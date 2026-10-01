@@ -28,7 +28,7 @@ function SidebarIcon({ name }) {
   return <svg className="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{iconPaths[name]}</svg>
 }
 
-export default function Sidebar({ active, effectiveRole = 'user' }) {
+export default function Sidebar({ active, effectiveRole = 'user', onLogout }) {
   const storageKey = `${effectiveRole}-sidebar-collapsed`
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(storageKey) === 'true')
   const [selected, setSelected] = useState(null)
@@ -45,6 +45,6 @@ export default function Sidebar({ active, effectiveRole = 'user' }) {
   return <aside className={`sidebar${collapsed ? ' collapsed' : ''}`} style={{ width: sidebarWidth, minWidth: sidebarWidth, flexBasis: sidebarWidth, padding: sidebarPadding }}>
     <div className="sidebar-brand"><img src={collapsed ? icon : logo} alt="Lightning PDPM" /><button onClick={toggleCollapsed} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}>{collapsed ? '›' : '‹'}</button></div>
     <nav className="sidebar-nav" aria-label="Main navigation">{links.map(([label, icon, href]) => <a key={label} href={href} title={collapsed ? label : undefined} onClick={() => setSelected(href === '#' ? label : null)} className={`sidebar-link${active === href || selected === label ? ' active' : ''}`}><SidebarIcon name={icon} /><span className="sidebar-label">{label}</span></a>)}</nav>
-    <button className="sidebar-logout"><span className="logout-icon">⇥</span><span className="sidebar-label">Logout</span></button>
+    <button className="sidebar-logout" onClick={onLogout}><span className="logout-icon">⇥</span><span className="sidebar-label">Logout</span></button>
   </aside>
 }

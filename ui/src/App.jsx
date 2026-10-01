@@ -4,18 +4,42 @@ import DependenciesPage from './features/dependencies/DependenciesPage.jsx'
 import TasksPage from './features/tasks/TasksPage.jsx'
 import CalendarPage from './features/calendar/CalendarPage.jsx'
 import ChatPage from './features/chat/ChatPage.jsx'
+import PmProjects from './features/projects/pm_projects.jsx'
+import ProjectManagerDashboard from './modules/project-manager/dashboard.jsx'
+import UserDashboard from './modules/user/user_dashboard.jsx'
 import Navbar from './layouts/Navbar.jsx'
 import Sidebar from './layouts/Sidebar.jsx'
 import './App.css'
 
 function AppLayout({ user, children }) {
   const location = useLocation()
+  const navigate = useNavigate()
   const path = location.pathname.replace(/\/$/, '')
   const role = user?.role === 'Administrator' ? 'admin' : 'user'
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate('/login', { replace: true })
+    } catch {
+      // Keep the current page visible if the server cannot end the session.
+    }
+  }
+  const handleSidebarNavigation = event => {
+    const link = event.target.closest('.sidebar-link')
+    const label = link?.querySelector('.sidebar-label')?.textContent.trim()
+    if (label === 'Dashboard' || label === 'Projects') {
+      event.preventDefault()
+      if (label === 'Projects') {
+        navigate('/projects')
+        return
+      }
+      navigate(user?.role === 'Project Manager' ? '/pm/dashboard' : user?.role === 'Administrator' ? '/admin/dashboard' : '/user/dashboard')
+    }
+  }
 
   return (
-    <div className="app-shell">
-      <Sidebar active={path} effectiveRole={role} />
+    <div className="app-shell" onClickCapture={handleSidebarNavigation}>
+      <Sidebar active={path} effectiveRole={role} onLogout={handleLogout} />
       <main className="main-column">
         <Navbar />
         {children}
@@ -24,32 +48,16 @@ function AppLayout({ user, children }) {
   )
 }
 
-function Dashboard({ user }) {
-  const navigate = useNavigate()
-  const signOut = async () => {
-    try {
-      await logout()
-      navigate('/login', { replace: true })
-    } catch {
-      // Keep this screen visible when the server cannot invalidate the session.
-    }
-  }
-
-  return (
-    <main className="dashboard-placeholder">
-      <h1>{user.role} dashboard</h1>
-      <p>Signed in as {user.first_name} {user.last_name}</p>
-      <button type="button" onClick={signOut}>Log out</button>
-    </main>
-  )
+function Dashboard({ user, variant }) {
+  return variant === 'user' ? <UserDashboard user={user} /> : <ProjectManagerDashboard user={user} />
 }
 
-function DashboardRoute({ allowedRoles }) {
+function DashboardRoute({ allowedRoles, variant }) {
   return (
     <ProtectedRoute allowedRoles={allowedRoles}>
       {(user) => (
         <AppLayout user={user}>
-          <Dashboard user={user} />
+          <Dashboard user={user} variant={variant} />
         </AppLayout>
       )}
     </ProtectedRoute>
@@ -68,11 +76,12 @@ export default function App() {
         <Route path="/reset-password" element={<ForgotPasswordPage mode="reset" />} />
         <Route path="/admin/dashboard" element={<DashboardRoute allowedRoles={['Administrator']} />} />
         <Route path="/pm/dashboard" element={<DashboardRoute allowedRoles={['Project Manager']} />} />
-        <Route path="/user/dashboard" element={<DashboardRoute />} />
+        <Route path="/user/dashboard" element={<DashboardRoute variant="user" />} />
         <Route path="/tasks" element={<AppLayout><TasksPage /></AppLayout>} />
         <Route path="/dependencies" element={<AppLayout><DependenciesPage /></AppLayout>} />
         <Route path="/calendar" element={<AppLayout><CalendarPage /></AppLayout>} />
         <Route path="/chat" element={<AppLayout><ChatPage /></AppLayout>} />
+        <Route path="/projects" element={<AppLayout><PmProjects /></AppLayout>} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
