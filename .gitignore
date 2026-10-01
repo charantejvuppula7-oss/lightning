@@ -1,0 +1,28 @@
+# Virtual environment & environment files
+backend/venv/
+venv/
+.env
+backend/.env
+*.env
+
+# SQLite databases
+backend/db.sqlite3
+*.sqlite3
+
+# Python cache & logs
+__pycache__/
+*.py[cod]
+backend/logs/
+backend/media/
+backend/staticfiles/
+
+# Frontend dependencies & builds
+node_modules/
+ui/node_modules/
+ui/dist/
+
+# OS / Editor files
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
