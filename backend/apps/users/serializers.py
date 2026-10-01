@@ -62,7 +62,10 @@ class UserSerializer(serializers.ModelSerializer):
     @staticmethod
     def _company_email(value):
         value = value.strip().lower()
-        if value.rsplit('@', 1)[-1] not in ('tachyonautomations.com', 'tachyonadvancedsystems.com'):
+        prefix, separator, domain = value.rpartition('@')
+        if not separator or not prefix or '@' in prefix or domain not in (
+            'tachyonautomations.com', 'tachyonadvancedsystems.com'
+        ):
             raise serializers.ValidationError('Use a tachyonautomations.com or tachyonadvancedsystems.com email.')
         return value
 

@@ -68,7 +68,7 @@ class PasswordResetRequestView(APIView):
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         request_password_reset(serializer.validated_data['identifier'])
-        return Response({'message': 'If the account exists, a verification code has been sent.'})
+        return Response({'message': 'A verification code has been sent to the account email.'})
 
 
 class PasswordResetVerifyView(APIView):

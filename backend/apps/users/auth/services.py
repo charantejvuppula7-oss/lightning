@@ -11,7 +11,7 @@ from django.db.models import Q
 from django.db.models.functions import Lower
 from django.middleware.csrf import rotate_token
 from django.utils import timezone
-from rest_framework.exceptions import AuthenticationFailed, ValidationError
+from rest_framework.exceptions import APIException, AuthenticationFailed, Throttled, ValidationError
 
 from api.models import PasswordResetOTP, UserData
 from apps.audit.services import LogService
@@ -51,6 +51,11 @@ class AuthenticationService:
         request.session.flush()
 
 
+class PasswordResetDeliveryError(APIException):
+    status_code = 503
+    default_detail = 'Unable to send the verification code. Please try again later.'
+
+
 def _reset_user(identifier):
     value = identifier.strip()
     return UserData.objects.filter(
@@ -59,24 +64,31 @@ def _reset_user(identifier):
 
 
 def request_password_reset(identifier):
+    user = _reset_user(identifier)
+    if user is None:
+        raise ValidationError({'identifier': 'No active account was found for this User ID or email.'})
+    if not user.email:
+        raise ValidationError({'identifier': 'This account has no email address. Contact your administrator.'})
+
     with transaction.atomic():
-        user = _reset_user(identifier)
-        if user is None or not user.email:
-            return
-        UserData.objects.select_for_update().get(pk=user.pk)
+        user = UserData.objects.select_for_update().get(pk=user.pk)
+        if user.account_status != 'active':
+            raise ValidationError({'identifier': 'No active account was found for this User ID or email.'})
         recent = PasswordResetOTP.objects.filter(
-            user=user, created_at__gte=timezone.now() - timedelta(minutes=10)).count()
-        if recent >= 3:
-            return
+            user=user, created_at__gte=timezone.now() - timedelta(minutes=10))
+        if recent.count() >= 3:
+            wait = (recent.order_by('created_at').first().created_at + timedelta(minutes=10) - timezone.now()).total_seconds()
+            raise Throttled(wait=max(1, wait))
         record, code = PasswordResetOTP.create_for_user(user)
 
-        def send_code():
-            sent, error = EmailService.send_password_reset_otp(user.email, code)
-            if not sent:
-                PasswordResetOTP.objects.filter(pk=record.pk).update(is_used=True)
-                LogService.log_error('password_reset_email_failed', user_id=str(user.pk), error=error)
-
-        transaction.on_commit(send_code)
+    try:
+        sent, error = EmailService.send_password_reset_otp(user.email, code)
+    except Exception as exc:
+        sent, error = False, type(exc).__name__
+    if not sent:
+        PasswordResetOTP.objects.filter(pk=record.pk).update(is_used=True)
+        LogService.log_error('password_reset_email_failed', user_id=str(user.pk), error=error)
+        raise PasswordResetDeliveryError()
 
 
 def verify_password_reset_otp(identifier, otp_code):

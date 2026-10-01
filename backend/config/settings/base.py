@@ -99,9 +99,12 @@ LOCAL_IP = _get_local_ip()
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
     'http://localhost:4069',
     'http://127.0.0.1:4069',
     f'http://{LOCAL_IP}:3000',
+    f'http://{LOCAL_IP}:5173',
     f'http://{LOCAL_IP}:4069',
 ]
 if os.environ.get('CSRF_TRUSTED_ORIGINS'):
