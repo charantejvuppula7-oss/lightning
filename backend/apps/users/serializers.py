@@ -138,3 +138,34 @@ class UserSerializer(serializers.ModelSerializer):
         return data
 
 
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    """Fields an authenticated user may change on their own account."""
+
+    class Meta:
+        model = UserData
+        fields = ('email', 'phone_number', 'location', 'alternate_email', 'bio',
+                  'first_name', 'last_name', 'linkedin_profile', 'github_profile')
+        extra_kwargs = {'email': {'validators': []}}
+
+    def to_internal_value(self, data):
+        unsupported = set(data) - set(self.Meta.fields)
+        if unsupported:
+            raise serializers.ValidationError({field: 'This field cannot be changed here.' for field in unsupported})
+        return super().to_internal_value(data)
+
+    def validate_email(self, value):
+        if self.instance and value.casefold() == self.instance.email.casefold():
+            return self.instance.email
+        value = UserSerializer._company_email(value)
+        if UserData.objects.filter(email__iexact=value).exclude(pk=self.instance.pk).exists():
+            raise serializers.ValidationError('Email already exists.')
+        return value
+
+    def validate_alternate_email(self, value):
+        return UserSerializer._company_email(value) if value else value
+
+    def validate(self, attrs):
+        validate_model_attributes(UserData, self.instance, attrs)
+        return attrs
+
+

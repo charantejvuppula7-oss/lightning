@@ -9,7 +9,7 @@ from apps.core.pagination import ResourcePagination
 from apps.core.sse import after_cursor, event_cursor, stream_response
 from apps.notifications.models import Notification
 from apps.notifications.serializers import NotificationSerializer
-from api.models import UserData
+from api.models import ProjectChatMessage, Task, TaskDependency, UserData
 from rest_framework.exceptions import PermissionDenied
 
 
@@ -25,7 +25,16 @@ class NotificationListView(APIView):
             queryset = queryset.filter(is_read=value == 'true')
         paginator = ResourcePagination()
         page = paginator.paginate_queryset(queryset, request, view=self)
-        return paginator.get_paginated_response(NotificationSerializer(page, many=True).data)
+        task_ids = [item.resource_id for item in page if item.notification_type.startswith('task_')]
+        dependency_ids = [item.resource_id for item in page if item.notification_type.startswith('dependency_')]
+        message_ids = [item.resource_id for item in page if item.notification_type == Notification.CHAT_MENTION]
+        project_names = dict(Task.objects.filter(pk__in=task_ids).values_list('pk', 'project__project_name'))
+        project_names.update(TaskDependency.objects.filter(pk__in=dependency_ids)
+                             .values_list('pk', 'task__project__project_name'))
+        project_names.update(ProjectChatMessage.objects.filter(pk__in=message_ids)
+                             .values_list('pk', 'room__project__project_name'))
+        return paginator.get_paginated_response(NotificationSerializer(
+            page, many=True, context={'project_names': project_names}).data)
 
 
 class NotificationStreamView(APIView):

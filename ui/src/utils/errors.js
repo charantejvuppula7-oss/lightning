@@ -1,4 +1,5 @@
 export function authError(error, fallback) {
+  if (error.message === 'Unconfirmed password reset response') return 'We could not verify this account. Please try again later.'
   if (error.message === 'Unexpected server response') return 'The server returned an unexpected response. Please try again.'
   if (!error.status) return 'Unable to reach the server. Check your connection and try again.'
   if (error.status === 503) return error.data?.detail || 'Unable to send the verification code. Please try again later.'

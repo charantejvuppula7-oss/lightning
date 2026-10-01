@@ -34,4 +34,3 @@ button, input, textarea { font-family: inherit; }
 .code-input:focus { border-color: var(--color-primary) !important; background: white !important; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
 .login-link:hover, .text-link:hover { color: var(--color-primary-hover) !important; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.dashboard-placeholder { padding: 32px; }

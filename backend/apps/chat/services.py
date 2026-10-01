@@ -1,8 +1,12 @@
+import re
+
 from django.db import transaction
+from django.utils import timezone
 from django.core.exceptions import ValidationError as ModelValidationError
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
-from api.models import Project, ProjectChatMessage, ProjectChatRoom
+from api.models import ChatMention, Project, ProjectChatMessage, ProjectChatRoom, UserData
+from apps.notifications.models import Notification
 from apps.roles.permissions import require_permission
 
 
@@ -46,4 +50,20 @@ def save_chat_message(user, data):
         message = ProjectChatMessage.objects.create(room=room, sender=user,
                                                     content=data['content'], parent_message=parent)
         created = True
+    if created:
+        names = set(re.findall(r'(?<!\w)@([A-Za-z0-9_.-]+)', message.content))
+        recipients = UserData.objects.filter(user_name__in=names).exclude(pk=user.pk)
+        recipients = [recipient for recipient in recipients if room.is_member(recipient)]
+        ChatMention.objects.bulk_create([
+            ChatMention(message=message, mentioned_user=recipient, mentioned_by=user)
+            for recipient in recipients
+        ])
+        Notification.objects.bulk_create([
+            Notification(
+                user=recipient, notification_type=Notification.CHAT_MENTION,
+                resource_id=message.pk, notification_date=timezone.localdate(),
+                title=f'{user.user_name} mentioned you'[:100],
+                message=f'{user.user_name} mentioned you: "{message.content[:230]}"'[:300],
+            ) for recipient in recipients
+        ], ignore_conflicts=True)
     return message, created

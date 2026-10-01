@@ -89,13 +89,15 @@ def require_permission(user, resource, action, project=None):
         require_project_scope(user, project)
 
 
-def allowed_projects(user):
-    if is_admin(user):
-        return Project.objects.all()
+def assigned_projects(user):
     return Project.objects.filter(
         Q(created_by=user) | Q(project_managers=user) |
         Q(team_members=user) | Q(members=user)
     ).distinct()
+
+
+def allowed_projects(user):
+    return Project.objects.all() if is_admin(user) else assigned_projects(user)
 
 
 def scope_queryset(user, resource, queryset):

@@ -8,7 +8,7 @@ from apps.core.utils import validate_model_attributes
 class MilestoneSerializer(serializers.ModelSerializer):
     class Meta:
         model = Milestones
-        fields = ('id', 'project', 'task', 'description', 'name', 'due_date',
+        fields = ('id', 'project', 'task', 'description', 'name', 'start_date', 'due_date',
                   'created_by', 'updated_by', 'created_at', 'updated_at')
         read_only_fields = ('id', 'created_by', 'updated_by', 'created_at', 'updated_at')
 

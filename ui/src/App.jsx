@@ -1,46 +1,25 @@
-import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { LoginPage, ForgotPasswordPage, ProtectedRoute, logout } from './features/auth/index.js'
+import { useState } from 'react'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { LoginPage, ForgotPasswordPage, ProtectedRoute } from './features/auth/index.js'
 import DependenciesPage from './features/dependencies/DependenciesPage.jsx'
 import TasksPage from './features/tasks/TasksPage.jsx'
 import CalendarPage from './features/calendar/CalendarPage.jsx'
 import ChatPage from './features/chat/ChatPage.jsx'
-import Navbar from './layouts/Navbar.jsx'
-import Sidebar from './layouts/Sidebar.jsx'
+import { ProjectSelectionProvider } from './features/projects/ProjectSelection.jsx'
+import ProjectsPage from './features/projects/ProjectsPage.jsx'
+import ProjectEditorPage from './features/projects/editor/ProjectEditorPage.jsx'
+import PageLayout from './layouts/PageLayout.jsx'
+import { MyProfile } from './features/profile/index.js'
+import NotificationsPage from './features/notifications/NotificationsPage.jsx'
+import { NotificationPopup } from './features/notifications/NotificationPopup.jsx'
 import './App.css'
 
-function AppLayout({ user, children }) {
-  const location = useLocation()
-  const path = location.pathname.replace(/\/$/, '')
-  const role = user?.role === 'Administrator' ? 'admin' : 'user'
-
-  return (
-    <div className="app-shell">
-      <Sidebar active={path} effectiveRole={role} />
-      <main className="main-column">
-        <Navbar />
-        {children}
-      </main>
-    </div>
-  )
-}
-
 function Dashboard({ user }) {
-  const navigate = useNavigate()
-  const signOut = async () => {
-    try {
-      await logout()
-      navigate('/login', { replace: true })
-    } catch {
-      // Keep this screen visible when the server cannot invalidate the session.
-    }
-  }
-
   return (
-    <main className="dashboard-placeholder">
+    <section className="dashboard-placeholder">
       <h1>{user.role} dashboard</h1>
       <p>Signed in as {user.first_name} {user.last_name}</p>
-      <button type="button" onClick={signOut}>Log out</button>
-    </main>
+    </section>
   )
 }
 
@@ -48,10 +27,27 @@ function DashboardRoute({ allowedRoles }) {
   return (
     <ProtectedRoute allowedRoles={allowedRoles}>
       {(user) => (
-        <AppLayout user={user}>
+        <PageLayout user={user}>
           <Dashboard user={user} />
-        </AppLayout>
+        </PageLayout>
       )}
+    </ProtectedRoute>
+  )
+}
+
+function ProfileRoute({ allowedRoles }) {
+  return (
+    <ProtectedRoute allowedRoles={allowedRoles}>
+      {(user) => <MyProfile user={user} />}
+    </ProtectedRoute>
+  )
+}
+
+function NotificationsRoute({ allowedRoles }) {
+  const [searchQuery, setSearchQuery] = useState('')
+  return (
+    <ProtectedRoute allowedRoles={allowedRoles}>
+      {(user) => <PageLayout user={user} searchQuery={searchQuery} onSearchChange={(event) => setSearchQuery(event.target.value)}><NotificationsPage searchQuery={searchQuery} /></PageLayout>}
     </ProtectedRoute>
   )
 }
@@ -59,6 +55,8 @@ function DashboardRoute({ allowedRoles }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <ProjectSelectionProvider>
+      <NotificationPopup />
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
@@ -69,12 +67,24 @@ export default function App() {
         <Route path="/admin/dashboard" element={<DashboardRoute allowedRoles={['Administrator']} />} />
         <Route path="/pm/dashboard" element={<DashboardRoute allowedRoles={['Project Manager']} />} />
         <Route path="/user/dashboard" element={<DashboardRoute />} />
-        <Route path="/tasks" element={<AppLayout><TasksPage /></AppLayout>} />
-        <Route path="/dependencies" element={<AppLayout><DependenciesPage /></AppLayout>} />
-        <Route path="/calendar" element={<AppLayout><CalendarPage /></AppLayout>} />
-        <Route path="/chat" element={<AppLayout><ChatPage /></AppLayout>} />
+        <Route path="/profile" element={<ProfileRoute />} />
+        <Route path="/user/profile" element={<ProfileRoute />} />
+        <Route path="/pm/profile" element={<ProfileRoute allowedRoles={['Project Manager']} />} />
+        <Route path="/admin/profile" element={<ProfileRoute allowedRoles={['Administrator']} />} />
+        <Route path="/notifications" element={<NotificationsRoute />} />
+        <Route path="/user/notifications" element={<NotificationsRoute />} />
+        <Route path="/pm/notifications" element={<NotificationsRoute allowedRoles={['Project Manager']} />} />
+        <Route path="/admin/notifications" element={<NotificationsRoute allowedRoles={['Administrator']} />} />
+        <Route path="/tasks" element={<PageLayout><TasksPage /></PageLayout>} />
+        <Route path="/projects" element={<PageLayout><ProjectsPage /></PageLayout>} />
+        <Route path="/projects/new" element={<PageLayout><ProjectEditorPage /></PageLayout>} />
+        <Route path="/projects/:projectId/edit" element={<PageLayout><ProjectEditorPage /></PageLayout>} />
+        <Route path="/dependencies" element={<PageLayout><DependenciesPage /></PageLayout>} />
+        <Route path="/calendar" element={<PageLayout><CalendarPage /></PageLayout>} />
+        <Route path="/chat" element={<PageLayout><ChatPage /></PageLayout>} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
+      </ProjectSelectionProvider>
     </BrowserRouter>
   )
 }

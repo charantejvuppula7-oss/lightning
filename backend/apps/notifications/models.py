@@ -5,15 +5,19 @@ from django.utils import timezone
 
 
 class Notification(models.Model):
+    TASK_ASSIGNED = 'task_assigned'
     TASK_DUE_TODAY = 'task_due_today'
     TASK_OVERDUE = 'task_overdue'
     DEPENDENCY_DUE_TODAY = 'dependency_due_today'
     DEPENDENCY_OVERDUE = 'dependency_overdue'
+    CHAT_MENTION = 'chat_mention'
     TYPES = [
+        (TASK_ASSIGNED, 'Task assigned'),
         (TASK_DUE_TODAY, 'Task due today'),
         (TASK_OVERDUE, 'Task overdue'),
         (DEPENDENCY_DUE_TODAY, 'Dependency due today'),
         (DEPENDENCY_OVERDUE, 'Dependency overdue'),
+        (CHAT_MENTION, 'Chat mention'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
