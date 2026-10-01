@@ -8,7 +8,7 @@ class FeatureSerializer(serializers.ModelSerializer):
     class Meta:
         model = Milestone_Features
         fields = ('id', 'Milestone', 'feature_name', 'description', 'feature_status',
-                  'feature_priority', 'feature_due_date', 'created_at', 'updated_at')
+                  'feature_priority', 'feature_start_date', 'feature_due_date', 'created_at', 'updated_at')
         read_only_fields = ('id', 'created_at', 'updated_at')
 
     def validate(self, attrs):

@@ -10,6 +10,7 @@ class Milestones(models.Model):
     task = models.ForeignKey('Task', on_delete=models.CASCADE, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     name = models.CharField(max_length=100)
+    start_date = models.DateField(null=True, blank=True)
     due_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

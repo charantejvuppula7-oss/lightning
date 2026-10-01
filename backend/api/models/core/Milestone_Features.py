@@ -129,6 +129,7 @@ class Milestone_Features(models.Model):
         blank=True,
         help_text="Optional deadline for this feature (may differ from milestone due date).",
     )
+    feature_start_date = models.DateField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

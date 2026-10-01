@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { after, test } from 'node:test'
 import { confirmReset, getSession, login, logout, requestReset, verifyOtp } from '../src/features/auth/api/authApi.js'
-import { authError } from '../src/features/auth/utils/errors.js'
+import { authError } from '../src/utils/errors.js'
 
 const originalFetch = globalThis.fetch
 after(() => { globalThis.fetch = originalFetch })
@@ -15,6 +15,7 @@ test('cookie session, CSRF rotation, and reset payloads match Django auth API', 
     if (url.endsWith('/auth/session/')) return Response.json({ user: { role: 'Project Manager' } })
     if (url.endsWith('/verify-otp/')) return Response.json({ reset_token: 'token' })
     if (url.endsWith('/confirm/')) return Response.json({ message: 'updated' })
+    if (url.endsWith('/password-reset/request/')) return Response.json({ account_exists: true, code_sent: true })
     return Response.json({ message: 'ok' })
   }
 
@@ -56,4 +57,10 @@ test('reset request surfaces unknown users and failed delivery', async () => {
   globalThis.fetch = async () => Response.json({ detail: 'Unable to send the verification code. Please try again later.' }, { status: 503 })
   await assert.rejects(requestReset('known'), (error) =>
     error.status === 503 && authError(error, 'fallback').startsWith('Unable to send'))
+})
+
+test('reset request rejects a generic success response', async () => {
+  globalThis.fetch = async () => Response.json({ message: 'If the account exists, a verification code has been sent.' })
+  await assert.rejects(requestReset('unknown'), (error) =>
+    authError(error, 'fallback') === 'We could not verify this account. Please try again later.')
 })

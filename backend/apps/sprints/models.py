@@ -50,16 +50,20 @@ class Sprint(models.Model):
         ordering = ['Sprint_start_date']
         indexes = [models.Index(fields=['project', 'Sprint_start_date'], name='sprint_project_start_idx')]
 
-    def working_days(self):
+    def working_days(self, off_dates=()):
         days = (self.Sprint_end_date - self.Sprint_start_date).days + 1
-        if not self.exclude_weekends:
-            return days
-        weeks, remainder = divmod(days, 7)
-        return weeks * 5 + sum((self.Sprint_start_date.weekday() + day) % 7 < 5
-                               for day in range(remainder))
+        if self.exclude_weekends:
+            weeks, remainder = divmod(days, 7)
+            days = weeks * 5 + sum((self.Sprint_start_date.weekday() + day) % 7 < 5
+                                  for day in range(remainder))
+        return days - sum(self.Sprint_start_date <= day <= self.Sprint_end_date and
+                          (not self.exclude_weekends or day.weekday() < 5)
+                          for day in set(off_dates))
 
     def save(self, *args, **kwargs):
-        self.Number_of_days = self.working_days()
+        existing_off_days = (self.off_days.values_list('date', flat=True)
+                             if not self._state.adding else ())
+        self.Number_of_days = self.working_days(existing_off_days)
         if kwargs.get('update_fields') is not None:
             kwargs['update_fields'] = set(kwargs['update_fields']) | {'Number_of_days'}
         super().save(*args, **kwargs)

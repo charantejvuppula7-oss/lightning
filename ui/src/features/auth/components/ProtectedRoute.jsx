@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom'
-import useSession from '../hooks/useSession.js'
-import { getRoleDashboard, roleSlug } from '../utils/roles.js'
+import useSession from '../../../hooks/useSession.js'
+import { getRoleDashboard, roleSlug } from '../../../utils/roles.js'
 
 export default function ProtectedRoute({ children, allowedRoles, requiredPermission }) {
   const { status, user } = useSession()

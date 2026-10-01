@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'apps.milestones',
     'apps.notifications',
     'apps.chat',
+    'apps.calendar',
 ]
 
 MIDDLEWARE = [

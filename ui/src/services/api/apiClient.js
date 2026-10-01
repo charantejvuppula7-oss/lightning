@@ -35,4 +35,14 @@ export async function apiRequest(path, { method = 'GET', body } = {}) {
   return data
 }
 
+export async function apiUpload(path, formData) {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: 'POST', credentials: 'include',
+    headers: { 'X-CSRFToken': await csrf() }, body: formData,
+  })
+  const data = response.headers.get('content-type')?.includes('application/json') ? await response.json() : null
+  if (!response.ok) throw new ApiError(response.status, data)
+  return data
+}
+
 export function clearCsrf() { csrfToken = null }

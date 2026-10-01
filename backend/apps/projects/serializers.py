@@ -1,23 +1,34 @@
 from rest_framework import serializers
 
-from api.models import Project, UserData, Milestone_Features, Task, TaskDependency
+from api.models import Project, ProjectResourceLink, UserData, Milestone_Features, Task, TaskDependency
 from apps.roles.permissions import require_permission, require_project_members
 from apps.core.utils import validate_model_attributes
 from apps.sprints.serializers import SprintCreateItemSerializer
 
 
 class ProjectSerializer(serializers.ModelSerializer):
+    resource_links = serializers.ListField(child=serializers.URLField(max_length=500), required=False, write_only=True)
+    customer_name = serializers.CharField(max_length=200, required=False, allow_blank=True, write_only=True)
+    priority_name = serializers.ChoiceField(choices=('low', 'medium', 'high'), required=False, write_only=True)
+    project_type_name = serializers.ChoiceField(choices=('web', 'mobile', 'desktop', 'other'), required=False, write_only=True)
+
     class Meta:
         model = Project
         fields = ('id', 'project_code', 'project_name', 'description', 'customer_link',
                   'priority_link', 'project_type_link', 'departments', 'created_by',
                   'project_managers', 'start_date', 'end_date', 'team_members',
-                  'points_per_working_day', 'created_at', 'updated_at')
+                  'points_per_working_day', 'resource_links', 'customer_name',
+                  'priority_name', 'project_type_name', 'created_at', 'updated_at')
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_at')
 
     def validate(self, attrs):
         require_project_members(self.context['request'].user, attrs)
-        validate_model_attributes(Project, self.instance, attrs)
+        validate_model_attributes(Project, self.instance, {
+            key: value for key, value in attrs.items()
+            if key in ('project_code', 'project_name', 'description', 'customer_link',
+                       'priority_link', 'project_type_link', 'start_date', 'end_date',
+                       'points_per_working_day')
+        })
         if self.instance and ('start_date' in attrs or 'end_date' in attrs):
             start = attrs.get('start_date', self.instance.start_date)
             end = attrs.get('end_date', self.instance.end_date)
@@ -31,6 +42,30 @@ class ProjectSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({'end_date': 'Existing milestone is due after the project.'})
         return attrs
 
+    def update(self, instance, validated_data):
+        links = validated_data.pop('resource_links', None)
+        names = {key: validated_data.pop(key) for key in
+                 ('customer_name', 'priority_name', 'project_type_name') if key in validated_data}
+        instance = super().update(instance, validated_data)
+        if names:
+            for key, value in names.items():
+                setattr(instance, key.removesuffix('_name'), value)
+            instance.save()
+        if links is not None:
+            instance.links.all().delete()
+            ProjectResourceLink.objects.bulk_create(
+                [ProjectResourceLink(project=instance, url=url) for url in links], batch_size=200
+            )
+        return instance
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['resource_links'] = [link.url for link in instance.links.all()]
+        data['customer_name'] = instance.customer_link.name if instance.customer_link_id else ''
+        data['priority_name'] = instance.priority_link.name if instance.priority_link_id else ''
+        data['project_type_name'] = instance.project_type_link.name if instance.project_type_link_id else ''
+        return data
+
 
 class InitialTaskSerializer(serializers.ModelSerializer):
     temp_id = serializers.CharField(max_length=100, required=False)
@@ -41,7 +76,7 @@ class InitialTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ('Task_Name', 'description', 'assigned_to', 'review_by',
-                  'Due_Date', 'Remarks', 'temp_id', 'sprint_ref')
+                  'Due_Date', 'planned_start_date', 'Remarks', 'temp_id', 'sprint_ref')
 
 
 class InitialFeatureSerializer(serializers.ModelSerializer):
@@ -50,12 +85,13 @@ class InitialFeatureSerializer(serializers.ModelSerializer):
     class Meta:
         model = Milestone_Features
         fields = ('feature_name', 'description', 'feature_status',
-                  'feature_priority', 'feature_due_date', 'tasks')
+                  'feature_priority', 'feature_start_date', 'feature_due_date', 'tasks')
 
 
 class InitialMilestoneSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     description = serializers.CharField(required=False, allow_blank=True)
+    start_date = serializers.DateField(required=False, allow_null=True)
     due_date = serializers.DateField()
     features = InitialFeatureSerializer(many=True, allow_empty=False)
 
@@ -247,11 +283,12 @@ class ProjectCreationResponseSerializer(ProjectSerializer):
     def get_milestones(self, project):
         return [
             {'id': milestone.pk, 'name': milestone.name, 'description': milestone.description,
-             'due_date': milestone.due_date,
+             'start_date': milestone.start_date, 'due_date': milestone.due_date,
              'features': [
                  {'id': feature.pk, 'feature_name': feature.feature_name,
                   'description': feature.description, 'feature_status': feature.feature_status,
                   'feature_priority': feature.feature_priority,
+                  'feature_start_date': feature.feature_start_date,
                   'feature_due_date': feature.feature_due_date}
                  for feature in milestone.features.all()]}
             for milestone in project.milestones_set.all()
@@ -263,6 +300,9 @@ class ProjectCreationResponseSerializer(ProjectSerializer):
              'Sprint_Name': sprint.Sprint_Name,
              'Sprint_start_date': sprint.Sprint_start_date,
              'Sprint_end_date': sprint.Sprint_end_date,
+             'exclude_weekends': sprint.exclude_weekends,
+             'off_days': [day.date for day in sprint.off_days.all()],
+             'Status': sprint.Status,
              'team_members': [user.pk for user in sprint.team_members.all()]}
             for sprint in project.sprints.all()
         ]
@@ -270,9 +310,11 @@ class ProjectCreationResponseSerializer(ProjectSerializer):
     def get_tasks(self, project):
         return [
             {'id': task.pk, 'Task_Name': task.Task_Name,
+             'description': task.description, 'Remarks': task.Remarks,
+             'review_by': task.review_by_id,
              'assigned_to': task.assigned_to_id, 'feature': task.feature_id,
              'sprint': task.sprint_id, 'status': task.status,
-             'Due_Date': task.Due_Date}
+             'planned_start_date': task.planned_start_date, 'Due_Date': task.Due_Date}
             for task in project.tasks.all()
         ]
 
@@ -280,6 +322,7 @@ class ProjectCreationResponseSerializer(ProjectSerializer):
         return [
             {'id': dependency.pk, 'task': dependency.task_id,
              'depends_on': dependency.depends_on_id,
-             'description': dependency.description, 'status': dependency.status}
+             'description': dependency.description, 'assigned_to': dependency.assigned_to_id,
+             'due_date': dependency.due_date, 'status': dependency.status}
             for task in project.tasks.all() for dependency in task.dependencies.all()
         ]

@@ -6,11 +6,12 @@ from rest_framework.response import Response
 
 from api.models import Task, TaskDependency, UserData
 from apps.core.pagination import ResourcePagination
-from apps.users.serializers import UserSerializer
+from apps.users.serializers import ProfileUpdateSerializer, UserSerializer
 from apps.users.filters import filter_users
 from apps.notifications.services import schedule_account_notice
 from apps.core.views import ResourceAPIView
 from apps.roles.permissions import allowed_projects, require_permission
+from apps.audit.services import LogService
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
@@ -114,5 +115,22 @@ class ProjectUserWorkloadView(APIView):
                                            if state != 'completed'),
             })
         return paginator.get_paginated_response(results)
+
+
+class ProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response(UserSerializer(request.user).data)
+
+    def patch(self, request):
+        with transaction.atomic():
+            user = UserData.objects.select_for_update().get(pk=request.user.pk)
+            serializer = ProfileUpdateSerializer(user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            user = serializer.save()
+            LogService.log_audit_event(actor=user, action='updated_profile', entity_type='user_account',
+                                       entity=user, request=request)
+        return Response(UserSerializer(user).data)
 
 

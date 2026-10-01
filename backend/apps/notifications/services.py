@@ -25,10 +25,19 @@ def schedule_assignment_notice(task, actor):
 
 def schedule_assignment_notices(tasks, actor):
     messages = []
+    in_app = []
     assigned_by_name = f'{actor.first_name} {actor.last_name}'.strip() or actor.user_name
     for task in tasks:
         assignee = task.assigned_to
-        if not assignee or not assignee.email:
+        if not assignee:
+            continue
+        in_app.append(Notification(
+            user_id=assignee.pk, notification_type=Notification.TASK_ASSIGNED,
+            resource_id=task.pk, notification_date=timezone.localdate(),
+            title='Task assigned',
+            message=f'{assigned_by_name} assigned **{task.Task_Name or "a task"}** to you.'[:300],
+        ))
+        if not assignee.email:
             continue
         email_data = {
             'to_email': assignee.email,
@@ -39,6 +48,7 @@ def schedule_assignment_notices(tasks, actor):
             'assigned_by_name': assigned_by_name,
         }
         messages.append((EmailOutbox.TASK_ASSIGNED, email_data))
+    Notification.objects.bulk_create(in_app, ignore_conflicts=True, batch_size=500)
     enqueue_emails(messages)
 
 

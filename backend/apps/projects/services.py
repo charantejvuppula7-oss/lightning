@@ -1,4 +1,4 @@
-from api.models import Project
+from api.models import Project, ProjectResourceLink
 from apps.dependencies.services import create_dependencies
 from apps.features.services import create_features
 from apps.milestones.services import create_milestones
@@ -14,12 +14,21 @@ def create_project(validated_data, user):
     members = validated_data.pop('team_members', [])
     managers = validated_data.pop('project_managers', [])
     departments = validated_data.pop('departments', [])
+    resource_links = validated_data.pop('resource_links', [])
+    names = {key: validated_data.pop(key) for key in
+             ('customer_name', 'priority_name', 'project_type_name') if key in validated_data}
     users = validated_data.pop('_users', {})
 
-    project = Project.objects.create(created_by=user, **validated_data)
+    project = Project(created_by=user, **validated_data)
+    for key, value in names.items():
+        setattr(project, key.removesuffix('_name'), value)
+    project.save()
     project.team_members.set(members)
     project.project_managers.set(managers)
     project.departments.set(departments)
+    ProjectResourceLink.objects.bulk_create(
+        [ProjectResourceLink(project=project, url=url) for url in resource_links], batch_size=200
+    )
 
     milestones = create_milestones(project, user, milestones_data)
     task_specs = [(data, None) for data in tasks_data]

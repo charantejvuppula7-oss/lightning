@@ -44,6 +44,7 @@ class Task(models.Model):
     Remarks = models.TextField(null=True, blank=True)
     Time_Taken = models.DurationField(null=True, blank=True)
     Due_Date = models.DateField(null=True, blank=True, db_index=True)
+    planned_start_date = models.DateField(null=True, blank=True)
     start_Time = models.DateTimeField(null=True, blank=True)
     pause_Time = models.DateTimeField(null=True, blank=True)
     review_by = models.ForeignKey(

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getSession } from '../api/authApi.js'
+import { getSession } from '../features/auth/api/authApi.js'
 
 export default function useSession() {
   const [state, setState] = useState({ status: 'loading', user: null })
