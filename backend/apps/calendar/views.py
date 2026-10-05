@@ -20,7 +20,24 @@ class CalendarEventsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        """
+        Handle calendar events query, validating date range and query filters.
+
+        Args:
+            request (Request): Authenticated HTTP request with query parameters:
+                - 'start' (YYYY-MM-DD): Start date.
+                - 'end' (YYYY-MM-DD): End date.
+                - 'project_id': Target project UUID or 'all'.
+                - 'type': Comma-separated event types ('task,sprint,milestone,dependency').
+                - 'category': Comma-separated category filters.
+                - 'status': Filter by task/item status.
+                - 'assigned_to': Filter by assignee UUID.
+
+        Returns:
+            Response: JSON array of normalized event objects.
+        """
         query_params = request.query_params
+
 
         # ── 1. Date Range Parsing & Validation ──
         raw_start = query_params.get("start")

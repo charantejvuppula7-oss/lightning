@@ -7,6 +7,29 @@ from apps.tasks.services import create_tasks
 
 
 def create_project(validated_data, user):
+    """
+    Orchestrate the holistic creation of a project and its nested work hierarchy.
+
+    Execution sequence:
+      1. Extracts nested collections (milestones, sprints, tasks, dependencies, members, managers, departments, links).
+      2. Instantiates and saves the parent Project model with resolved lookup attributes.
+      3. Binds Many-to-Many relationships for team members, managers, and departments.
+      4. Bulk-creates external resource link records.
+      5. Provisions milestones via `create_milestones`.
+      6. Provisions features under those milestones via `create_features`.
+      7. Provisions agile sprints via `create_sprints`.
+      8. Bulk-creates tasks assigned to sprints/features via `create_tasks` and schedules notices.
+      9. Links dependency predecessor/successor graphs via `create_dependencies`.
+
+    Args:
+        validated_data (dict): Validated project specification dictionary from ProjectCreateSerializer.
+        user (UserData): The authenticated creator of the project.
+
+    Returns:
+        tuple[Project, dict]: A tuple of:
+            - The newly created and persisted Project model instance.
+            - A references dictionary mapping client temporary IDs to real database UUIDs for sprints and tasks.
+    """
     milestones_data = validated_data.pop('milestones', [])
     sprints_data = validated_data.pop('sprints', [])
     tasks_data = validated_data.pop('tasks', [])
@@ -38,3 +61,4 @@ def create_project(validated_data, user):
     create_dependencies(task_refs, dependencies_data, users)
     return project, {'sprints': {ref: str(sprint.pk) for ref, sprint in sprints.items()},
                      'tasks': {ref: str(task.pk) for ref, task in task_refs.items()}}
+

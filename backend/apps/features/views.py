@@ -13,16 +13,37 @@ FEATURE_QUERYSET = Milestone_Features.objects.select_related('Milestone', 'Miles
 
 
 class FeatureListCreateView(ResourceAPIView):
+    """
+    List features accessible within the user's project scope or create a new feature under a milestone.
+    """
     resource = 'feature'
     queryset = FEATURE_QUERYSET
 
     def get(self, request):
+        """
+        List features with filtering, sorting, and pagination.
+
+        Args:
+            request (Request): Incoming DRF request.
+
+        Returns:
+            Response: Paginated serialized features.
+        """
         queryset = filter_features(self.authorized_queryset(request), request.query_params)
         paginator = ResourcePagination()
         page = paginator.paginate_queryset(queryset, request, view=self)
         return paginator.get_paginated_response(FeatureSerializer(page, many=True).data)
 
     def post(self, request):
+        """
+        Create a new feature and log an audit event.
+
+        Args:
+            request (Request): DRF request with feature payload.
+
+        Returns:
+            Response: Serialized feature with HTTP 201 Created.
+        """
         serializer = FeatureSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         with transaction.atomic():
@@ -32,14 +53,37 @@ class FeatureListCreateView(ResourceAPIView):
 
 
 class FeatureDetailView(ResourceAPIView):
+    """
+    Retrieve, update, or delete an individual feature.
+    """
     resource = 'feature'
     queryset = FEATURE_QUERYSET
 
     def get(self, request, feature_id):
+        """
+        Retrieve details of a single feature.
+
+        Args:
+            request (Request): Incoming request.
+            feature_id (UUID): Feature identifier.
+
+        Returns:
+            Response: Serialized feature details.
+        """
         instance = self.authorized_object(request, feature_id)
         return Response(FeatureSerializer(instance).data)
 
     def put(self, request, feature_id):
+        """
+        Full update of a feature within an atomic transaction.
+
+        Args:
+            request (Request): Request with full payload.
+            feature_id (UUID): Feature identifier.
+
+        Returns:
+            Response: Serialized updated feature.
+        """
         with transaction.atomic():
             instance = self.authorized_object(request, feature_id, lock=True)
             serializer = FeatureSerializer(instance, data=request.data, context={'request': request})
@@ -49,6 +93,16 @@ class FeatureDetailView(ResourceAPIView):
         return Response(FeatureSerializer(instance).data)
 
     def patch(self, request, feature_id):
+        """
+        Partial update of a feature within an atomic transaction.
+
+        Args:
+            request (Request): Request with partial payload.
+            feature_id (UUID): Feature identifier.
+
+        Returns:
+            Response: Serialized updated feature.
+        """
         with transaction.atomic():
             instance = self.authorized_object(request, feature_id, lock=True)
             serializer = FeatureSerializer(instance, data=request.data, partial=True, context={'request': request})
@@ -58,9 +112,20 @@ class FeatureDetailView(ResourceAPIView):
         return Response(FeatureSerializer(instance).data)
 
     def delete(self, request, feature_id):
+        """
+        Delete a feature within an atomic transaction.
+
+        Args:
+            request (Request): Incoming request.
+            feature_id (UUID): Feature identifier.
+
+        Returns:
+            Response: Empty response with HTTP 204 No Content.
+        """
         with transaction.atomic():
             instance = self.authorized_object(request, feature_id, lock=True)
             self.audit(request, instance, 'deleted')
             instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 

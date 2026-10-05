@@ -20,17 +20,38 @@ USER_QUERYSET = UserData.objects.select_related('role_link', 'department_link').
 
 
 class UserListCreateView(ResourceAPIView):
+    """
+    List user accounts or provision a new user in the system.
+    """
     resource = 'user'
     audit_entity = 'user_account'
     queryset = USER_QUERYSET
 
     def get(self, request):
+        """
+        List users filtered by scope, department, role, or search string with pagination.
+
+        Args:
+            request (Request): Incoming DRF HTTP request.
+
+        Returns:
+            Response: Paginated list of serialized user profiles.
+        """
         queryset = filter_users(self.authorized_queryset(request), request.query_params)
         paginator = ResourcePagination()
         page = paginator.paginate_queryset(queryset, request, view=self)
         return paginator.get_paginated_response(UserSerializer(page, many=True).data)
 
     def post(self, request):
+        """
+        Create a new user account, record audit trail, and dispatch an onboarding notification.
+
+        Args:
+            request (Request): DRF request containing new user parameters.
+
+        Returns:
+            Response: Serialized newly created user with HTTP 201 Created.
+        """
         serializer = UserSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         with transaction.atomic():
@@ -41,15 +62,38 @@ class UserListCreateView(ResourceAPIView):
 
 
 class UserDetailView(ResourceAPIView):
+    """
+    Retrieve, update, or soft-delete (deactivate) an individual user account.
+    """
     resource = 'user'
     audit_entity = 'user_account'
     queryset = USER_QUERYSET
 
     def get(self, request, user_id):
+        """
+        Retrieve details of an authorized user by primary key.
+
+        Args:
+            request (Request): Incoming DRF request.
+            user_id (UUID): User identifier.
+
+        Returns:
+            Response: Serialized user details.
+        """
         instance = self.authorized_object(request, user_id)
         return Response(UserSerializer(instance).data)
 
     def put(self, request, user_id):
+        """
+        Full update of a user account within an atomic transaction.
+
+        Args:
+            request (Request): Incoming request with full payload.
+            user_id (UUID): User identifier.
+
+        Returns:
+            Response: Serialized updated user profile.
+        """
         with transaction.atomic():
             instance = self.authorized_object(request, user_id, lock=True)
             serializer = UserSerializer(instance, data=request.data, context={'request': request})
@@ -59,6 +103,16 @@ class UserDetailView(ResourceAPIView):
         return Response(UserSerializer(instance).data)
 
     def patch(self, request, user_id):
+        """
+        Partial update of a user account within an atomic transaction.
+
+        Args:
+            request (Request): Incoming request with partial payload.
+            user_id (UUID): User identifier.
+
+        Returns:
+            Response: Serialized updated user profile.
+        """
         with transaction.atomic():
             instance = self.authorized_object(request, user_id, lock=True)
             serializer = UserSerializer(instance, data=request.data, partial=True, context={'request': request})
@@ -68,6 +122,16 @@ class UserDetailView(ResourceAPIView):
         return Response(UserSerializer(instance).data)
 
     def delete(self, request, user_id):
+        """
+        Soft-deactivate a user account (marks account_status as 'inactive').
+
+        Args:
+            request (Request): Incoming request.
+            user_id (UUID): User identifier.
+
+        Returns:
+            Response: Serialized deactivated user profile with HTTP 200 OK.
+        """
         with transaction.atomic():
             instance = self.authorized_object(request, user_id, lock=True)
             instance.account_status = 'inactive'
@@ -77,9 +141,22 @@ class UserDetailView(ResourceAPIView):
 
 
 class ProjectUserWorkloadView(APIView):
+    """
+    Analytics endpoint calculating task and dependency workloads across users for a given project.
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request, project_id):
+        """
+        Calculate active and completed task/dependency distribution per team member.
+
+        Args:
+            request (Request): Incoming DRF request.
+            project_id (UUID): Target project identifier.
+
+        Returns:
+            Response: Paginated user workload statistics.
+        """
         require_permission(request.user, 'TeamWorLoad', 'View')
         project = get_object_or_404(allowed_projects(request.user), pk=project_id)
         params = request.query_params.copy()
@@ -118,12 +195,33 @@ class ProjectUserWorkloadView(APIView):
 
 
 class ProfileView(APIView):
+    """
+    Self-service profile endpoint for the currently authenticated user.
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        """
+        Fetch the current user's profile information.
+
+        Args:
+            request (Request): Authenticated HTTP request.
+
+        Returns:
+            Response: Serialized user profile.
+        """
         return Response(UserSerializer(request.user).data)
 
     def patch(self, request):
+        """
+        Allow the current user to update their own contact details and personal settings.
+
+        Args:
+            request (Request): Authenticated request with profile updates.
+
+        Returns:
+            Response: Serialized updated profile.
+        """
         with transaction.atomic():
             user = UserData.objects.select_for_update().get(pk=request.user.pk)
             serializer = ProfileUpdateSerializer(user, data=request.data, partial=True)
@@ -132,5 +230,6 @@ class ProfileView(APIView):
             LogService.log_audit_event(actor=user, action='updated_profile', entity_type='user_account',
                                        entity=user, request=request)
         return Response(UserSerializer(user).data)
+
 
 

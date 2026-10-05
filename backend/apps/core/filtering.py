@@ -7,6 +7,26 @@ from rest_framework.exceptions import ValidationError
 
 
 def parse_filters(params, *, ids=(), dates=(), choices=None, booleans=(), ordering=()):
+    """
+    Parse, sanitize, and validate HTTP GET query parameters against strict rules.
+
+    Protects backend query builders from SQL injection, invalid formats,
+    and unexpected sorting fields.
+
+    Args:
+        params (QueryDict|dict): The incoming `request.query_params` dictionary.
+        ids (tuple[str]): Field names expected to be valid UUIDs (e.g. ('project_id', 'user_id')).
+        dates (tuple[str]): Field names expected to be ISO dates (YYYY-MM-DD).
+        choices (dict[str, tuple]): Mapping of field names to their allowable string choices.
+        booleans (tuple[str]): Field names expected to be 'true' or 'false' (converted to bool).
+        ordering (tuple[str]): Whitelist of field names permitted for sorting (allows optional '-' prefix).
+
+    Returns:
+        dict: Cleaned and typed parameter dictionary containing validated inputs and 'search'.
+
+    Raises:
+        ValidationError: If any parameter does not match its expected format or permitted values.
+    """
     values = {}
     choices = choices or {}
     for name in ids:
@@ -40,3 +60,4 @@ def parse_filters(params, *, ids=(), dates=(), choices=None, booleans=(), orderi
         values['ordering'] = value
     values['search'] = params.get('search', '').strip()
     return values
+

@@ -3,12 +3,18 @@ Root URL Configuration
 ~~~~~~~~~~~~~~~~~~~~~~
 
 This is the top-level URL dispatcher for the PMS backend.
-Admin interface and admin-related pages are completely removed.
+All functional business domains are exposed under the `/api/` prefix.
+
+When adding a new domain/feature:
+1. Create your `urls.py` within `apps/<feature_name>/urls.py`.
+2. Register the endpoint list below with `path('api/', include('apps.<feature_name>.urls'))`.
+3. Standard conventions dictate RESTful resource routing (e.g. `/api/<resource>/`).
 """
 
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+
 
 urlpatterns = [
     path('api/', include('apps.users.urls')),

@@ -2,6 +2,18 @@ from api.models import Sprint, SprintOffDay
 
 
 def create_sprints(project, sprints_data):
+    """
+    Bulk-create sprints, compute net working days, and bind team members and off-days.
+
+    Args:
+        project (Project): Parent project instance.
+        sprints_data (list[dict]): List of sprint dictionaries from project creation serializer.
+
+    Returns:
+        tuple[list[tuple[Sprint, str|None]], dict[str, Sprint]]:
+            - List of (Sprint, client_id) pairs.
+            - Mapping of client temporary IDs to the created Sprint instances.
+    """
     prepared = []
     members = []
     off_days = []
@@ -25,3 +37,4 @@ def create_sprints(project, sprints_data):
     if off_days:
         SprintOffDay.objects.bulk_create(off_days, batch_size=500)
     return prepared, sprint_map
+

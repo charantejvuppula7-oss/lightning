@@ -134,6 +134,16 @@ class EmailService:
 
     @staticmethod
     def send_password_reset_otp(to_email, otp_code):
+        """
+        Send a one-time password (OTP) verification code for password reset.
+
+        Args:
+            to_email (str): Recipient email address.
+            otp_code (str): 6-digit numeric verification code.
+
+        Returns:
+            tuple[bool, str]: (True, "Email sent successfully") on success, or (False, error_message).
+        """
         return _GraphMailClient().send(
             to_email, 'Password reset verification code',
             f'<p>Your password reset code is <strong>{otp_code}</strong>.</p>'

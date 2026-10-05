@@ -5,6 +5,10 @@ from apps.roles.permissions import require_project_scope
 
 
 class SprintSerializer(serializers.ModelSerializer):
+    """
+    Serializer for individual Sprint operations, supporting off-days synchronization
+    and net working days computation.
+    """
     off_days = serializers.ListField(child=serializers.DateField(), required=False, write_only=True)
 
     class Meta:
@@ -16,6 +20,9 @@ class SprintSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'Number_of_days', 'Created_at', 'Updated_at')
 
     def validate(self, attrs):
+        """
+        Validate project bounds, member active statuses, and off-day date spans.
+        """
         project = attrs.get('project', self.instance.project if self.instance else None)
         if project is None:
             return attrs
@@ -44,12 +51,14 @@ class SprintSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        """Create sprint and populate off-days."""
         off_days = validated_data.pop('off_days', [])
         sprint = super().create(validated_data)
         self._save_off_days(sprint, off_days)
         return sprint
 
     def update(self, instance, validated_data):
+        """Update sprint and replace off-days."""
         off_days = validated_data.pop('off_days', None)
         sprint = super().update(instance, validated_data)
         if off_days is not None:
@@ -59,6 +68,7 @@ class SprintSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def _save_off_days(sprint, dates):
+        """Bulk-create SprintOffDay objects and update Number_of_days cache."""
         SprintOffDay.objects.bulk_create(
             [SprintOffDay(sprint=sprint, date=day) for day in dates], batch_size=200
         )
@@ -66,12 +76,16 @@ class SprintSerializer(serializers.ModelSerializer):
         Sprint.objects.filter(pk=sprint.pk).update(Number_of_days=sprint.Number_of_days)
 
     def to_representation(self, instance):
+        """Append off_days array to serialized output."""
         data = super().to_representation(instance)
         data['off_days'] = [day.date for day in instance.off_days.all()]
         return data
 
 
 class SprintCreateItemSerializer(serializers.Serializer):
+    """
+    Serializer validating individual sprint items within bulk creation requests.
+    """
     client_id = serializers.CharField(max_length=100, required=False)
     Sprint_No = serializers.CharField(max_length=20, required=False, allow_blank=True)
     Sprint_Name = serializers.CharField(max_length=200)
@@ -82,6 +96,7 @@ class SprintCreateItemSerializer(serializers.Serializer):
     off_days = serializers.ListField(child=serializers.DateField(), required=False)
 
     def validate(self, attrs):
+        """Validate date ordering and off-day ranges."""
         if attrs['Sprint_end_date'] < attrs['Sprint_start_date']:
             raise serializers.ValidationError({'Sprint_end_date': 'Must be on or after Sprint_start_date.'})
         if len(attrs.get('off_days', [])) != len(set(attrs.get('off_days', []))) or any(
@@ -93,9 +108,13 @@ class SprintCreateItemSerializer(serializers.Serializer):
 
 
 class SprintBulkSerializer(serializers.Serializer):
+    """
+    Serializer handling batch sprint generation for a project with client reference uniqueness.
+    """
     sprints = SprintCreateItemSerializer(many=True, allow_empty=False)
 
     def to_internal_value(self, data):
+        """Transform error representations into indexed maps."""
         try:
             return super().to_internal_value(data)
         except serializers.ValidationError as error:
@@ -107,6 +126,7 @@ class SprintBulkSerializer(serializers.Serializer):
             raise
 
     def validate(self, attrs):
+        """Validate all sprints against parent project boundaries and active team members."""
         project = self.context['project']
         member_ids = {project.created_by_id}
         member_ids.update(project.team_members.values_list('pk', flat=True))
@@ -136,3 +156,4 @@ class SprintBulkSerializer(serializers.Serializer):
         if errors:
             raise serializers.ValidationError({'sprints': errors})
         return attrs
+

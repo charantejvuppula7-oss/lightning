@@ -7,6 +7,9 @@ from apps.sprints.serializers import SprintCreateItemSerializer
 
 
 class ProjectSerializer(serializers.ModelSerializer):
+    """
+    Standard ModelSerializer for Project representations and individual project updates.
+    """
     resource_links = serializers.ListField(child=serializers.URLField(max_length=500), required=False, write_only=True)
     customer_name = serializers.CharField(max_length=200, required=False, allow_blank=True, write_only=True)
     priority_name = serializers.ChoiceField(choices=('low', 'medium', 'high'), required=False, write_only=True)
@@ -22,6 +25,18 @@ class ProjectSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'created_by', 'created_at', 'updated_at')
 
     def validate(self, attrs):
+        """
+        Validate project dates against child sprints/milestones and check actor membership rights.
+
+        Args:
+            attrs (dict): Serializer input data.
+
+        Returns:
+            dict: Validated attributes.
+
+        Raises:
+            ValidationError: If project start/end dates conflict with existing sprints or milestones.
+        """
         require_project_members(self.context['request'].user, attrs)
         validate_model_attributes(Project, self.instance, {
             key: value for key, value in attrs.items()
@@ -43,6 +58,16 @@ class ProjectSerializer(serializers.ModelSerializer):
         return attrs
 
     def update(self, instance, validated_data):
+        """
+        Update project instance and synchronize resource link records.
+
+        Args:
+            instance (Project): Existing project instance.
+            validated_data (dict): Validated fields.
+
+        Returns:
+            Project: Updated project instance.
+        """
         links = validated_data.pop('resource_links', None)
         names = {key: validated_data.pop(key) for key in
                  ('customer_name', 'priority_name', 'project_type_name') if key in validated_data}
@@ -59,12 +84,14 @@ class ProjectSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance):
+        """Add resource_links array and resolved lookup names to the serialized output."""
         data = super().to_representation(instance)
         data['resource_links'] = [link.url for link in instance.links.all()]
         data['customer_name'] = instance.customer_link.name if instance.customer_link_id else ''
         data['priority_name'] = instance.priority_link.name if instance.priority_link_id else ''
         data['project_type_name'] = instance.project_type_link.name if instance.project_type_link_id else ''
         return data
+
 
 
 class InitialTaskSerializer(serializers.ModelSerializer):
@@ -108,6 +135,15 @@ class InitialDependencySerializer(serializers.ModelSerializer):
 
 
 class ProjectCreateSerializer(ProjectSerializer):
+    """
+    Comprehensive creation serializer validating the entire project hierarchy in a single payload.
+
+    Validates:
+      - Permission to create milestones, features, tasks, and dependencies.
+      - Active status and project membership for all referenced managers, assignees, and reviewers.
+      - Date consistency across project, sprints, and milestones.
+      - Acyclicity of task dependencies using Kahn's topological sort algorithm.
+    """
     team_members = serializers.ListField(child=serializers.UUIDField(), required=False)
     project_managers = serializers.ListField(child=serializers.UUIDField(), required=False)
     milestones = InitialMilestoneSerializer(many=True, required=False)
@@ -119,6 +155,7 @@ class ProjectCreateSerializer(ProjectSerializer):
         fields = ProjectSerializer.Meta.fields + ('milestones', 'sprints', 'tasks', 'dependencies')
 
     def to_internal_value(self, data):
+        """Reject unwhitelisted fields on project initialization."""
         unknown = set(data) - set(self.fields)
         if unknown:
             raise serializers.ValidationError({field: 'Unsupported project creation field.'
@@ -126,6 +163,9 @@ class ProjectCreateSerializer(ProjectSerializer):
         return super().to_internal_value(data)
 
     def validate(self, attrs):
+        """
+        Validate all cross-cutting domain invariants, user scopes, date bounds, and dependency graphs.
+        """
         actor = self.context['request'].user
         if attrs.get('milestones'):
             require_permission(actor, 'milestone', 'create')
@@ -272,6 +312,9 @@ class ProjectCreateSerializer(ProjectSerializer):
 
 
 class ProjectCreationResponseSerializer(ProjectSerializer):
+    """
+    Detailed read-only serializer outputting the complete project tree after creation or deep setup fetch.
+    """
     milestones = serializers.SerializerMethodField()
     sprints = serializers.SerializerMethodField()
     tasks = serializers.SerializerMethodField()
@@ -281,6 +324,7 @@ class ProjectCreationResponseSerializer(ProjectSerializer):
         fields = ProjectSerializer.Meta.fields + ('milestones', 'sprints', 'tasks', 'dependencies')
 
     def get_milestones(self, project):
+        """Serialize nested milestones and their child features."""
         return [
             {'id': milestone.pk, 'name': milestone.name, 'description': milestone.description,
              'start_date': milestone.start_date, 'due_date': milestone.due_date,
@@ -295,6 +339,7 @@ class ProjectCreationResponseSerializer(ProjectSerializer):
         ]
 
     def get_sprints(self, project):
+        """Serialize project sprints and off-days."""
         return [
             {'id': sprint.pk, 'Sprint_No': sprint.Sprint_No,
              'Sprint_Name': sprint.Sprint_Name,
@@ -308,6 +353,7 @@ class ProjectCreationResponseSerializer(ProjectSerializer):
         ]
 
     def get_tasks(self, project):
+        """Serialize tasks belonging to the project."""
         return [
             {'id': task.pk, 'Task_Name': task.Task_Name,
              'description': task.description, 'Remarks': task.Remarks,
@@ -319,10 +365,12 @@ class ProjectCreationResponseSerializer(ProjectSerializer):
         ]
 
     def get_dependencies(self, project):
+        """Serialize task dependencies across all project tasks."""
         return [
             {'id': dependency.pk, 'task': dependency.task_id,
-             'depends_on': dependency.depends_on_id,
+              'depends_on': dependency.depends_on_id,
              'description': dependency.description, 'assigned_to': dependency.assigned_to_id,
              'due_date': dependency.due_date, 'status': dependency.status}
             for task in project.tasks.all() for dependency in task.dependencies.all()
         ]
+

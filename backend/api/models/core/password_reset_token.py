@@ -31,6 +31,16 @@ class PasswordResetOTP(models.Model):
 
     @classmethod
     def create_for_user(cls, user, expiry_minutes=10):
+        """
+        Invalidate previous active tokens and generate a fresh hashed 6-digit OTP.
+
+        Args:
+            user (UserData): Target account requesting password reset.
+            expiry_minutes (int, optional): Validity duration in minutes. Defaults to 10.
+
+        Returns:
+            tuple[PasswordResetOTP, str]: (model_record, plain_text_code).
+        """
         # Invalidate any unused prior OTPs for this user
         cls.objects.filter(user=user, is_used=False).update(is_used=True)
 
@@ -46,7 +56,10 @@ class PasswordResetOTP(models.Model):
         return record, code
 
     def is_expired(self):
+        """Check whether current system time exceeds the token expiration timestamp."""
         return timezone.now() > self.expires_at
 
     def __str__(self):
+        """Return human-readable token descriptor."""
         return f"OTP for {self.user.user_name}"
+

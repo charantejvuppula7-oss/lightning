@@ -5,6 +5,26 @@ from apps.core.filtering import parse_filters
 
 
 def filter_dependencies(queryset, params):
+    """
+    Apply validated filters and ordering to a TaskDependency queryset.
+
+    Supported filters:
+      - 'project': Project UUID (via task__project_id).
+      - 'source_task': Task UUID.
+      - 'target_task': Depends-on Task UUID.
+      - 'assigned_to': UserData UUID.
+      - 'status': Dependency status choice.
+      - 'due_date_from', 'due_date_to': Date range.
+      - 'search': Case-insensitive search on description and task name.
+      - 'ordering': Sort fields ('created_at', 'due_date', 'status').
+
+    Args:
+        queryset (QuerySet[TaskDependency]): Base dependency queryset.
+        params (QueryDict|dict): Incoming query parameters.
+
+    Returns:
+        QuerySet[TaskDependency]: Filtered and ordered dependency queryset.
+    """
     values = parse_filters(
         params, ids=('project', 'source_task', 'target_task', 'assigned_to'),
         dates=('due_date_from', 'due_date_to'),
@@ -26,3 +46,4 @@ def filter_dependencies(queryset, params):
         queryset = queryset.filter(Q(description__icontains=values['search']) |
                                    Q(task__Task_Name__icontains=values['search']))
     return queryset.order_by(values.get('ordering', 'created_at'), 'pk')
+

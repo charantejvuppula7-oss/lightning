@@ -8,6 +8,11 @@ from apps.core.utils import normalize_aliases, validate_model_attributes
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """
+    Primary serializer for UserData managing account registration, updates,
+    nested associations (roles, departments, default projects, skills),
+    and company email verification.
+    """
     password = serializers.CharField(write_only=True, required=False, trim_whitespace=False)
     role = serializers.CharField(write_only=True, required=False)
     department = serializers.CharField(write_only=True, required=False)
@@ -24,6 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
     }
 
     def to_internal_value(self, data):
+        """Standardize incoming alias keys and coerce empty manager strings to None."""
         values = normalize_aliases(data, self.INPUT_ALIASES)
         if values.get('manager') == '':
             values['manager'] = None
@@ -41,6 +47,7 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'user_name': {'validators': []}, 'email': {'validators': []}}
 
     def validate_user_name(self, value):
+        """Ensure username is unique case-insensitively and contains no '@' character."""
         if '@' in value:
             raise serializers.ValidationError('Username cannot contain @.')
         query = UserData.objects.filter(user_name__iexact=value)
@@ -51,6 +58,7 @@ class UserSerializer(serializers.ModelSerializer):
         return value
 
     def validate_email(self, value):
+        """Validate corporate email format and ensure case-insensitive uniqueness."""
         value = self._company_email(value)
         query = UserData.objects.filter(email__iexact=value)
         if self.instance:
@@ -61,6 +69,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def _company_email(value):
+        """Verify that email belongs to tachyonautomations.com or tachyonadvancedsystems.com."""
         value = value.strip().lower()
         prefix, separator, domain = value.rpartition('@')
         if not separator or not prefix or '@' in prefix or domain not in (
@@ -70,20 +79,27 @@ class UserSerializer(serializers.ModelSerializer):
         return value
 
     def validate_alternate_email(self, value):
+        """Validate alternate company email format if provided."""
         return self._company_email(value) if value else value
 
     def validate_department(self, value):
+        """Validate that department matches one of the canonical allowed departments."""
         name = Department.normalize_name(value)
         if name not in Department.ALLOWED_DEPARTMENTS:
             raise serializers.ValidationError('Invalid department.')
         return name
 
     def validate_department_link(self, value):
+        """Validate department ForeignKey link against allowed departments."""
         if value is not None and value.name not in Department.ALLOWED_DEPARTMENTS:
             raise serializers.ValidationError('Invalid department.')
         return value
 
     def validate(self, attrs):
+        """
+        Validate cross-field business logic, role resolution, required fields for creation,
+        relational RBAC constraints, and password strength.
+        """
         if 'role' in attrs:
             role = resolve_role_object(attrs.pop('role'))
             if role is None:
@@ -106,18 +122,21 @@ class UserSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        """Hash password securely and delegate user provisioning to _save_profile."""
         user = UserData()
         user.set_password(validated_data['password'])
         validated_data['password'] = user.password
         return self._save_profile(user, validated_data)
 
     def update(self, instance, validated_data):
+        """Hash updated password if supplied and delegate to _save_profile."""
         if 'password' in validated_data:
             instance.set_password(validated_data['password'])
             validated_data['password'] = instance.password
         return self._save_profile(instance, validated_data)
 
     def _save_profile(self, instance, data):
+        """Coordinate multi-entity persistence via UserService if relationships are present."""
         if {'department', 'default_projects', 'skills'} & data.keys():
             values = dict(data)
             department = values.pop('department', None)
@@ -129,6 +148,7 @@ class UserSerializer(serializers.ModelSerializer):
         return super().update(instance, data)
 
     def to_representation(self, instance):
+        """Append computed fields: role, department, skills list, and effective_permissions."""
         data = super().to_representation(instance)
         data['role'] = instance.role_link.name if instance.role_link_id else ''
         data['department'] = instance.department_link.name if instance.department_link_id else ''
@@ -139,7 +159,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
-    """Fields an authenticated user may change on their own account."""
+    """
+    Serializer restricting what fields an authenticated user may modify on their own profile.
+    """
 
     class Meta:
         model = UserData
@@ -148,12 +170,14 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
         extra_kwargs = {'email': {'validators': []}}
 
     def to_internal_value(self, data):
+        """Enforce whitelist of allowed self-service profile fields."""
         unsupported = set(data) - set(self.Meta.fields)
         if unsupported:
             raise serializers.ValidationError({field: 'This field cannot be changed here.' for field in unsupported})
         return super().to_internal_value(data)
 
     def validate_email(self, value):
+        """Validate corporate email uniqueness when changed."""
         if self.instance and value.casefold() == self.instance.email.casefold():
             return self.instance.email
         value = UserSerializer._company_email(value)
@@ -162,10 +186,13 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_alternate_email(self, value):
+        """Validate corporate email format for alternate email."""
         return UserSerializer._company_email(value) if value else value
 
     def validate(self, attrs):
+        """Validate model attributes without saving."""
         validate_model_attributes(UserData, self.instance, attrs)
         return attrs
+
 
 

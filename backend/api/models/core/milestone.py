@@ -4,6 +4,10 @@ import uuid
 class Milestones(models.Model):
     """
     Represents milestones within a project.
+
+    Milestones represent major delivery checkpoints or phases for a project.
+    Provides backward-compatible camelCase / PascalCase property aliases (e.g. `Milestone_Name`,
+    `Milestone_Descripition`, `Project_ID`) to support legacy API and database schema conventions.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     project = models.ForeignKey('Project', on_delete=models.CASCADE)
@@ -18,6 +22,7 @@ class Milestones(models.Model):
     updated_by = models.ForeignKey('UserData', on_delete=models.CASCADE, related_name='updated_milestones')
 
     def __init__(self, *args, **kwargs):
+        """Translate legacy uppercase kwargs to canonical snake_case fields."""
         if 'Project_ID' in kwargs:
             kwargs['project'] = kwargs.pop('Project_ID')
         if 'Task_ID' in kwargs:
@@ -33,6 +38,7 @@ class Milestones(models.Model):
         if 'Updated_By' in kwargs:
             kwargs['updated_by'] = kwargs.pop('Updated_By')
         super().__init__(*args, **kwargs)
+
 
     @property
     def Project_ID(self):

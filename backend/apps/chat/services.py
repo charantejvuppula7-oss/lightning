@@ -11,6 +11,23 @@ from apps.roles.permissions import require_permission
 
 
 def get_chat_room(project_id, user, *, create=False):
+    """
+    Retrieve or initialize the ProjectChatRoom associated with a project.
+
+    Verifies user membership and project read permission.
+
+    Args:
+        project_id (UUID): Target project identifier.
+        user (UserData): Acting user.
+        create (bool): If True, creates the chat room if it does not yet exist.
+
+    Returns:
+        ProjectChatRoom|None: The resolved chat room instance.
+
+    Raises:
+        NotFound: If project does not exist.
+        PermissionDenied: If user is not an authorized member of the project.
+    """
     require_permission(user, 'project', 'read')
     project = Project.objects.filter(pk=project_id).first()
     if project is None:
@@ -26,6 +43,23 @@ def get_chat_room(project_id, user, *, create=False):
 
 @transaction.atomic
 def save_chat_message(user, data):
+    """
+    Persist a new chat message, parse @username mentions, and generate in-app notifications.
+
+    Supports idempotent message delivery using `client_id` (UUID) deduplication.
+    Mentions are parsed using regex, verified against project membership, and dispatched
+    as in-app notifications.
+
+    Args:
+        user (UserData): Message author.
+        data (dict): Message parameters including 'project_id', 'content', optional 'client_id' and 'parent_message_id'.
+
+    Returns:
+        tuple[ProjectChatMessage, bool]: (message_instance, was_created_boolean).
+
+    Raises:
+        ValidationError: If parent message is invalid or outside the project room.
+    """
     room = get_chat_room(data['project_id'], user, create=True)
     parent = None
     if data.get('parent_message_id'):
@@ -67,3 +101,4 @@ def save_chat_message(user, data):
             ) for recipient in recipients
         ], ignore_conflicts=True)
     return message, created
+

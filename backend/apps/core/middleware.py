@@ -22,9 +22,19 @@ class ApiLogMiddleware:
     """
 
     def __init__(self, get_response):
+        """Initialize the middleware with the next response handler in the pipeline."""
         self.get_response = get_response
 
     def __call__(self, request):
+        """
+        Intercept incoming requests, inject request correlation IDs, and benchmark duration.
+
+        Args:
+            request (HttpRequest): Incoming Django HTTP request.
+
+        Returns:
+            HttpResponse: Outgoing response with injected 'X-Request-ID' header.
+        """
         request.request_id = str(uuid.uuid4())
         if not request.path.startswith('/api/'):
             return self.get_response(request)
@@ -51,7 +61,15 @@ class ApiLogMiddleware:
 
     @staticmethod
     def _get_client_ip(request):
-        """Extract client IP, respecting X-Forwarded-For."""
+        """
+        Extract the client's public IP address, respecting reverse proxies and X-Forwarded-For.
+
+        Args:
+            request (HttpRequest): Django request object.
+
+        Returns:
+            str: Resolved client IP address string.
+        """
         forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
         if forwarded:
             return forwarded.split(',')[0].strip()
@@ -59,7 +77,14 @@ class ApiLogMiddleware:
 
     @staticmethod
     def _save_log(request, response, elapsed_ms):
-        """Persist one API request log; the caller handles logging failures."""
+        """
+        Persist an ApiRequestLog record in the database.
+
+        Args:
+            request (HttpRequest): The HTTP request.
+            response (HttpResponse): The HTTP response.
+            elapsed_ms (float): Request duration in milliseconds.
+        """
         from api.models import ApiRequestLog
         user = getattr(request, 'user', None)
         if user and not user.is_authenticated:
@@ -108,16 +133,31 @@ class SecurityHeadersMiddleware:
     """
 
     def __init__(self, get_response):
+        """Initialize the middleware with the next response handler."""
         self.get_response = get_response
 
     def __call__(self, request):
+        """
+        Process the response and attach security headers.
+
+        Args:
+            request (HttpRequest): Incoming HTTP request.
+
+        Returns:
+            HttpResponse: Response with hardened HTTP security headers.
+        """
         response = self.get_response(request)
         self._apply_security_headers(response)
         return response
 
     @staticmethod
     def _apply_security_headers(response):
-        """Attach security headers to the response object."""
+        """
+        Attach security headers to the response object.
+
+        Args:
+            response (HttpResponse): Target response object to decorate.
+        """
 
         # Content-Security-Policy
         response['Content-Security-Policy'] = (
@@ -143,4 +183,5 @@ class SecurityHeadersMiddleware:
             'payment=(), '
             'usb=()'
         )
+
 

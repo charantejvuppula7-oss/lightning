@@ -9,6 +9,10 @@ from apps.roles.permissions import allowed_projects, scope_queryset
 
 
 class CalendarService:
+    """
+    Service layer responsible for aggregating, filtering, and normalizing calendar events
+    across multiple underlying domain entities (Tasks, TaskDependencies, Milestones, Sprints).
+    """
     @staticmethod
     def get_calendar_events(
         user,
@@ -22,8 +26,28 @@ class CalendarService:
     ):
         """
         Aggregate and normalize calendar events intersecting the date range [start_date, end_date].
-        Strictly scopes results to projects authorized for the requesting user.
+
+        Strictly scopes results to projects authorized for the requesting user according to RBAC.
+        Transforms tasks, dependencies, milestones, and sprints into uniform event structures:
+        { id, title, type, category, start, end, allDay, status, projectId, projectName, ... }
+
+        Args:
+            user (UserData): The requesting authenticated user.
+            start_date (date|None): Beginning of the viewing window.
+            end_date (date|None): End of the viewing window.
+            project_id (str|UUID|None): Filter by a specific project ID, or None/"all".
+            types (list[str]|None): Event types to include ('task', 'dependency', 'milestone', 'sprint').
+            categories (list[str]|None): Optional category filters.
+            status (str|None): Filter by item status.
+            assigned_to (str|UUID|None): Filter by assigned user ID.
+
+        Returns:
+            list[dict]: Array of normalized calendar event dictionaries.
+
+        Raises:
+            PermissionDenied: If project_id is outside the user's allowed projects.
         """
+
         if project_id and project_id != "all":
             if not allowed_projects(user).filter(pk=project_id).exists():
                 raise PermissionDenied("Project outside your scope or not found.")

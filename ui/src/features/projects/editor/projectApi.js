@@ -21,6 +21,14 @@ export async function saveProjectFiles(id, form, originalFiles) {
   for (const file of originalFiles.filter(file => !retainedIds.has(file.id))) {
     await apiRequest(`/projects/${id}/files/`, { method: 'DELETE', body: { id: file.id } })
   }
+  for (const file of form.files.filter(item => item.id && item.is_pdr)) {
+    const original = originalFiles.find(item => item.id === file.id)
+    if (original && (original.pdr_version !== form.pdrVersion || original.pdr_changelog !== form.pdrChangelog)) {
+      await apiRequest(`/projects/${id}/files/`, { method: 'PATCH', body: {
+        id: file.id, pdr_version: form.pdrVersion, pdr_changelog: form.pdrChangelog,
+      } })
+    }
+  }
   await uploadFiles(id, form.files.filter(file => file.file && !file.is_pdr).map(file => file.file))
   await uploadFiles(id, form.files.filter(file => file.file && file.is_pdr).map(file => file.file),
     true, form.pdrVersion, form.pdrChangelog)
@@ -204,8 +212,10 @@ export async function updateProject(id, form, initial, originalFiles) {
   return project
 }
 
-export async function createProject(form) {
-  const project = await apiRequest('/projects/', { method: 'POST', body: creationPayload(form) })
+export async function createProject(form, projectOnly = false) {
+  const project = await apiRequest('/projects/', {
+    method: 'POST', body: projectOnly ? projectFields(form) : creationPayload(form),
+  })
   await saveProjectFiles(project.id, form, [])
   return project
 }

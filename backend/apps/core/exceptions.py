@@ -23,7 +23,22 @@ logger = logging.getLogger(__name__)
 
 def custom_exception_handler(exc, context):
     """
-    Custom exception handler that provides clearer rate-limit responses.
+    Global custom exception handler for Django REST Framework.
+
+    Handles and normalizes various exception types:
+      - Django `ModelValidationError`: Converted to DRF `ValidationError` for uniform JSON errors.
+      - Django `IntegrityError`: Captured, logged as a warning, and mapped to HTTP 409 Conflict.
+      - DRF `PermissionDenied` and `NotAuthenticated`: Recorded as security audit events.
+      - DRF `Throttled`: Formatted with user-friendly retry-after messages and HTTP 429.
+      - Unhandled Exceptions: Masked to prevent leaking database internals or sensitive stack traces,
+        logged with correlation ID, and returned as HTTP 500 Internal Server Error.
+
+    Args:
+        exc (Exception): The unhandled exception raised within a view.
+        context (dict): Additional context dictionary containing the active DRF `request` and `view`.
+
+    Returns:
+        Response: A structured DRF Response object containing error details and status code.
     """
     request = context.get('request')
     request_id = getattr(request, 'request_id', None)
@@ -61,3 +76,4 @@ def custom_exception_handler(exc, context):
                      request_id, type(exc).__name__, exc_info=(type(exc), exc, exc.__traceback__))
         return Response({'detail': 'Internal server error.', 'request_id': request_id}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return response
+

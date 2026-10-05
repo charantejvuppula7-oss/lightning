@@ -19,8 +19,25 @@ from services.email import EmailService
 
 
 class AuthenticationService:
+    """
+    Core authentication service handling user session login, session rotation, and logout.
+    """
     @staticmethod
     def login(request, identifier, password):
+        """
+        Authenticate a user by email or username, initialize session state, and rotate CSRF token.
+
+        Args:
+            request (HttpRequest): Current Django HTTP request.
+            identifier (str): Username or email address.
+            password (str): Plain-text password to verify against hashed database value.
+
+        Returns:
+            UserData: Authenticated active user instance.
+
+        Raises:
+            AuthenticationFailed: If credentials are invalid or user account is inactive.
+        """
         field = 'email' if '@' in identifier else 'user_name'
         user = UserData.objects.select_related('role_link').alias(
             login_identifier=Lower(field)
@@ -47,16 +64,32 @@ class AuthenticationService:
 
     @staticmethod
     def logout(request):
+        """
+        Terminate user session, flush session data, and record an audit log event.
+
+        Args:
+            request (HttpRequest): The current HTTP request with an active session.
+        """
         LogService.log_audit_event(actor=request.user, action='logout', entity_type='session', request=request)
         request.session.flush()
 
 
 class PasswordResetDeliveryError(APIException):
+    """Exception raised when SMTP delivery of OTP verification fails."""
     status_code = 503
     default_detail = 'Unable to send the verification code. Please try again later.'
 
 
 def _reset_user(identifier):
+    """
+    Lookup an active user by username, email, or employee ID.
+
+    Args:
+        identifier (str): User identifier string.
+
+    Returns:
+        UserData|None: Found user instance or None.
+    """
     value = identifier.strip()
     return UserData.objects.filter(
         Q(user_name__iexact=value) | Q(email__iexact=value) |
@@ -64,6 +97,19 @@ def _reset_user(identifier):
 
 
 def request_password_reset(identifier):
+    """
+    Initiate password reset flow by creating a secure OTP and emailing it to the user.
+
+    Enforces rate-limiting of at most 3 requests per 10-minute window per account.
+
+    Args:
+        identifier (str): Username, email, or employee ID.
+
+    Raises:
+        ValidationError: If no active user or email is found.
+        Throttled: If requests exceed allowable limits.
+        PasswordResetDeliveryError: If email transmission fails.
+    """
     user = _reset_user(identifier)
     if user is None:
         raise ValidationError({'identifier': 'No active account was found for this User ID or email.'})
@@ -92,6 +138,18 @@ def request_password_reset(identifier):
 
 
 def verify_password_reset_otp(identifier, otp_code):
+    """
+    Verify a submitted 6-digit OTP code against the latest pending reset record.
+
+    Locks attempts after 5 failures to protect against brute-force guessing.
+
+    Args:
+        identifier (str): User identifier string.
+        otp_code (str): Plain-text OTP code submitted by the user.
+
+    Returns:
+        UUID|None: Unique reset_token if OTP is valid and unexpired; None otherwise.
+    """
     user = _reset_user(identifier)
     if user is None:
         return None
@@ -111,6 +169,20 @@ def verify_password_reset_otp(identifier, otp_code):
 
 
 def confirm_password_reset(reset_token, new_password, request=None):
+    """
+    Apply a new password using a verified reset token.
+
+    Validates password strength, hashes the new password, marks OTP records as used,
+    and writes an audit event.
+
+    Args:
+        reset_token (str|UUID): Verified one-time reset token.
+        new_password (str): New plain-text password.
+        request (Request|None): Optional current HTTP request for audit logging.
+
+    Raises:
+        ValidationError: If token is invalid/expired or new password fails policy validation.
+    """
     with transaction.atomic():
         record = PasswordResetOTP.objects.select_for_update().select_related('user').filter(
             reset_token=reset_token, is_verified=True, is_used=False,
@@ -127,3 +199,4 @@ def confirm_password_reset(reset_token, new_password, request=None):
         PasswordResetOTP.objects.filter(user=user, is_used=False).update(is_used=True)
         LogService.log_audit_event(actor=user, action='password_reset',
                                    entity_type='user', entity=user, request=request)
+

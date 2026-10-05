@@ -7,9 +7,28 @@ from apps.audit.services import LogService
 
 
 class UserService:
+    """
+    Domain service handling user entity lifecycle, department associations, project memberships, and skills.
+    """
     @staticmethod
     @transaction.atomic
     def save_profile_with_assignments(user, attributes, *, department=None, projects=None, skills=None):
+        """
+        Persist user profile attributes and synchronize many-to-many associations atomically.
+
+        Updates user attributes, links or creates the department, synchronizes default projects
+        and project team memberships, and replaces skill associations.
+
+        Args:
+            user (UserData): The user model instance to save.
+            attributes (dict): Basic scalar fields (first_name, last_name, role_link, etc.).
+            department (str|None): Department name to associate or None.
+            projects (list[Project]|None): Collection of projects to assign as default memberships.
+            skills (list[str]|None): List of skill names to associate with the user.
+
+        Returns:
+            UserData: Updated user instance.
+        """
         for field, value in attributes.items():
             setattr(user, field, value)
         if department is not None:
@@ -30,3 +49,4 @@ class UserService:
             links = [Skill.objects.get_or_create(name=name)[0] for name in dict.fromkeys(skills)]
             Skills.objects.bulk_create([Skills(person=user, skill_link=skill) for skill in links])
         return user
+

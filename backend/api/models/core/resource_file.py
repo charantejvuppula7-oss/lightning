@@ -4,13 +4,22 @@ import os
 
 def resource_upload_path(instance, filename):
     """
-    Route uploaded files into category folders based on extension.
+    Route uploaded files into categorized directory structures based on file extension.
+
+    Sorts common office documents and PDFs into a `documents/project_<id>/` subdirectory,
+    and all other file types into `other/project_<id>/`.
+
+    Args:
+        instance (ResourceFile): Target resource file instance being saved.
+        filename (str): Original uploaded filename.
+
+    Returns:
+        str: Relative filesystem storage path.
     """
     ext = os.path.splitext(filename)[1].lower()
 
     DOCUMENT_EXTENSIONS = {'.pdf', '.docx', '.doc', '.pptx', '.ppt', '.xlsx', '.xls', '.txt', '.csv', '.rtf', '.zip', '.rar'}
 
-   
     if ext in DOCUMENT_EXTENSIONS:
         category = 'documents'
     else:
@@ -18,6 +27,7 @@ def resource_upload_path(instance, filename):
 
     project_folder = f"project_{instance.project_id}"
     return os.path.join(category, project_folder, filename)
+
 
 
 class ResourceFile(models.Model):

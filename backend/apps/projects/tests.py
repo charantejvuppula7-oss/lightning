@@ -3,7 +3,7 @@ from datetime import date
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from api.models import Project, Role, UserData, Department, Milestones, Milestone_Features, Task
+from api.models import Project, Role, UserData, Department, Milestones, Milestone_Features, ResourceFile, Task
 
 
 class AssignedProjectListTests(TestCase):
@@ -50,6 +50,37 @@ class ProjectSetupTests(TestCase):
         self.department = Department.objects.create(name='Software')
         self.client = APIClient()
         self.client.force_authenticate(user=self.admin)
+
+    def test_existing_pdr_details_can_be_edited(self):
+        project = Project.objects.create(project_name='PDR project', created_by=self.admin)
+        pdr = ResourceFile.objects.create(
+            project=project, file='documents/test.pdf', file_name='test.pdf',
+            file_size=1024, is_pdr=True, pdr_version='V1.0', uploaded_by=self.admin,
+        )
+        response = self.client.patch(f'/api/projects/{project.pk}/files/', {
+            'id': str(pdr.pk), 'pdr_version': 'V1.1', 'pdr_changelog': 'Updated scope',
+        }, format='json')
+        self.assertEqual(response.status_code, 200, response.data)
+        pdr.refresh_from_db()
+        self.assertEqual((pdr.pdr_version, pdr.pdr_changelog), ('V1.1', 'Updated scope'))
+        self.assertEqual(self.client.patch(f'/api/projects/{project.pk}/files/', {
+            'id': 'invalid', 'pdr_version': 'V2',
+        }, format='json').status_code, 400)
+        editor = UserData.objects.create(
+            user_name='file_editor', employee_id='FE1', first_name='File', last_name='Editor',
+            email='file_editor@example.com', password='unused', date_of_joining=date(2025, 1, 1),
+            role_link=Role.objects.create(name='file_editor_role', permissions={
+                'Projects': {'View': True, 'Edit': True},
+            }),
+        )
+        project.team_members.add(editor)
+        self.client.force_authenticate(user=editor)
+        self.assertEqual(self.client.patch(f'/api/projects/{project.pk}/files/', {
+            'id': str(pdr.pk), 'pdr_version': 'V1.2',
+        }, format='json').status_code, 200)
+        self.assertEqual(self.client.delete(f'/api/projects/{project.pk}/files/', {
+            'id': str(pdr.pk),
+        }, format='json').status_code, 204)
 
     def test_complete_wizard_payload_can_be_created_read_and_edited(self):
         payload = {

@@ -6,16 +6,36 @@ class DepartmentManager(models.Manager):
     Custom manager for Department that normalizes names upon lookup and creation.
     """
     def get_or_create(self, **kwargs):
+        """
+        Lookup or create a Department, ensuring the 'name' is normalized.
+
+        Args:
+            **kwargs: Department lookup/creation arguments.
+
+        Returns:
+            tuple[Department, bool]: (instance, created_flag).
+        """
         if 'name' in kwargs and kwargs['name']:
             kwargs['name'] = Department.normalize_name(kwargs['name'])
         return super().get_or_create(**kwargs)
 
     def filter(self, *args, **kwargs):
+        """
+        Filter Department records with automatic name alias normalization.
+
+        Args:
+            *args: Positional Q objects.
+            **kwargs: Keyword lookups (e.g. name, name__iexact).
+
+        Returns:
+            QuerySet: Filtered Department queryset.
+        """
         if 'name__iexact' in kwargs and kwargs['name__iexact']:
             kwargs['name__iexact'] = Department.normalize_name(kwargs['name__iexact'])
         elif 'name' in kwargs and isinstance(kwargs['name'], str):
             kwargs['name'] = Department.normalize_name(kwargs['name'])
         return super().filter(*args, **kwargs)
+
 
 
 class Department(models.Model):

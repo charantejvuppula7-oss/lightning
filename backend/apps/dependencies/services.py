@@ -2,6 +2,14 @@ from api.models import TaskDependency
 
 
 def create_dependencies(task_refs, dependencies_data, users):
+    """
+    Bulk-instantiate and persist TaskDependency records resolving temporary task references.
+
+    Args:
+        task_refs (dict[str, Task]): Mapping from client temporary task IDs to created Task objects.
+        dependencies_data (list[dict]): Dependency dictionaries containing 'task_ref' and 'depends_on_ref'.
+        users (dict[UUID, UserData]): User lookup dictionary for resolving assignees.
+    """
     dependencies = []
     for data in dependencies_data:
         source = task_refs[data.pop('task_ref')]
@@ -15,3 +23,4 @@ def create_dependencies(task_refs, dependencies_data, users):
         )
         dependencies.append(dependency)
     TaskDependency.objects.bulk_create(dependencies, batch_size=200)
+

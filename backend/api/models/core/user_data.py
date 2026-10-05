@@ -4,6 +4,12 @@ import uuid
 
 
 class UserData(models.Model):
+    """
+    Primary user model representing employees and system actors.
+
+    Serves as the custom authentication entity containing personal information,
+    organization hierarchy (department and manager), security credentials, and project memberships.
+    """
 
     class Meta:
         constraints = [
@@ -28,8 +34,6 @@ class UserData(models.Model):
         ('active', 'Active'),
         ('inactive', 'Inactive'),
     ]
-
-    
 
     id = models.UUIDField(
         primary_key=True,
@@ -97,10 +101,6 @@ class UserData(models.Model):
         default='active'
     )
 
-    
-
-    
-
     # ------------------------
     # Additional Information
     # ------------------------
@@ -135,6 +135,7 @@ class UserData(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __init__(self, *args, **kwargs):
+        """Initialize instance and capture string role/department kwargs for deferred lookup."""
         super().__init__(*args, **kwargs)
         # Handle string kwargs or initial values during initialization without hitting DB
         self._role_name = kwargs.get('role')
@@ -142,12 +143,14 @@ class UserData(models.Model):
 
     @property
     def role(self):
+        """Get role name string either from pending assignment or referenced Role record."""
         if getattr(self, '_role_name', None) is not None:
             return self._role_name
         return self.role_link.name if self.role_link else ""
 
     @role.setter
     def role(self, value):
+        """Set role via Role instance or string name."""
         from api.models import Role
         if not value:
             self.role_link = None
@@ -167,12 +170,14 @@ class UserData(models.Model):
 
     @property
     def department(self):
+        """Get department name string either from pending assignment or referenced Department record."""
         if getattr(self, '_department_name', None) is not None:
             return self._department_name
         return self.department_link.name if self.department_link else ""
 
     @department.setter
     def department(self, value):
+        """Set department via Department instance or string name."""
         from api.models import Department
         if not value:
             self.department_link = None
@@ -185,6 +190,7 @@ class UserData(models.Model):
             self._department_name = value.strip()
 
     def save(self, *args, **kwargs):
+        """Resolve deferred role and department references before writing to database."""
         from api.models import Role, Department
 
         role_name = getattr(self, '_role_name', None)
@@ -209,23 +215,30 @@ class UserData(models.Model):
 
     @property
     def is_authenticated(self):
+        """Compatibility property for Django auth framework."""
         return True
 
     @property
     def is_anonymous(self):
+        """Compatibility property for Django auth framework."""
         return False
 
     def check_password(self, raw_password):
+        """Verify candidate raw password against salted hash."""
         from django.contrib.auth.hashers import check_password
         return check_password(raw_password, self.password)
 
     def set_password(self, raw_password):
+        """Hash raw password and assign to password attribute."""
         from django.contrib.auth.hashers import make_password
         self.password = make_password(raw_password)
 
     def get_session_auth_hash(self):
+        """Generate HMAC session verification hash based on the current password hash."""
         from django.utils.crypto import salted_hmac
         return salted_hmac('api.UserData.get_session_auth_hash', self.password).hexdigest()
 
     def __str__(self):
+        """Return username representation."""
         return self.user_name
+

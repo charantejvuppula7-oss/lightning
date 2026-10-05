@@ -80,17 +80,30 @@ class Project(models.Model):
     points_per_working_day = models.IntegerField(default=2)
 
     def clean(self):
+        """
+        Validate date range consistency.
+
+        Raises:
+            ValidationError: If `end_date` is earlier than `start_date`.
+        """
         from django.core.exceptions import ValidationError
         if self.start_date and self.end_date and self.end_date < self.start_date:
             raise ValidationError({'end_date': 'Must be on or after start_date.'})
 
     def validate_deletion(self):
+        """
+        Ensure project has no dependent records before deletion.
+
+        Raises:
+            ValidationError: If tasks, milestones, sprints, files, links, activities, or messages exist.
+        """
         from django.core.exceptions import ValidationError
         if (self.tasks.exists() or self.milestones_set.exists() or self.sprints.exists() or
                 self.resource_files_set.exists() or self.links.exists() or
                 self.activities.exists() or
                 hasattr(self, 'chat_room') and self.chat_room.messages.exists()):
             raise ValidationError({'detail': 'Project has dependent records.'})
+
     
     
 

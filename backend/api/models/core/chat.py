@@ -120,8 +120,16 @@ class ProjectChatMessage(models.Model):
 
 
 class ProjectChatReaction(models.Model):
+    """
+    Emoji or status reaction attached to a specific chat message by a user.
+    """
     message = models.ForeignKey(ProjectChatMessage, on_delete=models.CASCADE, related_name='reactions')
     user = models.ForeignKey('UserData', on_delete=models.CASCADE)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['message', 'user'], name='unique_chat_reaction')]
+
+    def __str__(self):
+        """String representation of reaction."""
+        return f"Reaction by {self.user.user_name} on {self.message_id}"
+

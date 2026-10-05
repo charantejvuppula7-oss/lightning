@@ -1,4 +1,10 @@
-"""Email delivery and in-app deadline notification services."""
+"""
+Email delivery and in-app deadline notification services.
+
+This module coordinates transactional notification lifecycles, handling both:
+1. In-app notifications stored in the `Notification` table for live UI alerting.
+2. Outbox-based asynchronous emails stored in `EmailOutbox` for background dispatch.
+"""
 
 from django.conf import settings
 from django.utils import timezone
@@ -9,6 +15,19 @@ from apps.notifications.email_outbox import enqueue_emails
 
 
 def schedule_account_notice(user, actor):
+    """
+    Queue a welcome email notification for a newly provisioned user account.
+
+    Constructs the recipient profile, account display name, and password reset
+    link, then enqueues an `ACCOUNT_CREATED` message into the `EmailOutbox`.
+
+    Args:
+        user (CustomUser): The newly created user instance who will receive the notice.
+        actor (CustomUser): The administrator or creator who provisioned the account.
+
+    Returns:
+        None
+    """
     email_data = {
         'to_email': user.email,
         'user_display_name': f'{user.first_name} {user.last_name}'.strip() or user.user_name,
@@ -20,10 +39,37 @@ def schedule_account_notice(user, actor):
 
 
 def schedule_assignment_notice(task, actor):
+    """
+    Convenience helper to dispatch notifications for a single assigned task.
+
+    Delegates to `schedule_assignment_notices` with a single-item task list.
+
+    Args:
+        task (Task): The task that was assigned.
+        actor (CustomUser): The authenticated user making the assignment.
+
+    Returns:
+        None
+    """
     schedule_assignment_notices([task], actor)
 
 
 def schedule_assignment_notices(tasks, actor):
+    """
+    Queue in-app and email notifications when tasks are assigned to users.
+
+    For each task with a valid assignee:
+    1. Creates an in-app `Notification` record (TASK_ASSIGNED) with local date.
+    2. Builds email payload for background dispatch if the assignee has an email.
+    3. Bulk inserts in-app notifications and queues email outbox records.
+
+    Args:
+        tasks (Iterable[Task]): Collection of task instances that received assignments.
+        actor (CustomUser): The user/manager who assigned the tasks.
+
+    Returns:
+        None
+    """
     messages = []
     in_app = []
     assigned_by_name = f'{actor.first_name} {actor.last_name}'.strip() or actor.user_name
@@ -53,12 +99,31 @@ def schedule_assignment_notices(tasks, actor):
 
 
 def generate_due_notifications(today=None):
-    """Persist one alert per recipient, resource, type, and local day."""
+    """
+    Scan tasks and dependencies to persist daily deadline alerts.
+
+    Generates alerts for:
+    - Tasks due today (TASK_DUE_TODAY)
+    - Tasks overdue (TASK_OVERDUE)
+    - Dependencies due today (DEPENDENCY_DUE_TODAY)
+    - Dependencies overdue (DEPENDENCY_OVERDUE)
+
+    Guarantees idempotency by deduplicating against existing notifications for
+    (user_id, notification_type, resource_id, notification_date).
+    Uses chunked memory iterators and batch inserts for database scalability.
+
+    Args:
+        today (date, optional): Reference date for comparison. Defaults to timezone.localdate().
+
+    Returns:
+        int: Number of newly created notification records.
+    """
     today = today or timezone.localdate()
     pending = []
     created_count = 0
 
     def flush():
+        """Batch insert pending notifications and filter out duplicates already existing in DB."""
         nonlocal created_count
         if not pending:
             return
@@ -76,6 +141,7 @@ def generate_due_notifications(today=None):
         pending.clear()
 
     def queue(notification):
+        """Append to pending queue, flushing when threshold reaches 500 items."""
         pending.append(notification)
         if len(pending) == 500:
             flush()
