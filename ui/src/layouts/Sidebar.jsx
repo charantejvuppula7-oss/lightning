@@ -41,7 +41,7 @@ function SidebarIcon({ name, role }) {
   return <svg className="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{iconPaths[name]}</svg>
 }
 
-export default function Sidebar({ active, effectiveRole = 'user' }) {
+export default function Sidebar({ active, effectiveRole = 'user', onLogout }) {
   const navigate = useNavigate()
   const storageKey = `${effectiveRole}-sidebar-collapsed`
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(storageKey) === 'true')
@@ -50,6 +50,10 @@ export default function Sidebar({ active, effectiveRole = 'user' }) {
   const [logoutError, setLogoutError] = useState('')
   const dashboardPath = getRoleDashboard(effectiveRole)
   const signOut = async () => {
+    if (onLogout) {
+      await onLogout()
+      return
+    }
     if (loggingOut) return
     setLoggingOut(true)
     setLogoutError('')

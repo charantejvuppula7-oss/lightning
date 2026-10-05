@@ -8,13 +8,22 @@ import ChatPage from './features/chat/ChatPage.jsx'
 import { ProjectSelectionProvider } from './features/projects/ProjectSelection.jsx'
 import ProjectsPage from './features/projects/ProjectsPage.jsx'
 import ProjectEditorPage from './features/projects/editor/ProjectEditorPage.jsx'
+import PmProjects from './features/projects/pm_projects.jsx'
+import ProjectManagerDashboard from './modules/project-manager/dashboard.jsx'
+import UserDashboard from './modules/user/user_dashboard.jsx'
 import PageLayout from './layouts/PageLayout.jsx'
 import { MyProfile } from './features/profile/index.js'
 import NotificationsPage from './features/notifications/NotificationsPage.jsx'
 import { NotificationPopup } from './features/notifications/NotificationPopup.jsx'
 import './App.css'
 
-function Dashboard({ user }) {
+function Dashboard({ user, variant }) {
+  if (variant === 'user' || user?.role === 'Regular User' || user?.role === 'User') {
+    return <UserDashboard user={user} />
+  }
+  if (user?.role === 'Project Manager') {
+    return <ProjectManagerDashboard user={user} />
+  }
   return (
     <section className="dashboard-placeholder">
       <h1>{user.role} dashboard</h1>
@@ -23,12 +32,12 @@ function Dashboard({ user }) {
   )
 }
 
-function DashboardRoute({ allowedRoles }) {
+function DashboardRoute({ allowedRoles, variant }) {
   return (
     <ProtectedRoute allowedRoles={allowedRoles}>
       {(user) => (
         <PageLayout user={user}>
-          <Dashboard user={user} />
+          <Dashboard user={user} variant={variant} />
         </PageLayout>
       )}
     </ProtectedRoute>
@@ -84,7 +93,7 @@ export default function App() {
         <Route path="/reset-password" element={<ForgotPasswordPage mode="reset" />} />
         <Route path="/admin/dashboard" element={<DashboardRoute allowedRoles={['Administrator']} />} />
         <Route path="/pm/dashboard" element={<DashboardRoute allowedRoles={['Project Manager']} />} />
-        <Route path="/user/dashboard" element={<DashboardRoute />} />
+        <Route path="/user/dashboard" element={<DashboardRoute variant="user" />} />
         <Route path="/profile" element={<ProfileRoute />} />
         <Route path="/user/profile" element={<ProfileRoute />} />
         <Route path="/pm/profile" element={<ProfileRoute allowedRoles={['Project Manager']} />} />
@@ -95,6 +104,7 @@ export default function App() {
         <Route path="/admin/notifications" element={<NotificationsRoute allowedRoles={['Administrator']} />} />
         <Route path="/tasks" element={<PageLayout><TasksPage /></PageLayout>} />
         <Route path="/projects" element={<ProjectsRoute />} />
+        <Route path="/pm/projects" element={<PageLayout><PmProjects /></PageLayout>} />
         <Route path="/projects/new" element={<ProjectCreateRoute />} />
         <Route path="/projects/:projectId/edit" element={<ProjectEditRoute />} />
         <Route path="/dependencies" element={<PageLayout><DependenciesPage /></PageLayout>} />
