@@ -5,13 +5,6 @@ import { getRoleDashboard } from '../utils/roles.js'
 import logo from '../assets/lightning-logo-light.png'
 import icon from '../assets/lightning-icon.png'
 
-const links = [
-  ['Dashboard', 'dashboard', '#'], ['Projects', 'projects', '/projects'], ['Tasks', 'tasks', '/tasks'],
-  ['Dependencies', 'dependencies', '/dependencies'], ['Users', 'users', '#'], ['Chat', 'chat', '/chat'],
-  ['Approvals', 'approvals', '#'], ['Workload', 'workload', '#'], ['Roles & Permissions', 'roles', '#'], ['Calendar', 'calendar', '/calendar'],
-  ['Document', 'document', '#'], ['Audit logs', 'audit', '#'],
-]
-
 const iconPaths = {
   dashboard: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18M9 12h12" /></>,
   projects: <><path d="M3 7h7l2 2h9l-2 11H3z" /><path d="M3 7V5h7l2 2" /></>,
@@ -25,20 +18,51 @@ const iconPaths = {
   calendar: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></>,
   document: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h6" />,
   audit: <><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5m4-1v5l4 2" /></>,
+  database: <><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" /></>,
 }
 
 const materialIcons = {
-  dashboard: 'space_dashboard', projects: 'folder_open', tasks: 'assignment_turned_in',
-  dependencies: 'account_tree', users: 'group', chat: 'chat', approvals: 'fact_check',
-  workload: 'monitoring', roles: 'admin_panel_settings', calendar: 'calendar_today',
-  document: 'description', audit: 'history',
+  dashboard: 'space_dashboard',
+  projects: 'folder_open',
+  tasks: 'assignment_turned_in',
+  dependencies: 'account_tree',
+  users: 'group',
+  chat: 'chat',
+  approvals: 'fact_check',
+  workload: 'monitoring',
+  roles: 'admin_panel_settings',
+  calendar: 'calendar_today',
+  document: 'description',
+  audit: 'history',
+  database: 'database',
 }
 
 function SidebarIcon({ name, role }) {
-  if (role !== 'user' || !['dashboard', 'tasks', 'dependencies', 'chat', 'calendar', 'document'].includes(name)) {
-    return <span className="material-symbols-outlined sidebar-icon" aria-hidden="true">{materialIcons[name]}</span>
+  const useCustomIcon = role === 'user'
+    && ['dashboard', 'tasks', 'dependencies', 'chat', 'calendar', 'document'].includes(name)
+
+  if (!useCustomIcon) {
+    return (
+      <span className="material-symbols-outlined sidebar-icon" aria-hidden="true">
+        {materialIcons[name]}
+      </span>
+    )
   }
-  return <svg className="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{iconPaths[name]}</svg>
+
+  return (
+    <svg
+      className="sidebar-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {iconPaths[name]}
+    </svg>
+  )
 }
 
 export default function Sidebar({ active, effectiveRole = 'user', onLogout }) {
@@ -49,6 +73,8 @@ export default function Sidebar({ active, effectiveRole = 'user', onLogout }) {
   const [loggingOut, setLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState('')
   const dashboardPath = getRoleDashboard(effectiveRole)
+  const links = getSidebarElements(effectiveRole)
+
   const signOut = async () => {
     if (onLogout) {
       await onLogout()
@@ -65,27 +91,156 @@ export default function Sidebar({ active, effectiveRole = 'user', onLogout }) {
       setLoggingOut(false)
     }
   }
-  const toggleCollapsed = () => setCollapsed(value => {
-    localStorage.setItem(storageKey, String(!value))
-    return !value
-  })
-  return <aside className={`sidebar role-${effectiveRole}${collapsed ? ' collapsed' : ''}`}>
-    <div className="sidebar-brand">
-      <img className="sidebar-logo" src={collapsed ? icon : logo} alt="Lightning PDPM" />
-      <img className="sidebar-mobile-logo" src={icon} alt="" aria-hidden="true" />
-      <button type="button" onClick={toggleCollapsed} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}><span className="material-symbols-outlined" aria-hidden="true">{collapsed ? 'chevron_right' : 'chevron_left'}</span></button>
-    </div>
-    <nav className="sidebar-nav" aria-label="Main navigation">{links.map(([label, icon, target]) => {
-      const href = label === 'Dashboard' ? dashboardPath : target
-      const isActive = href !== '#' ? active === href || active.startsWith(`${href}/`) : selected?.label === label && selected.path === active
-      const content = <><SidebarIcon name={icon} role={effectiveRole} /><span className="sidebar-label">{label}</span></>
-      return href === '#'
-        ? <button key={label} type="button" aria-label={label} title={collapsed ? label : undefined} onClick={() => setSelected({ label, path: active })} className={`sidebar-link${isActive ? ' active' : ''}`}>{content}</button>
-        : <Link key={label} to={href} aria-label={label} title={collapsed ? label : undefined} onClick={() => setSelected(null)} aria-current={isActive ? 'page' : undefined} className={`sidebar-link${isActive ? ' active' : ''}`}>{content}</Link>
-    })}</nav>
-    <div className="sidebar-footer">
-      <button type="button" className="sidebar-logout" onClick={signOut} disabled={loggingOut} aria-label={loggingOut ? 'Logging out' : 'Logout'} title={collapsed ? 'Logout' : undefined}><span className="material-symbols-outlined logout-icon" aria-hidden="true">logout</span><span className="sidebar-label">{loggingOut ? 'Logging out...' : 'Logout'}</span></button>
-      {logoutError && <div role="alert" className="sidebar-logout-error">{logoutError}</div>}
-    </div>
-  </aside>
+  const toggleCollapsed = () => {
+    setCollapsed((value) => {
+      const nextValue = !value
+      localStorage.setItem(storageKey, String(nextValue))
+      return nextValue
+    })
+  }
+
+  return (
+    <aside className={`sidebar role-${effectiveRole}${collapsed ? ' collapsed' : ''}`}>
+      <div className="sidebar-brand">
+        <img className="sidebar-logo" src={collapsed ? icon : logo} alt="Lightning PDPM" />
+        <img className="sidebar-mobile-logo" src={icon} alt="" aria-hidden="true" />
+        <button
+          type="button"
+          onClick={toggleCollapsed}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+        >
+          <span className="material-symbols-outlined" aria-hidden="true">
+            {collapsed ? 'chevron_right' : 'chevron_left'}
+          </span>
+        </button>
+      </div>
+
+      <nav className="sidebar-nav" aria-label="Main navigation">
+        {links.map(([label, iconName, target]) => {
+          const href = iconName === 'dashboard' ? dashboardPath : target
+          const isActive = href !== '#'
+            ? active === href || active.startsWith(`${href}/`)
+            : selected?.label === label && selected.path === active
+          const className = `sidebar-link${isActive ? ' active' : ''}`
+          const content = (
+            <>
+              <SidebarIcon name={iconName} role={effectiveRole} />
+              <span className="sidebar-label">{label}</span>
+            </>
+          )
+
+          if (href === '#') {
+            return (
+              <button
+                key={label}
+                type="button"
+                aria-label={label}
+                title={collapsed ? label : undefined}
+                onClick={() => setSelected({ label, path: active })}
+                className={className}
+              >
+                {content}
+              </button>
+            )
+          }
+
+          return (
+            <Link
+              key={label}
+              to={href}
+              aria-label={label}
+              title={collapsed ? label : undefined}
+              onClick={() => setSelected(null)}
+              aria-current={isActive ? 'page' : undefined}
+              className={className}
+            >
+              {content}
+            </Link>
+          )
+        })}
+      </nav>
+
+      <div className="sidebar-footer">
+        <button
+          type="button"
+          className="sidebar-logout"
+          onClick={signOut}
+          disabled={loggingOut}
+          aria-label={loggingOut ? 'Logging out' : logoutLabel(effectiveRole)}
+          title={collapsed ? logoutLabel(effectiveRole) : undefined}
+        >
+          <span className="material-symbols-outlined logout-icon" aria-hidden="true">
+            logout
+          </span>
+          <span className="sidebar-label">
+            {loggingOut ? 'Logging out...' : logoutLabel(effectiveRole)}
+          </span>
+        </button>
+        {logoutError && (
+          <div role="alert" className="sidebar-logout-error">
+            {logoutError}
+          </div>
+        )}
+      </div>
+    </aside>
+  )
 }
+
+function logoutLabel(role) {
+  return role === 'admin' ? 'Sign Out' : 'Logout'
+}
+
+function getSidebarElements(role) {
+  if (role === 'admin') return adminSidebarElements
+  if (role === 'pm') return pmSidebarElements
+  return userSidebarElements
+}
+
+// Admin sidebar elements and access restrictions.
+const adminSidebarElements = [
+  ['Overview', 'dashboard', '#'],
+  ['All Projects & PMs', 'projects', '/projects'],
+  ['Tasks', 'tasks', '/tasks'],
+  ['Dependencies', 'dependencies', '/dependencies'],
+  ['Project Chat', 'chat', '/chat'],
+  ['Approvals', 'approvals', '#'],
+  ['Workload', 'workload', '#'],
+  ['Documents', 'document', '#'],
+  ['Users & Accounts', 'users', '#'],
+  ['Roles & Permissions', 'roles', '#'],
+  ['Database Explorer', 'database', '#'],
+  ['Audit Logs', 'audit', '#'],
+]
+
+// PM sidebar elements and access restrictions.
+const pmSidebarElements = [
+  ['Dashboard', 'dashboard', '#'],
+  ['Projects', 'projects', '/projects'],
+  ['Tasks', 'tasks', '/tasks'],
+  ['Dependencies', 'dependencies', '/dependencies'],
+  ['Users', 'users', '#'],
+  ['Chat', 'chat', '/chat'],
+  ['Approvals', 'approvals', '#'],
+  ['Workload', 'workload', '#'],
+  ['Roles & Permission', 'roles', '#'],
+  ['Calendar', 'calendar', '/calendar'],
+  ['Document', 'document', '#'],
+  ['Audit logs', 'audit', '#'],
+]
+
+// User sidebar elements and access restrictions. New roles use this list by default.
+const userSidebarElements = [
+  ['Dashboard', 'dashboard', '#'],
+  ['Tasks', 'tasks', '/tasks'],
+  ['Projects', 'projects', '/projects'],
+  ['Dependencies', 'dependencies', '/dependencies'],
+  ['Chats', 'chat', '/chat'],
+  ['Approvals', 'approvals', '#'],
+  ['Calendar', 'calendar', '/calendar'],
+  ['Document', 'document', '#'],
+  ['Audit Logs', 'audit', '#'],
+  ['Users', 'users', '#'],
+  ['Roles & Permissions', 'roles', '#'],
+  ['Workload', 'workload', '#'],
+]
