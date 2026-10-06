@@ -15,6 +15,7 @@ import PageLayout from './layouts/PageLayout.jsx'
 import { MyProfile } from './features/profile/index.js'
 import NotificationsPage from './features/notifications/NotificationsPage.jsx'
 import { NotificationPopup } from './features/notifications/NotificationPopup.jsx'
+import { ApiLogsPage, AuditLogsPage, DatabaseExplorerPage } from './features/audit/index.js'
 import './App.css'
 
 function Dashboard({ user, variant }) {
@@ -85,7 +86,6 @@ function PermissionPageRoute({ module, children }) {
   </ProtectedRoute>
 }
 
-
 export default function App() {
   return (
     <BrowserRouter>
@@ -111,12 +111,29 @@ export default function App() {
         <Route path="/admin/notifications" element={<NotificationsRoute allowedRoles={['Administrator']} />} />
         <Route path="/tasks" element={<PermissionPageRoute module="Tasks">{(user) => <TasksPage user={user} />}</PermissionPageRoute>} />
         <Route path="/projects" element={<ProjectsRoute />} />
-        <Route path="/pm/projects" element={<PageLayout><PmProjects /></PageLayout>} />
+        <Route path="/pm/projects" element={<ProtectedRoute allowedRoles={['Project Manager']}>
+          {(user) => <PageLayout user={user}><PmProjects /></PageLayout>}
+        </ProtectedRoute>} />
         <Route path="/projects/new" element={<ProjectCreateRoute />} />
         <Route path="/projects/:projectId/edit" element={<ProjectEditRoute />} />
         <Route path="/dependencies" element={<PermissionPageRoute module="Dependencies">{(user) => <DependenciesPage user={user} />}</PermissionPageRoute>} />
-        <Route path="/calendar" element={<PageLayout><CalendarPage /></PageLayout>} />
-        <Route path="/chat" element={<PageLayout><ChatPage /></PageLayout>} />
+        <Route path="/calendar" element={<PermissionPageRoute module="Tasks"><CalendarPage /></PermissionPageRoute>} />
+        <Route path="/chat" element={<PermissionPageRoute module="Projects"><ChatPage /></PermissionPageRoute>} />
+        <Route path="/admin/api-logs" element={
+          <ProtectedRoute allowedRoles={['Administrator']}>
+            {(user) => <PageLayout user={user}><ApiLogsPage /></PageLayout>}
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/audit-logs" element={
+          <ProtectedRoute allowedRoles={['Administrator']}>
+            {(user) => <PageLayout user={user}><AuditLogsPage /></PageLayout>}
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/db-explorer" element={
+          <ProtectedRoute allowedRoles={['Administrator']}>
+            {(user) => <PageLayout user={user}><DatabaseExplorerPage /></PageLayout>}
+          </ProtectedRoute>
+        } />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
       </ProjectSelectionProvider>

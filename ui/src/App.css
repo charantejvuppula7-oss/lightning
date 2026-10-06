@@ -106,3 +106,53 @@
   .chat-layout { height: calc(100dvh - 108px); grid-template-columns: 1fr; }
   .chat-details { display: none; }
 }
+
+/* =========================================================
+   Admin Panel — API Logs · Audit Logs · Database Explorer
+   ========================================================= */
+.admin-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; margin-bottom: 4px; }
+.admin-input { height: 34px; border: 1px solid var(--color-slate-200); border-radius: 6px; padding: 0 10px; font: inherit; font-size: 13px; color: var(--color-slate-900); background: var(--color-white); min-width: 140px; }
+.admin-input-wide { min-width: 220px; }
+.admin-input:focus { outline: 2px solid var(--color-primary); outline-offset: 2px; border-color: var(--color-primary); }
+.admin-select { height: 34px; border: 1px solid var(--color-slate-200); border-radius: 6px; padding: 0 10px; font: inherit; font-size: 13px; color: var(--color-slate-900); background: var(--color-white); cursor: pointer; }
+.admin-select:focus { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.admin-btn { height: 34px; padding: 0 16px; border: none; border-radius: 6px; background: var(--color-primary); color: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.admin-btn:hover { background: var(--color-primary-hover); }
+.admin-btn-ghost { background: var(--color-slate-100); color: var(--color-slate-600); }
+.admin-btn-ghost:hover { background: var(--color-slate-200); color: var(--color-slate-900); }
+.admin-meta { font-size: 12px; color: var(--color-slate-500); padding: 8px 0 4px; }
+.admin-meta-text { font-size: 12px; color: var(--color-slate-500); }
+.admin-table-wrap { overflow-x: auto; border: 1px solid var(--color-slate-200); border-radius: 10px; background: var(--color-white); }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.admin-table thead tr { background: var(--color-slate-50); border-bottom: 1px solid var(--color-slate-200); }
+.admin-table th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--color-slate-500); white-space: nowrap; }
+.admin-table td { padding: 10px 14px; border-bottom: 1px solid var(--color-slate-100); color: #374151; white-space: nowrap; max-width: 320px; overflow: hidden; text-overflow: ellipsis; }
+.admin-table tr:last-child td { border-bottom: none; }
+.admin-table tbody tr:hover td { background: var(--color-slate-50); }
+.admin-table-state { padding: 32px; text-align: center; color: var(--color-slate-400); font-size: 14px; }
+.admin-table-error { color: #dc2626; }
+.admin-table-empty { text-align: center; color: var(--color-slate-400); padding: 32px; }
+.admin-code { font-family: 'Consolas','Menlo',monospace; font-size: 12px; background: var(--color-slate-100); padding: 2px 5px; border-radius: 4px; }
+.admin-null { color: var(--color-slate-400); font-style: italic; font-size: 12px; }
+.admin-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.admin-badge-green  { background: #dcfce7; color: #15803d; }
+.admin-badge-red    { background: #fee2e2; color: #dc2626; }
+.admin-badge-yellow { background: #fef9c3; color: #a16207; }
+.admin-badge-blue   { background: #dbeafe; color: #1d4ed8; }
+.admin-badge-neutral{ background: var(--color-slate-100); color: var(--color-slate-600); }
+.admin-paginator { display: flex; align-items: center; gap: 12px; padding: 14px 0 6px; }
+.admin-page-btn { height: 32px; padding: 0 14px; border: 1px solid var(--color-slate-200); border-radius: 6px; background: var(--color-white); color: #374151; font: inherit; font-size: 13px; cursor: pointer; }
+.admin-page-btn:disabled { opacity: .4; cursor: not-allowed; }
+.admin-page-btn:not(:disabled):hover { background: var(--color-slate-50); }
+.admin-page-info { font-size: 13px; color: var(--color-slate-500); }
+.db-explorer-layout { display: grid; grid-template-columns: 240px 1fr; gap: 16px; margin-top: 16px; align-items: start; }
+.db-table-list { background: var(--color-white); border: 1px solid var(--color-slate-200); border-radius: 10px; padding: 10px; max-height: calc(100vh - 220px); overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.db-table-item { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border: none; border-radius: 6px; background: transparent; text-align: left; font: inherit; font-size: 13px; color: #374151; cursor: pointer; }
+.db-table-item:hover { background: var(--color-slate-50); }
+.db-table-item-active { background: var(--color-primary-subtle); color: var(--color-primary); font-weight: 600; }
+.db-table-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: 'Consolas',monospace; font-size: 12px; }
+.db-table-count { flex: 0 0 auto; font-size: 11px; color: var(--color-slate-400); }
+.db-table-detail { min-width: 0; }
+.db-detail-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--color-slate-900); }
+@media (max-width: 900px) { .db-explorer-layout { grid-template-columns: 1fr; } .db-table-list { max-height: 200px; } }
+

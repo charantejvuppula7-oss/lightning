@@ -38,7 +38,7 @@ const materialIcons = {
 }
 
 function SidebarIcon({ name, role }) {
-  const useCustomIcon = role === 'user'
+  const useCustomIcon = !['admin', 'pm'].includes(role)
     && ['dashboard', 'tasks', 'dependencies', 'chat', 'calendar', 'document'].includes(name)
 
   if (!useCustomIcon) {
@@ -65,7 +65,7 @@ function SidebarIcon({ name, role }) {
   )
 }
 
-export default function Sidebar({ active, effectiveRole = 'user', onLogout }) {
+export default function Sidebar({ active, effectiveRole = 'developer', permissions = {}, onLogout }) {
   const navigate = useNavigate()
   const storageKey = `${effectiveRole}-sidebar-collapsed`
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(storageKey) === 'true')
@@ -73,7 +73,7 @@ export default function Sidebar({ active, effectiveRole = 'user', onLogout }) {
   const [loggingOut, setLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState('')
   const dashboardPath = getRoleDashboard(effectiveRole)
-  const links = getSidebarElements(effectiveRole)
+  const links = getSidebarElements(permissions, effectiveRole)
 
   const signOut = async () => {
     if (onLogout) {
@@ -117,8 +117,8 @@ export default function Sidebar({ active, effectiveRole = 'user', onLogout }) {
       </div>
 
       <nav className="sidebar-nav" aria-label="Main navigation">
-        {links.map(([label, iconName, target]) => {
-          const href = iconName === 'dashboard' ? dashboardPath : target
+        {links.map(({ label, icon: iconName, to }) => {
+          const href = to === 'dashboard' ? dashboardPath : to
           const isActive = href !== '#'
             ? active === href || active.startsWith(`${href}/`)
             : selected?.label === label && selected.path === active
@@ -191,56 +191,26 @@ function logoutLabel(role) {
   return role === 'admin' ? 'Sign Out' : 'Logout'
 }
 
-function getSidebarElements(role) {
-  if (role === 'admin') return adminSidebarElements
-  if (role === 'pm') return pmSidebarElements
-  return userSidebarElements
+const navigation = [
+  { label: 'Dashboard', icon: 'dashboard', to: 'dashboard' },
+  { label: 'Projects', icon: 'projects', to: '/projects', module: 'Projects' },
+  { label: 'Tasks', icon: 'tasks', to: '/tasks', module: 'Tasks' },
+  { label: 'Dependencies', icon: 'dependencies', to: '/dependencies', module: 'Dependencies' },
+  { label: 'Users', icon: 'users', to: '#', module: 'User Management' },
+  { label: 'Chat', icon: 'chat', to: '/chat', module: 'Projects' },
+  { label: 'Approvals', icon: 'approvals', to: '#', adminOnly: true },
+  { label: 'Workload', icon: 'workload', to: '#', module: 'TeamWorLoad' },
+  { label: 'Roles & Permissions', icon: 'roles', to: '#', module: 'Roles & permissions' },
+  { label: 'Calendar', icon: 'calendar', to: '/calendar', module: 'Tasks' },
+  { label: 'Documents', icon: 'document', to: '#', module: 'Documents' },
+  { label: 'Audit Logs', icon: 'audit', to: '/admin/audit-logs', adminOnly: true },
+  { label: 'Database Explorer', icon: 'database', to: '/admin/db-explorer', adminOnly: true },
+  { label: 'API Logs', icon: 'audit', to: '/admin/api-logs', adminOnly: true },
+]
+
+function getSidebarElements(permissions, role) {
+  return navigation.filter(item => {
+    if (item.adminOnly) return role === 'admin'
+    return !item.module || permissions?.[item.module]?.View === true
+  })
 }
-
-// Admin sidebar elements and access restrictions.
-const adminSidebarElements = [
-  ['Overview', 'dashboard', '#'],
-  ['All Projects & PMs', 'projects', '/projects'],
-  ['Tasks', 'tasks', '/tasks'],
-  ['Dependencies', 'dependencies', '/dependencies'],
-  ['Project Chat', 'chat', '/chat'],
-  ['Approvals', 'approvals', '#'],
-  ['Workload', 'workload', '#'],
-  ['Documents', 'document', '#'],
-  ['Users & Accounts', 'users', '#'],
-  ['Roles & Permissions', 'roles', '#'],
-  ['Database Explorer', 'database', '#'],
-  ['Audit Logs', 'audit', '#'],
-]
-
-// PM sidebar elements and access restrictions.
-const pmSidebarElements = [
-  ['Dashboard', 'dashboard', '#'],
-  ['Projects', 'projects', '/projects'],
-  ['Tasks', 'tasks', '/tasks'],
-  ['Dependencies', 'dependencies', '/dependencies'],
-  ['Users', 'users', '#'],
-  ['Chat', 'chat', '/chat'],
-  ['Approvals', 'approvals', '#'],
-  ['Workload', 'workload', '#'],
-  ['Roles & Permission', 'roles', '#'],
-  ['Calendar', 'calendar', '/calendar'],
-  ['Document', 'document', '#'],
-  ['Audit logs', 'audit', '#'],
-]
-
-// User sidebar elements and access restrictions. New roles use this list by default.
-const userSidebarElements = [
-  ['Dashboard', 'dashboard', '#'],
-  ['Tasks', 'tasks', '/tasks'],
-  ['Projects', 'projects', '/projects'],
-  ['Dependencies', 'dependencies', '/dependencies'],
-  ['Chats', 'chat', '/chat'],
-  ['Approvals', 'approvals', '#'],
-  ['Calendar', 'calendar', '/calendar'],
-  ['Document', 'document', '#'],
-  ['Audit Logs', 'audit', '#'],
-  ['Users', 'users', '#'],
-  ['Roles & Permissions', 'roles', '#'],
-  ['Workload', 'workload', '#'],
-]
