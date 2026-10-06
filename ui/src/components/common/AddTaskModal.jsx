@@ -5,7 +5,7 @@ import { canUsePermission, displayName, getApiError } from './modalUtils.js'
 
 const initialTask = () => ({ name: '', description: '', startDate: '', dueDate: '', priority: 'medium', sprint: '', milestone: '', feature: '', assignee: '', reviewer: '' })
 
-export default function AddTaskModal({ isOpen, onClose, projectId, projectName, users = [], sprints = [], milestones = [], features = [], permissions, user, onCreated }) {
+export default function AddTaskModal({ isOpen, onClose, projectId, projectName, users = [], sprints = [], milestones = [], features = [], permissions, user, onCreated, embedded = false }) {
   const [task, setTask] = useState(initialTask)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -35,9 +35,8 @@ export default function AddTaskModal({ isOpen, onClose, projectId, projectName, 
     finally { setSaving(false) }
   }
 
-  if (!allowed) return null
-  return <ModalShell isOpen={isOpen} onClose={close} title="Add Task" subtitle={projectName ? `Create a task for ${projectName}.` : 'Create a task for this project.'} wide>
-    <form className="project-modal-form" onSubmit={submit}>
+  if (!allowed || (embedded && !isOpen)) return null
+  const form = <form className="project-modal-form" onSubmit={submit}>
       {!projectId && <p className="project-modal-error">Select a project before opening this form.</p>}
       <div className="project-modal-row"><ModalField label="Task name" required><input maxLength={100} value={task.name} onChange={event => update('name', event.target.value)} placeholder="Task name" /></ModalField><ModalField label="Assigned to" required><select value={task.assignee} onChange={event => update('assignee', event.target.value)}><option value="">Select team member</option>{users.map(person => <option key={person.id} value={person.id}>{displayName(person)}</option>)}</select></ModalField></div>
       <ModalField label="Description"><textarea rows={3} value={task.description} onChange={event => update('description', event.target.value)} placeholder="Describe the task" /></ModalField>
@@ -48,5 +47,5 @@ export default function AddTaskModal({ isOpen, onClose, projectId, projectName, 
       {error && <p className="project-modal-error" role="alert">{error}</p>}
       <div className="project-modal-actions"><button type="button" onClick={close} disabled={saving}>Cancel</button><button className="primary" type="submit" disabled={saving || !projectId}>{saving ? 'Creating…' : 'Create task'}</button></div>
     </form>
-  </ModalShell>
+  return embedded ? form : <ModalShell isOpen={isOpen} onClose={close} title="Add Task" subtitle={projectName ? `Create a task for ${projectName}.` : 'Create a task for this project.'} wide>{form}</ModalShell>
 }

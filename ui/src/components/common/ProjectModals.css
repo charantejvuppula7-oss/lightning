@@ -44,5 +44,8 @@
 .task-empty h2 { margin: 0; color: #172033; font-size: 17px; }
 .task-empty p { margin: 7px 0 0; color: #64748b; font-size: 14px; }
 .project-modal-date-row { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)) auto; gap: 14px; align-items: end; }
+.project-modal-tabs { display: flex; gap: 20px; margin: -8px 0 20px; border-bottom: 1px solid #e2e8f0; }
+.project-modal-tabs button { padding: 0 4px 11px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #64748b; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.project-modal-tabs button.selected { border-bottom-color: #2169df; color: #2169df; }
 @media (max-width: 700px) { .project-modal { padding: 22px 18px; }.project-modal-header h2 { font-size: 20px; }.project-modal-header p { font-size: 14px; }.project-modal-row,.project-modal-feature-row { grid-template-columns: 1fr; }.project-modal-feature-row { padding: 14px; }.project-modal-actions { flex-wrap: wrap; } }
 @media (max-width: 700px) { .task-page-heading { align-items: flex-start; }.task-page-heading > div:first-child { flex-basis: 100%; }.dependency-project-picker { flex: 1 1 100%; }.task-project-picker { align-items: flex-start; flex-direction: column; }.project-modal-date-row { grid-template-columns: 1fr; }.task-list-card { align-items: flex-start; flex-direction: column; }.task-list-card dl { grid-template-columns: 90px 1fr; } }

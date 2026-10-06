@@ -108,7 +108,8 @@ export default function TasksPage({ user }) {
       projectName={projectNames.get(String(projectId))} users={users} sprints={sprints} milestones={projectData?.milestones || []} features={features}
       permissions={user?.permissions} user={user} onCreated={refreshTasks} />
     {addOpen && projectId && optionsLoading && <p className="task-options-loading">Loading project options…</p>}
-    {assignTask && !optionsLoading && <AssignTaskModal isOpen onClose={() => setAssignTask(null)} tasks={[assignTask]} users={users}
-      permissions={user?.permissions} user={user} onUpdated={refreshTasks} />}
+    {assignTask && !optionsLoading && <AssignTaskModal isOpen onClose={() => setAssignTask(null)} initialTab="reassign" tasks={[assignTask]} users={users}
+      projectId={assignTask.project} projectName={projectNames.get(String(assignTask.project))} sprints={sprints}
+      milestones={projectData?.milestones || []} features={features} permissions={user?.permissions} user={user} onUpdated={refreshTasks} />}
   </section>
 }
