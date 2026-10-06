@@ -11,7 +11,7 @@ class DependencySerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = TaskDependency
-        fields = ('id', 'task', 'depends_on', 'description', 'assigned_to',
+        fields = ('id', 'task', 'depends_on', 'description', 'dependency_type', 'assigned_to',
                   'due_date', 'status', 'Time_Taken', 'start_Time',
                   'pause_Time', 'created_at')
         read_only_fields = ('id', 'created_at')
@@ -31,4 +31,3 @@ class DependencySerializer(serializers.ModelSerializer):
             require_project_scope(self.context['request'].user, task.project)
         validate_model_attributes(TaskDependency, self.instance, attrs)
         return attrs
-

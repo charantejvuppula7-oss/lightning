@@ -82,6 +82,58 @@
 @media (max-width: 700px) { .project-editor { padding: 20px 16px 35px; }.project-grid.two,.project-grid.three,.project-grid.four,.department-grid { grid-template-columns: 1fr; }.project-card { padding: 18px; }.project-stepper button { flex-basis: 95px; }.project-editor-actions { flex-wrap: wrap; }.sprint-summary-bar { grid-template-columns: 1fr; }.sprint-summary-bar > div { border-right: 0; border-bottom: 1px solid #e0e7ff; } }
 .project-list-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(245px,1fr)); gap: 16px; }.project-list-grid .project-card h2 { font-size: 17px; margin: 0 0 15px; }.project-list-grid .project-card a { color: #2169d4; font-size: 13px; font-weight: 700; }
 
+/* Sprint roadmap and task creation steps */
+.holiday-select-heading { margin: 2px 0 4px; font-size: 13px; }
+.holiday-caption { margin: 0 0 12px !important; }
+.holiday-calendar { min-width: 0; }
+.holiday-calendar-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.holiday-calendar-heading button { width: 30px; height: 30px; border: 0; border-radius: 6px; background: transparent; color: #2563eb; font-size: 20px; cursor: pointer; }
+.holiday-calendar-heading button:hover { background: #eff6ff; }
+.holiday-calendar-heading strong { color: #1f2937; font-size: 13px; }
+.holiday-calendar-grid { display: grid; grid-template-columns: repeat(7,minmax(28px,1fr)); gap: 4px; }
+.holiday-calendar-grid > * { display: grid; min-height: 30px; place-items: center; }
+.holiday-calendar-grid .weekday { color: #94a3b8; font-size: 11px; }
+.holiday-calendar-grid button { border: 0; border-radius: 7px; background: #fff; color: #475569; font: inherit; font-size: 11px; cursor: pointer; }
+.holiday-calendar-grid button:hover:not(:disabled) { background: #eff6ff; color: #2563eb; }
+.holiday-calendar-grid button.outside { color: #cbd5e1; }
+.holiday-calendar-grid button.selected { background: #2563eb; color: #fff; }
+.holiday-calendar-grid button:disabled { cursor: default; opacity: .35; }
+.sprint-roadmap-card { padding: 22px 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.sprint-roadmap-card h2 { margin: 0 0 16px; font-size: 15px; }
+.sprint-roadmap-table-wrap { overflow-x: auto; border: 1px solid #dbe5f2; border-radius: 8px; }
+.sprint-roadmap-table { width: 100%; min-width: 650px; border-collapse: collapse; font-size: 12px; text-align: left; }
+.sprint-roadmap-table th { padding: 11px 14px; background: #eff4ff; color: #475569; font-weight: 700; }
+.sprint-roadmap-table td { padding: 11px 14px; border-top: 1px solid #e8eef6; color: #475569; }
+.sprint-roadmap-table td:nth-child(4) { color: #16a34a; font-weight: 650; }
+.sprint-row-edit { margin-top: 5px; }
+.sprint-row-edit summary { width: fit-content; color: #2563eb; font-size: 11px; cursor: pointer; }
+.sprint-row-edit > .project-grid,.sprint-row-edit > .project-field { margin: 12px 0; }
+.sprint-row-edit .project-field input { min-height: 36px; font-size: 12px; }
+.task-form-stack { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.task-form-card { padding: 20px; border-radius: 12px; }
+.task-form-card .project-card-heading { margin-bottom: 15px; padding-bottom: 0; border: 0; }
+.task-form-card .project-card-heading h2 { font-size: 15px; }
+.task-form-card .project-card-heading p { font-size: 11px; }
+.task-form-card > .project-grid,.task-form-card .project-grid { margin-bottom: 14px; gap: 12px; }
+.task-form-card .project-field { font-size: 11px; }
+.task-form-card .project-field input,.task-form-card .project-field textarea,.task-form-card .project-field select { min-height: 36px; padding: 8px 10px; font-size: 12px; }
+.dependency-add-trigger { width: 100%; min-height: 36px; border: 1px dashed #cbd5e1; border-radius: 7px; background: #f8fafc; color: #2563eb; font: inherit; font-size: 11px; text-align: left; cursor: pointer; }
+.task-dependency-editor { display: grid; gap: 10px; margin-top: 10px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; }
+.task-dependency-editor .project-row-heading { margin: 0; font-size: 11px; }
+.task-dependency-editor .project-row-heading button { border: 0; background: transparent; color: #dc2626; font: inherit; cursor: pointer; }
+.task-dependency-editor .project-field input,.task-dependency-editor .project-field select { min-height: 34px; }
+.task-added-card { padding: 16px; border-radius: 12px; }
+.task-added-heading { margin-bottom: 12px; }
+.task-added-list { gap: 8px; }
+.task-added-list article { padding: 10px; border-radius: 7px; }
+.task-added-list .project-row-heading { align-items: flex-start; }
+.task-added-list .project-row-heading button { border: 0; background: transparent; color: #2563eb; font: inherit; font-size: 11px; cursor: pointer; }
+.task-added-list .project-row-heading button:last-child { color: #dc2626; }
+.task-added-list .project-row-heading > div { gap: 4px; }
+.task-added-list dl { grid-template-columns: 64px minmax(0,1fr); font-size: 10px; }
+.task-step { align-items: start; }
+@media (max-width: 700px) { .sprint-roadmap-card { padding: 16px; }.task-form-card { padding: 16px; }.holiday-calendar-grid { gap: 2px; } }
+
 /* Project setup: PDR and resources */
 .project-step-shell { padding: 36px; border: 1px solid #dce5f2; border-radius: 16px; background: #fff; box-shadow: 0 8px 30px #0f172a08; }
 .project-resource-layout { grid-template-columns: minmax(0,1.05fr) minmax(0,1.35fr); gap: 24px; align-items: stretch; }

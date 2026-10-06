@@ -14,6 +14,8 @@ class TaskSerializer(serializers.ModelSerializer):
         """Map legacy casing 'Status' to canonical 'status'."""
         return super().to_internal_value(normalize_aliases(data, {'Status': 'status'}))
 
+    description = serializers.CharField(required=False, allow_blank=True)
+
     class Meta:
         model = Task
         fields = ('id', 'Task_Name', 'project', 'assigned_to', 'description', 'status',

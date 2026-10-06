@@ -130,7 +130,7 @@ class InitialDependencySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TaskDependency
-        fields = ('task_ref', 'depends_on_ref', 'description', 'assigned_to',
+        fields = ('task_ref', 'depends_on_ref', 'description', 'dependency_type', 'assigned_to',
                   'due_date', 'status')
 
 
@@ -368,8 +368,9 @@ class ProjectCreationResponseSerializer(ProjectSerializer):
         """Serialize task dependencies across all project tasks."""
         return [
             {'id': dependency.pk, 'task': dependency.task_id,
-              'depends_on': dependency.depends_on_id,
-             'description': dependency.description, 'assigned_to': dependency.assigned_to_id,
+             'depends_on': dependency.depends_on_id,
+             'description': dependency.description, 'dependency_type': dependency.dependency_type,
+             'assigned_to': dependency.assigned_to_id,
              'due_date': dependency.due_date, 'status': dependency.status}
             for task in project.tasks.all() for dependency in task.dependencies.all()
         ]

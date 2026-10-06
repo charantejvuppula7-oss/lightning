@@ -20,8 +20,8 @@ const empty = () => ({
 const milestoneItem = () => ({ key: key(), name: '', description: '', startDate: '', dueDate: '', features: [] })
 const featureItem = () => ({ key: key(), name: '', description: '', startDate: '', dueDate: '', status: 'pending', priority: 'medium' })
 const taskItem = () => ({ key: key(), name: '', description: '', startDate: '', dueDate: '', priority: 'medium',
-  assignee: '', reviewer: '', sprintKey: '', featureKey: '' })
-const dependencyItem = (taskKey = '') => ({ key: key(), taskKey, dependsOnKey: '', description: '', assignee: '', dueDate: '' })
+  assignee: '', reviewer: '', sprintKey: '', milestoneKey: '', featureKey: '' })
+const dependencyItem = (taskKey = '') => ({ key: key(), taskKey, dependsOnKey: '', description: '', dependencyType: 'optional', assignee: '', dueDate: '' })
 const dateOnly = value => value?.slice(0, 10) || ''
 const userName = user => `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.user_name
 const departmentMeta = {
@@ -65,18 +65,18 @@ const readableError = error => {
 
 function fromApi(project, files) {
   const milestones = (project.milestones || []).map(milestone => ({
-    id: milestone.id, key: milestone.id, name: milestone.name || '',
+    id: milestone.id, key: String(milestone.id), name: milestone.name || '',
     description: milestone.description || '', startDate: dateOnly(milestone.start_date),
     dueDate: dateOnly(milestone.due_date),
     features: (milestone.features || []).map(feature => ({
-      id: feature.id, key: feature.id, name: feature.feature_name || '',
+      id: feature.id, key: String(feature.id), name: feature.feature_name || '',
       description: feature.description || '', startDate: dateOnly(feature.feature_start_date),
       dueDate: dateOnly(feature.feature_due_date), status: feature.feature_status || 'pending',
       priority: feature.feature_priority || 'medium',
     })),
   }))
   const sprints = (project.sprints || []).map(sprint => ({
-    id: sprint.id, key: sprint.id, number: sprint.Sprint_No || '', name: sprint.Sprint_Name || '',
+    id: sprint.id, key: String(sprint.id), number: sprint.Sprint_No || '', name: sprint.Sprint_Name || '',
     startDate: dateOnly(sprint.Sprint_start_date), endDate: dateOnly(sprint.Sprint_end_date),
     excludeWeekends: sprint.exclude_weekends ?? true, members: sprint.team_members || [],
     offDays: (sprint.off_days || []).map(dateOnly),
@@ -85,12 +85,13 @@ function fromApi(project, files) {
     let priority = 'medium'
     try { priority = JSON.parse(task.Remarks || '{}').priority || 'medium' } catch { /* existing free text */ }
     return {
-      id: task.id, key: task.id, name: task.Task_Name || '', description: task.description || '',
+      id: task.id, key: String(task.id), name: task.Task_Name || '', description: task.description || '',
       startDate: dateOnly(task.planned_start_date), dueDate: dateOnly(task.Due_Date), priority,
       remarksRaw: task.Remarks || '', originalPriority: priority,
       assignee: task.assigned_to || '', reviewer: task.review_by || '',
-      sprintKey: sprints.find(sprint => sprint.id === task.sprint)?.key || '',
-      featureKey: milestones.flatMap(milestone => milestone.features).find(feature => feature.id === task.feature)?.key || '',
+      sprintKey: sprints.find(sprint => String(sprint.id) === String(task.sprint))?.key || '',
+      milestoneKey: milestones.find(milestone => milestone.features.some(feature => String(feature.id) === String(task.feature)))?.key || '',
+      featureKey: milestones.flatMap(milestone => milestone.features).find(feature => String(feature.id) === String(task.feature))?.key || '',
     }
   })
   return {
@@ -105,11 +106,12 @@ function fromApi(project, files) {
     departments: project.departments || [], members: project.team_members || [],
     milestones, sprints, tasks,
     dependencies: (project.dependencies || []).map(dependency => ({
-      id: dependency.id, key: dependency.id,
+      id: dependency.id, key: String(dependency.id),
       taskKey: tasks.find(task => task.id === dependency.task)?.key || '',
       dependsOnKey: tasks.find(task => task.id === dependency.depends_on)?.key || '',
       taskId: dependency.task, dependsOnId: dependency.depends_on,
-      description: dependency.description || '', assignee: dependency.assigned_to || '',
+      description: dependency.description || '', dependencyType: dependency.dependency_type || 'optional',
+      assignee: dependency.assigned_to || '',
       dueDate: dateOnly(dependency.due_date),
     })),
     pointsPerDay: project.points_per_working_day || 2,
@@ -198,7 +200,7 @@ export default function ProjectEditorPage({ user }) {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [errors, setErrors] = useState({})
-  const [holidayDate, setHolidayDate] = useState('')
+  const [holidayMonth, setHolidayMonth] = useState(() => new Date())
   const [sprintOffDates, setSprintOffDates] = useState({})
   const [openTeamDepartment, setOpenTeamDepartment] = useState(null)
   const [milestoneDraft, setMilestoneDraft] = useState(milestoneItem)
@@ -213,8 +215,7 @@ export default function ProjectEditorPage({ user }) {
   const visibleSteps = projectOnlyCreation ? steps.slice(0, 3) : steps
   const lastStep = visibleSteps.length - 1
   const draftKey = `${DRAFT_KEY}:${user?.id || 'anonymous'}`
-  const allFeatures = useMemo(() => form.milestones.flatMap(milestone => milestone.features), [form.milestones])
-  const selectedUsers = useMemo(() => options.users.filter(user => form.members.includes(user.id) || user.id === form.projectManager), [options.users, form.members, form.projectManager])
+  const selectedUsers = useMemo(() => options.users.filter(user => form.members.some(id => String(id) === String(user.id)) || String(user.id) === String(form.projectManager)), [options.users, form.members, form.projectManager])
   const departments = useMemo(() => [...options.departments].sort((a, b) => {
     const aIndex = departmentOrder.indexOf(a.name)
     const bIndex = departmentOrder.indexOf(b.name)
@@ -294,17 +295,21 @@ export default function ProjectEditorPage({ user }) {
   }
   const resetTaskDraft = () => { setTaskDraft(taskItem()); setEditingTaskKey(null) }
   const saveTaskDraft = () => {
-    if (!taskDraft.name.trim() || !taskDraft.assignee) {
-      setErrors(current => ({ ...current, tasks: 'Task name and assignee are required.' }))
+    if (!taskDraft.name.trim() || !taskDraft.sprintKey || !taskDraft.startDate || !taskDraft.dueDate || !taskDraft.milestoneKey || !taskDraft.featureKey || !taskDraft.assignee) {
+      setErrors(current => ({ ...current, tasks: 'Task name, sprint, dates, milestone, feature, and assignee are required.' }))
       return
     }
     if (taskDraft.startDate && taskDraft.dueDate && taskDraft.dueDate < taskDraft.startDate) {
       setErrors(current => ({ ...current, tasks: 'Task due date must be after its start date.' }))
       return
     }
+    if (taskDraft.reviewer && String(taskDraft.reviewer) === String(taskDraft.assignee)) {
+      setErrors(current => ({ ...current, tasks: 'The reviewer and assignee must be different team members.' }))
+      return
+    }
     setForm(current => ({ ...current, tasks: editingTaskKey
       ? current.tasks.map(item => item.key === editingTaskKey ? { ...item, ...taskDraft, key: item.key } : item)
-      : [...current.tasks, { ...taskDraft, key: key() }] }))
+      : [...current.tasks, { ...taskDraft }] }))
     setErrors(current => ({ ...current, tasks: '' }))
     resetTaskDraft()
   }
@@ -371,13 +376,27 @@ export default function ProjectEditorPage({ user }) {
     setMessage('Sprints generated. Review their dates and assignments before saving.')
   }
 
-  const goNext = () => {
+  const stepFields = [['projectCode', 'projectName', 'description', 'customer', 'projectManager', 'priority', 'projectType', 'startDate', 'endDate'],
+    ['links', 'pdrFile', 'pdrVersion', 'resourceFiles'], ['departments'], ['milestones'], ['sprints'], ['tasks']]
+  const validateStep = index => {
     const all = validate(form, projectOnlyCreation)
-    const stepKeys = [['projectCode', 'projectName', 'description', 'customer', 'projectManager', 'priority', 'projectType', 'startDate', 'endDate'],
-      ['links', 'pdrFile', 'pdrVersion', 'resourceFiles'], ['departments'], ['milestones'], ['sprints'], ['tasks']][step]
-    const found = Object.fromEntries(Object.entries(all).filter(([name]) => stepKeys.includes(name)))
+    const found = Object.fromEntries(Object.entries(all).filter(([name]) => stepFields[index]?.includes(name)))
     setErrors(found)
-    if (!Object.keys(found).length) { setStep(value => Math.min(lastStep, value + 1)); setMessage('') }
+    if (Object.keys(found).length) { setMessage(Object.values(found)[0]); return false }
+    setErrors(current => Object.fromEntries(Object.entries(current).filter(([name]) => !stepFields[index]?.includes(name))))
+    return true
+  }
+  const goNext = () => {
+    if (validateStep(step)) { setStep(value => Math.min(lastStep, value + 1)); setMessage('') }
+  }
+  const goToStep = target => {
+    if (target <= step) { setStep(target); setMessage(''); window.scrollTo({ top: 0, behavior: 'smooth' }); return }
+    for (let index = step; index < target; index += 1) {
+      if (!validateStep(index)) { setStep(index); return }
+    }
+    setStep(target)
+    setMessage('')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
   const save = async () => {
     const found = validate(form, projectOnlyCreation)
@@ -408,13 +427,23 @@ export default function ProjectEditorPage({ user }) {
     setMessage('Draft saved in this browser. You can continue later.')
   }
 
+  const holidayMonthStart = new Date(holidayMonth.getFullYear(), holidayMonth.getMonth(), 1)
+  const holidayCalendarStart = new Date(holidayMonthStart)
+  holidayCalendarStart.setDate(1 - ((holidayMonthStart.getDay() + 6) % 7))
+  const holidayCalendarDays = Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(holidayCalendarStart)
+    date.setDate(date.getDate() + index)
+    return date
+  })
+  const calendarDateKey = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
   if (loading) return <div className="project-editor"><p>Loading project setup…</p></div>
   return <div className="project-editor">
     <div className="project-breadcrumb"><Link to="/projects">Project</Link> <span>›</span> {visibleSteps[step]}</div>
     <header className="project-editor-header"><h1>{visibleSteps[step]}</h1><p>Step <strong>{step + 1}</strong> of {visibleSteps.length} · {projectId ? 'Edit project' : 'Create new project'}</p></header>
     <nav className="project-stepper" aria-label="Project setup steps">{visibleSteps.map((label, index) =>
       <button key={label} type="button" className={index === step ? 'active' : index < step ? 'done' : ''}
-        onClick={() => setStep(index)} aria-current={index === step ? 'step' : undefined}>
+        onClick={() => goToStep(index)} aria-current={index === step ? 'step' : undefined}>
         <span>{index < step ? '✓' : index + 1}</span><small>{label}</small>
       </button>)}</nav>
     {message && <div className="project-alert" role="alert">{message}</div>}
@@ -546,44 +575,35 @@ export default function ProjectEditorPage({ user }) {
       </section>
       <section className="sprint-config-card"><h2>Holidays</h2><p>select your weekends days</p>
         <div className="weekend-buttons">{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, visibleIndex) => { const index = (visibleIndex + 1) % 7; return <button key={day} type="button" className={form.weekendDays.includes(index) ? 'active' : ''} onClick={() => field('weekendDays', form.weekendDays.includes(index) ? form.weekendDays.filter(item => item !== index) : [...form.weekendDays, index])}>{day}</button> })}</div>
-        <div className="holiday-picker"><div><h3>Select Holidays to Exclude</h3><p>Weekends are off automatically — add any other holiday.</p><div className="project-holidays"><Field label="Holiday date"><input type="date" min={form.startDate} max={form.endDate} value={holidayDate} onChange={event => setHolidayDate(event.target.value)} /></Field><button className="project-secondary" type="button" onClick={() => { if (holidayDate && !form.holidays.includes(holidayDate)) field('holidays', [...form.holidays, holidayDate].sort()); setHolidayDate('') }}>Add holiday</button></div></div><div className="holiday-list"><h3>Selected Holidays</h3>{form.holidays.length ? form.holidays.map(day => <button key={day} type="button" onClick={() => field('holidays', form.holidays.filter(item => item !== day))}><span>{formatDate(day)}</span><span>×</span></button>) : <p>No holidays selected</p>}</div></div>
+        <h3 className="holiday-select-heading">Select Holidays to Exclude</h3><p className="holiday-caption">Weekends are off automatically — tap any date to mark a holiday.</p>
+        <div className="holiday-picker"><div className="holiday-calendar"><div className="holiday-calendar-heading"><button type="button" aria-label="Previous month" onClick={() => setHolidayMonth(new Date(holidayMonth.getFullYear(), holidayMonth.getMonth() - 1, 1))}>‹</button><strong>{holidayMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</strong><button type="button" aria-label="Next month" onClick={() => setHolidayMonth(new Date(holidayMonth.getFullYear(), holidayMonth.getMonth() + 1, 1))}>›</button></div><div className="holiday-calendar-grid">{['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map(day => <span className="weekday" key={day}>{day}</span>)}{holidayCalendarDays.map(date => { const value = calendarDateKey(date); const selected = form.holidays.includes(value); const outOfRange = (form.startDate && value < form.startDate) || (form.endDate && value > form.endDate); return <button key={value} type="button" disabled={outOfRange} className={`${date.getMonth() === holidayMonth.getMonth() ? '' : 'outside'} ${selected ? 'selected' : ''}`} onClick={() => field('holidays', selected ? form.holidays.filter(item => item !== value) : [...form.holidays, value].sort())}>{date.getDate()}</button> })}</div></div><div className="holiday-list"><h3>Marked Holidays</h3>{form.holidays.length ? form.holidays.map(day => <button key={day} type="button" onClick={() => field('holidays', form.holidays.filter(item => item !== day))}><span>{formatDate(day)}</span><span>×</span></button>) : <p>No holidays marked yet.<br />Tap any weekday on the calendar to mark a holiday.</p>}</div></div>
       </section>
       <button className="project-primary" type="button" onClick={generateSprints}>Generate sprints</button>
-      <div className="project-sprint-list">{form.sprints.map((sprint, index) => <article className="project-nested-card" key={sprint.key}>
-        <div className="project-row-heading"><h3>Sprint {index + 1}</h3><button type="button" onClick={() => { field('sprints', form.sprints.filter(item => item.key !== sprint.key)); setForm(current => ({ ...current, tasks: current.tasks.map(task => task.sprintKey === sprint.key ? { ...task, sprintKey: '' } : task) })) }}>Remove</button></div>
-        <div className="project-grid four"><Field label="Code"><input value={sprint.number} onChange={event => patchItem('sprints', sprint.key, { number: event.target.value })} /></Field><Field label="Name"><input value={sprint.name} onChange={event => patchItem('sprints', sprint.key, { name: event.target.value })} /></Field><Field label="Start"><input type="date" value={sprint.startDate} onChange={event => patchItem('sprints', sprint.key, { startDate: event.target.value })} /></Field><Field label="End"><input type="date" value={sprint.endDate} onChange={event => patchItem('sprints', sprint.key, { endDate: event.target.value })} /></Field></div>
-        <Field label="Sprint members"><div className="project-chips">{selectedUsers.map(user => <button key={user.id} type="button" className={sprint.members.includes(user.id) ? 'selected' : ''} onClick={() => patchItem('sprints', sprint.key, { members: sprint.members.includes(user.id) ? sprint.members.filter(id => id !== user.id) : [...sprint.members, user.id] })}>{userName(user)}</button>)}</div></Field>
-        <div className="project-grid two"><label className="project-check"><input type="checkbox" checked={sprint.excludeWeekends} onChange={event => patchItem('sprints', sprint.key, { excludeWeekends: event.target.checked })} /> Exclude Saturday and Sunday</label><div><Field label="Additional off days"><input type="date" value={sprintOffDates[sprint.key] || ''} onChange={event => setSprintOffDates(current => ({ ...current, [sprint.key]: event.target.value }))} /></Field><button className="project-text-button" type="button" onClick={() => { const day = sprintOffDates[sprint.key]; if (day && !sprint.offDays.includes(day)) patchItem('sprints', sprint.key, { offDays: [...sprint.offDays, day].sort() }); setSprintOffDates(current => ({ ...current, [sprint.key]: '' })) }}>+ Add off day</button></div></div>
-        <div className="project-chips">{sprint.offDays.map(day => <button key={day} type="button" onClick={() => patchItem('sprints', sprint.key, { offDays: sprint.offDays.filter(item => item !== day) })}>{day} ×</button>)}</div>
-      </article>)}</div>
+      <section className="sprint-roadmap-card"><h2>Active Roadmap: {form.projectName || 'Project'}</h2>{form.sprints.length ? <div className="sprint-roadmap-table-wrap"><table className="sprint-roadmap-table"><thead><tr><th>Sprint No.</th><th>Date</th><th>Working Days</th><th>Sprint Points</th><th>Actions</th></tr></thead><tbody>{form.sprints.map((sprint, index) => <tr key={sprint.key}><td><strong>{sprint.name || `Sprint ${index + 1}`}</strong><details className="sprint-row-edit"><summary>Edit details</summary><div className="project-grid two"><Field label="Sprint code"><input value={sprint.number} onChange={event => patchItem('sprints', sprint.key, { number: event.target.value })} /></Field><Field label="Sprint name"><input value={sprint.name} onChange={event => patchItem('sprints', sprint.key, { name: event.target.value })} /></Field><Field label="Start date"><input type="date" value={sprint.startDate} onChange={event => patchItem('sprints', sprint.key, { startDate: event.target.value })} /></Field><Field label="End date"><input type="date" value={sprint.endDate} onChange={event => patchItem('sprints', sprint.key, { endDate: event.target.value })} /></Field><label className="project-check"><input type="checkbox" checked={sprint.excludeWeekends} onChange={event => patchItem('sprints', sprint.key, { excludeWeekends: event.target.checked })} /> Exclude weekends</label></div><Field label="Sprint members"><div className="project-chips">{selectedUsers.map(person => <button key={person.id} type="button" className={sprint.members.includes(person.id) ? 'selected' : ''} onClick={() => patchItem('sprints', sprint.key, { members: sprint.members.includes(person.id) ? sprint.members.filter(id => id !== person.id) : [...sprint.members, person.id] })}>{userName(person)}</button>)}</div></Field><Field label="Additional off day"><input type="date" value={sprintOffDates[sprint.key] || ''} onChange={event => setSprintOffDates(current => ({ ...current, [sprint.key]: event.target.value }))} /></Field><button className="project-text-button" type="button" onClick={() => { const day = sprintOffDates[sprint.key]; if (day && !sprint.offDays.includes(day)) patchItem('sprints', sprint.key, { offDays: [...sprint.offDays, day].sort() }); setSprintOffDates(current => ({ ...current, [sprint.key]: '' })) }}>+ Add off day</button><div className="project-chips">{sprint.offDays.map(day => <button key={day} type="button" onClick={() => patchItem('sprints', sprint.key, { offDays: sprint.offDays.filter(item => item !== day) })}>{day} ×</button>)}</div></details></td><td>{formatDate(sprint.startDate)} – {formatDate(sprint.endDate)}</td><td>{sprintWorkingDays(sprint)} days</td><td>{sprintWorkingDays(sprint) * Number(form.pointsPerDay || 0)} points</td><td><button type="button" className="project-text-button" onClick={() => { field('sprints', form.sprints.filter(item => item.key !== sprint.key)); setForm(current => ({ ...current, tasks: current.tasks.map(task => task.sprintKey === sprint.key ? { ...task, sprintKey: '' } : task) })) }}>Remove</button></td></tr>)}</tbody></table></div> : <p className="project-hint">Generate sprints to see the project roadmap.</p>}</section>
       <button className="project-secondary" type="button" onClick={() => field('sprints', [...form.sprints, { key: key(), number: `SP-${String(form.sprints.length + 1).padStart(3, '0')}`, name: `Sprint ${form.sprints.length + 1}`, startDate: form.startDate, endDate: form.endDate, excludeWeekends: true, offDays: [], members: form.members }])}>+ Add sprint</button>
       {errors.sprints && <p className="project-error">{errors.sprints}</p>}
     </div>}
 
-    {step === 5 && <div className="task-creation-step"><div className="project-card-heading project-section-heading"><h2>Create Tasks</h2><p>Assign work to project members and connect tasks to sprints and features.</p></div>
+    {step === 5 && <div className="task-creation-step">
       {errors.tasks && <p className="project-error">{errors.tasks}</p>}
-      <div className="project-grid task-step"><section className="project-card task-form-card"><div className="project-card-heading"><h2>Task Details</h2><p>Provide the task information and assignment.</p></div>
-        <Field label="Task name *"><input maxLength={100} value={taskDraft.name} placeholder="Task name" onChange={event => setTaskDraft(current => ({ ...current, name: event.target.value }))} /></Field>
-        <Field label="Description"><textarea rows={3} value={taskDraft.description} onChange={event => setTaskDraft(current => ({ ...current, description: event.target.value }))} /></Field>
-        <div className="project-grid two"><Field label="Start date"><input type="date" min={form.startDate} max={taskDraft.dueDate || form.endDate} value={taskDraft.startDate} onChange={event => setTaskDraft(current => ({ ...current, startDate: event.target.value }))} /></Field><Field label="Due date"><input type="date" min={taskDraft.startDate || form.startDate} max={form.endDate} value={taskDraft.dueDate} onChange={event => setTaskDraft(current => ({ ...current, dueDate: event.target.value }))} /></Field></div>
-        <div className="project-grid three"><Field label="Sprint"><select value={taskDraft.sprintKey} onChange={event => setTaskDraft(current => ({ ...current, sprintKey: event.target.value }))}><option value="">No sprint</option>{form.sprints.map(sprint => <option key={sprint.key} value={sprint.key}>{sprint.name}</option>)}</select></Field><Field label="Feature"><select value={taskDraft.featureKey} onChange={event => setTaskDraft(current => ({ ...current, featureKey: event.target.value }))}><option value="">No feature</option>{allFeatures.map(feature => <option key={feature.key} value={feature.key}>{feature.name || 'Unnamed feature'}</option>)}</select></Field><Field label="Priority"><select value={taskDraft.priority} onChange={event => setTaskDraft(current => ({ ...current, priority: event.target.value }))}><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></Field></div>
-        <div className="project-grid two"><Field label="Assigned to *"><SelectUser users={selectedUsers} value={taskDraft.assignee} onChange={value => setTaskDraft(current => ({ ...current, assignee: value }))} /></Field><Field label="Reviewer"><SelectUser users={selectedUsers} value={taskDraft.reviewer} onChange={value => setTaskDraft(current => ({ ...current, reviewer: value }))} optional /></Field></div>
+      <div className="project-grid task-step"><div className="task-form-stack">
+        <section className="project-card task-form-card"><div className="project-card-heading"><h2>Task Details</h2><p>Define the task and set the basic information.</p></div>
+          <div className="project-grid two"><Field label="Task name *"><input maxLength={100} value={taskDraft.name} placeholder="Task name" onChange={event => setTaskDraft(current => ({ ...current, name: event.target.value }))} /></Field><Field label="Sprint *"><select value={taskDraft.sprintKey} onChange={event => setTaskDraft(current => ({ ...current, sprintKey: event.target.value }))}><option value="">Select sprint</option>{form.sprints.map(sprint => <option key={sprint.key} value={sprint.key}>{sprint.name}</option>)}</select></Field></div>
+          <Field label="Description (optional)"><textarea rows={3} value={taskDraft.description} placeholder="Describe the task" onChange={event => setTaskDraft(current => ({ ...current, description: event.target.value }))} /></Field>
+          <div className="project-grid three"><Field label="Start date *"><input type="date" min={form.startDate} max={taskDraft.dueDate || form.endDate} value={taskDraft.startDate} onChange={event => setTaskDraft(current => ({ ...current, startDate: event.target.value }))} /></Field><Field label="Due date *"><input type="date" min={taskDraft.startDate || form.startDate} max={form.endDate} value={taskDraft.dueDate} onChange={event => setTaskDraft(current => ({ ...current, dueDate: event.target.value }))} /></Field><Field label="Priority *"><select value={taskDraft.priority} onChange={event => setTaskDraft(current => ({ ...current, priority: event.target.value }))}><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></Field></div>
+        </section>
+        <section className="project-card task-form-card"><div className="project-card-heading"><h2>Additional details</h2><p>Add dependencies, milestones and features related to this task.</p></div>
+          <div className="project-grid two"><div><strong className="project-small-heading">Add dependency</strong><button type="button" className="dependency-add-trigger" onClick={() => field('dependencies', [...form.dependencies, dependencyItem(taskDraft.key)])}>＋ Click to add dependency</button>{form.dependencies.filter(item => item.taskKey === taskDraft.key).map((dependency, index) => <div className="task-dependency-editor" key={dependency.key}><div className="project-row-heading"><strong>Dependency {index + 1}</strong><button type="button" onClick={() => field('dependencies', form.dependencies.filter(item => item.key !== dependency.key))}>Remove</button></div><Field label="Depends on"><select value={dependency.dependsOnKey} onChange={event => patchItem('dependencies', dependency.key, { dependsOnKey: event.target.value })}><option value="">Select task</option>{form.tasks.filter(task => task.key !== taskDraft.key).map(task => <option key={task.key} value={task.key}>{task.name || 'Unnamed task'}</option>)}</select></Field><Field label="Dependency type *"><select value={dependency.dependencyType} onChange={event => patchItem('dependencies', dependency.key, { dependencyType: event.target.value })}><option value="">Select type</option><option value="mandatory">Mandatory dependency</option><option value="optional">Optional dependency</option></select></Field><Field label="Description *"><input value={dependency.description} onChange={event => patchItem('dependencies', dependency.key, { description: event.target.value })} placeholder="Describe the blocker" /></Field></div>)}</div>
+            <Field label="Add milestones *"><select value={taskDraft.milestoneKey} onChange={event => setTaskDraft(current => ({ ...current, milestoneKey: event.target.value, featureKey: '' }))}><option value="">Select milestone</option>{form.milestones.map(milestone => <option key={milestone.key} value={milestone.key}>{milestone.name}</option>)}</select></Field>
+            <Field label="Add features *"><select value={taskDraft.featureKey} onChange={event => setTaskDraft(current => ({ ...current, featureKey: event.target.value }))}><option value="">Select feature</option>{form.milestones.find(item => item.key === taskDraft.milestoneKey)?.features.map(feature => <option key={feature.key} value={feature.key}>{feature.name || 'Unnamed feature'}</option>)}</select></Field>
+          </div>
+        </section>
+        <section className="project-card task-form-card"><div className="project-card-heading"><h2>Assign &amp; review</h2></div><div className="project-grid two"><Field label="Reviewer"><SelectUser users={selectedUsers} value={taskDraft.reviewer} onChange={value => setTaskDraft(current => ({ ...current, reviewer: value }))} optional /></Field><Field label="Assigned to *"><SelectUser users={selectedUsers} value={taskDraft.assignee} onChange={value => setTaskDraft(current => ({ ...current, assignee: value }))} /></Field></div></section>
         <div className="project-form-actions left"><button type="button" className="project-primary" onClick={saveTaskDraft}><span className="material-symbols-outlined">add</span>{editingTaskKey ? 'Update task' : 'Create task'}</button>{editingTaskKey && <button type="button" className="project-secondary" onClick={resetTaskDraft}>Cancel edit</button>}</div>
-      </section>
+      </div>
       <div className="task-side-column"><section className="project-card task-added-card"><div className="task-added-heading"><h2>Task added</h2><span>{form.tasks.length}</span></div>
-        {!form.tasks.length ? <div className="project-empty-state"><span className="material-symbols-outlined">assignment</span><strong>No tasks added yet</strong><p>Fill out the task form and create a task to view it here.</p></div> : <div className="task-added-list">{form.tasks.map(task => <article key={task.key}><div className="project-row-heading"><h3>{task.name}</h3><div><button type="button" onClick={() => editTask(task)}>Edit</button><button type="button" onClick={() => removeTask(task.key)}>Remove</button></div></div><dl><dt>Description</dt><dd>{task.description || '—'}</dd><dt>Sprint</dt><dd>{form.sprints.find(sprint => sprint.key === task.sprintKey)?.name || 'Not assigned'}</dd><dt>Reviewer</dt><dd>{userName(options.users.find(item => item.id === task.reviewer) || {}) || 'Not assigned'}</dd><dt>Assignee</dt><dd>{userName(options.users.find(item => item.id === task.assignee) || {}) || 'Not assigned'}</dd></dl><button className="project-text-button" type="button" onClick={() => field('dependencies', [...form.dependencies, dependencyItem(task.key)])}>+ Add dependency</button></article>)}</div>}
+        {!form.tasks.length ? <div className="project-empty-state"><strong>No tasks added yet</strong><p>Complete the task form to add it to the project.</p></div> : <div className="task-added-list">{form.tasks.map(task => <article key={task.key}><div className="project-row-heading"><h3>{task.name}</h3><div><button type="button" onClick={() => editTask(task)}>Edit</button><button type="button" onClick={() => removeTask(task.key)}>Remove</button></div></div><dl><dt>Description</dt><dd>{task.description || '—'}</dd><dt>Sprint</dt><dd>{form.sprints.find(sprint => sprint.key === task.sprintKey)?.name || 'Not assigned'}</dd><dt>Reviewer</dt><dd>{userName(options.users.find(item => String(item.id) === String(task.reviewer)) || {}) || 'Not assigned'}</dd><dt>Assignees</dt><dd>{userName(options.users.find(item => String(item.id) === String(task.assignee)) || {}) || 'Not assigned'}</dd><dt>Depends on</dt><dd>{form.dependencies.filter(dependency => dependency.taskKey === task.key).map(dependency => form.tasks.find(item => item.key === dependency.dependsOnKey)?.name).filter(Boolean).join(', ') || 'None'}</dd></dl></article>)}</div>}
       </section></div></div>
-      <section className="project-card project-dependencies"><div className="project-card-heading"><h2>Dependencies</h2><p>Track blockers for the tasks in this project.</p></div>
-      {form.dependencies.map((dependency, index) => <article className="project-nested-card" key={dependency.key}>
-        <div className="project-row-heading"><h3>Dependency {index + 1}</h3><button type="button" onClick={() => field('dependencies', form.dependencies.filter(item => item.key !== dependency.key))}>Remove</button></div>
-        <Field label="Task"><select value={dependency.taskKey} onChange={event => patchItem('dependencies', dependency.key, { taskKey: event.target.value })}><option value="">Select task</option>{form.tasks.map(task => <option key={task.key} value={task.key}>{task.name || 'Unnamed task'}</option>)}</select></Field>
-        <Field label="Depends on"><select value={dependency.dependsOnKey} onChange={event => patchItem('dependencies', dependency.key, { dependsOnKey: event.target.value })}><option value="">No linked task</option>{form.tasks.filter(task => task.key !== dependency.taskKey).map(task => <option key={task.key} value={task.key}>{task.name || 'Unnamed task'}</option>)}</select></Field>
-        <Field label="Description *"><textarea rows={2} value={dependency.description} onChange={event => patchItem('dependencies', dependency.key, { description: event.target.value })} /></Field>
-        <Field label="Assigned to"><SelectUser users={selectedUsers} value={dependency.assignee} onChange={value => patchItem('dependencies', dependency.key, { assignee: value })} optional /></Field>
-        <Field label="Due date"><input type="date" value={dependency.dueDate} onChange={event => patchItem('dependencies', dependency.key, { dueDate: event.target.value })} /></Field>
-      </article>)}
-      {!form.dependencies.length && <p className="project-hint">Add a dependency from a task if it has a blocker.</p>}
-      </section>
     </div>}
 
     <footer className="project-editor-actions"><div>{step === 0 ? <Link to="/projects" className="project-secondary">Cancel</Link> : <button type="button" className="project-secondary" onClick={() => setStep(value => value - 1)}>Back</button>}</div>

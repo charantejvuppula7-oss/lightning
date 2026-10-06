@@ -85,7 +85,8 @@ export function creationPayload(form) {
     tasks: tasks.filter((_, index) => !form.tasks[index].featureKey),
     dependencies: form.dependencies.map(dependency => ({
       task_ref: dependency.taskKey, depends_on_ref: dependency.dependsOnKey || undefined,
-      description: dependency.description.trim(), assigned_to: dependency.assignee || null,
+      description: dependency.description.trim(), dependency_type: dependency.dependencyType || 'optional',
+      assigned_to: dependency.assignee || null,
       due_date: dependency.dueDate || null,
     })),
   }
@@ -191,11 +192,13 @@ export async function updateProject(id, form, initial, originalFiles) {
   for (const dependency of form.dependencies) {
     const data = { task: taskIds[dependency.taskKey],
       depends_on: taskIds[dependency.dependsOnKey] || null,
-      description: dependency.description.trim(), assigned_to: dependency.assignee || null,
+      description: dependency.description.trim(), dependency_type: dependency.dependencyType || 'optional',
+      assigned_to: dependency.assignee || null,
       due_date: dependency.dueDate || null }
     const old = initial.dependencies.find(item => item.id === dependency.id)
     const prior = old && { task: old.taskId, depends_on: old.dependsOnId || null,
-      description: old.description.trim(), assigned_to: old.assignee || null,
+      description: old.description.trim(), dependency_type: old.dependencyType || 'optional',
+      assigned_to: old.assignee || null,
       due_date: old.dueDate || null }
     if (!dependency.id || changed(data, prior)) {
       await apiRequest(dependency.id ? `/dependencies/${dependency.id}/` : '/dependencies/', {

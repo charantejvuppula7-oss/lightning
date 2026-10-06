@@ -16,6 +16,10 @@ class TaskDependency(models.Model):
         default=uuid.uuid4,
         editable=False,
     )
+    DEPENDENCY_TYPE_CHOICES = [
+        ('mandatory', 'Mandatory dependency'),
+        ('optional', 'Optional dependency'),
+    ]
     task = models.ForeignKey(
         'Task',
         on_delete=models.CASCADE,
@@ -27,6 +31,11 @@ class TaskDependency(models.Model):
     )
     description = models.TextField(
         help_text="What this dependency entails.",
+    )
+    dependency_type = models.CharField(
+        max_length=20,
+        choices=DEPENDENCY_TYPE_CHOICES,
+        default='optional',
     )
     assigned_to = models.ForeignKey(
         'UserData',
