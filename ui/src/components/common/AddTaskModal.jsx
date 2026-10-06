@@ -3,9 +3,9 @@ import { apiRequest } from '../../services/api/apiClient.js'
 import { ModalField, ModalShell } from './ProjectModal.jsx'
 import { canUsePermission, displayName, getApiError } from './modalUtils.js'
 
-const initialTask = () => ({ name: '', description: '', startDate: '', dueDate: '', priority: 'medium', sprint: '', feature: '', assignee: '', reviewer: '' })
+const initialTask = () => ({ name: '', description: '', startDate: '', dueDate: '', priority: 'medium', sprint: '', milestone: '', feature: '', assignee: '', reviewer: '' })
 
-export default function AddTaskModal({ isOpen, onClose, projectId, projectName, users = [], sprints = [], features = [], permissions, user, onCreated }) {
+export default function AddTaskModal({ isOpen, onClose, projectId, projectName, users = [], sprints = [], milestones = [], features = [], permissions, user, onCreated }) {
   const [task, setTask] = useState(initialTask)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -43,7 +43,8 @@ export default function AddTaskModal({ isOpen, onClose, projectId, projectName, 
       <ModalField label="Description"><textarea rows={3} value={task.description} onChange={event => update('description', event.target.value)} placeholder="Describe the task" /></ModalField>
       <div className="project-modal-row"><ModalField label="Start date"><input type="date" value={task.startDate} onChange={event => update('startDate', event.target.value)} /></ModalField><ModalField label="Due date"><input type="date" min={task.startDate || undefined} value={task.dueDate} onChange={event => update('dueDate', event.target.value)} /></ModalField></div>
       <div className="project-modal-row"><ModalField label="Priority"><select value={task.priority} onChange={event => update('priority', event.target.value)}><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></ModalField><ModalField label="Reviewer"><select value={task.reviewer} onChange={event => update('reviewer', event.target.value)}><option value="">None</option>{users.map(person => <option key={person.id} value={person.id}>{displayName(person)}</option>)}</select></ModalField></div>
-      <div className="project-modal-row"><ModalField label="Sprint"><select value={task.sprint} onChange={event => update('sprint', event.target.value)}><option value="">No sprint</option>{sprints.map(sprint => <option key={sprint.id} value={sprint.id}>{sprint.Sprint_Name || sprint.name}</option>)}</select></ModalField><ModalField label="Feature"><select value={task.feature} onChange={event => update('feature', event.target.value)}><option value="">No feature</option>{features.map(feature => <option key={feature.id} value={feature.id}>{feature.feature_name || feature.name}</option>)}</select></ModalField></div>
+      <div className="project-modal-row"><ModalField label="Milestone"><select value={task.milestone} onChange={event => setTask(current => ({ ...current, milestone: event.target.value, feature: '' }))}><option value="">No milestone</option>{milestones.map(milestone => <option key={milestone.id} value={milestone.id}>{milestone.name}</option>)}</select></ModalField><ModalField label="Feature"><select value={task.feature} onChange={event => update('feature', event.target.value)}><option value="">No feature</option>{features.filter(feature => !task.milestone || String(feature.milestone || feature.Milestone) === String(task.milestone)).map(feature => <option key={feature.id} value={feature.id}>{feature.feature_name || feature.name}</option>)}</select></ModalField></div>
+      <ModalField label="Sprint"><select value={task.sprint} onChange={event => update('sprint', event.target.value)}><option value="">No sprint</option>{sprints.map(sprint => <option key={sprint.id} value={sprint.id}>{sprint.Sprint_Name || sprint.name}</option>)}</select></ModalField>
       {error && <p className="project-modal-error" role="alert">{error}</p>}
       <div className="project-modal-actions"><button type="button" onClick={close} disabled={saving}>Cancel</button><button className="primary" type="submit" disabled={saving || !projectId}>{saving ? 'Creating…' : 'Create task'}</button></div>
     </form>

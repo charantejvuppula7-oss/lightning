@@ -20,8 +20,8 @@ export default function AddDependencyModal({ isOpen, onClose, task, tasks = [], 
   const submit = async event => {
     event.preventDefault()
     if (!allowed) return
-    if (!selectedTask || !description.trim() || !dependencyType) {
-      setError('Select a task, dependency type, and description.')
+    if (!selectedTask || !assignedTo || !dueDate || !description.trim() || !dependencyType) {
+      setError('Select a task, assignee, due date, dependency type, and description.')
       return
     }
     setSaving(true)
@@ -45,7 +45,7 @@ export default function AddDependencyModal({ isOpen, onClose, task, tasks = [], 
       {tasks.length > 0 && <ModalField label="Depends on"><select value={dependsOn} onChange={event => setDependsOn(event.target.value)}><option value="">No linked task</option>{tasks.filter(item => String(item.id || item.pk) !== String(selectedTask)).map(item => <option key={item.id || item.pk} value={item.id || item.pk}>{item.Task_Name || item.name || 'Task'}</option>)}</select></ModalField>}
       <ModalField label="Dependency type" required><select value={dependencyType} onChange={event => setDependencyType(event.target.value)}><option value="">Select type</option><option value="mandatory">Mandatory dependency</option><option value="optional">Optional dependency</option></select></ModalField>
       <ModalField label="Description" required><textarea rows={3} value={description} onChange={event => setDescription(event.target.value)} placeholder="Describe the dependency" /></ModalField>
-      <div className="project-modal-row"><ModalField label="Assigned to"><select value={assignedTo} onChange={event => setAssignedTo(event.target.value)}><option value="">Not assigned</option>{users.map(person => <option key={person.id} value={person.id}>{displayName(person)}</option>)}</select></ModalField><ModalField label="Due date"><input type="date" value={dueDate} onChange={event => setDueDate(event.target.value)} /></ModalField></div>
+      <div className="project-modal-row"><ModalField label="Assigned to" required><select value={assignedTo} onChange={event => setAssignedTo(event.target.value)}><option value="">Select team member</option>{users.map(person => <option key={person.id} value={person.id}>{displayName(person)}</option>)}</select></ModalField><ModalField label="Due date" required><input type="date" value={dueDate} onChange={event => setDueDate(event.target.value)} /></ModalField></div>
       {error && <p className="project-modal-error" role="alert">{error}</p>}
       <div className="project-modal-actions"><button type="button" onClick={close} disabled={saving}>Cancel</button><button className="primary" type="submit" disabled={saving}>{saving ? 'Adding…' : 'Add Dependency'}</button></div>
     </form>

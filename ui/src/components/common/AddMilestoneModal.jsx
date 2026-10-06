@@ -38,9 +38,8 @@ export default function AddMilestoneModal({ isOpen, onClose, projectId, permissi
     <form className="project-modal-form" onSubmit={submit}>
       <ModalField label="Milestone" required><input maxLength={100} value={milestone.name} onChange={event => update('name', event.target.value)} placeholder="Add Milestone" /></ModalField>
       <ModalField label="Description (optional)"><textarea rows={3} value={milestone.description} onChange={event => update('description', event.target.value)} placeholder="Add a description" /></ModalField>
-      <div className="project-modal-row"><ModalField label="Start date" required><input type="date" value={milestone.startDate} onChange={event => update('startDate', event.target.value)} /></ModalField><ModalField label="End date" required><input type="date" min={milestone.startDate || undefined} value={milestone.dueDate} onChange={event => update('dueDate', event.target.value)} /></ModalField></div>
+      <div className="project-modal-date-row"><ModalField label="Start date" required><input type="date" value={milestone.startDate} onChange={event => update('startDate', event.target.value)} /></ModalField><ModalField label="End date" required><input type="date" min={milestone.startDate || undefined} value={milestone.dueDate} onChange={event => update('dueDate', event.target.value)} /></ModalField><button className="project-modal-primary" type="submit" disabled={saving || !projectId}>{saving ? 'Adding…' : '＋ Add Milestone'}</button></div>
       {error && <p className="project-modal-error" role="alert">{error}</p>}
-      <div className="project-modal-actions"><button type="button" onClick={close} disabled={saving}>Cancel</button><button className="primary" type="submit" disabled={saving || !projectId}>{saving ? 'Adding…' : '＋ Add Milestone'}</button></div>
     </form>
   </ModalShell>
 }

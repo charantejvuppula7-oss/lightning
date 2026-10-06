@@ -79,6 +79,13 @@ function ProjectEditRoute() {
   </ProtectedRoute>
 }
 
+function PermissionPageRoute({ module, children }) {
+  return <ProtectedRoute requiredPermission={{ module, action: 'View' }}>
+    {(user) => <PageLayout user={user}>{typeof children === 'function' ? children(user) : children}</PageLayout>}
+  </ProtectedRoute>
+}
+
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -102,12 +109,12 @@ export default function App() {
         <Route path="/user/notifications" element={<NotificationsRoute />} />
         <Route path="/pm/notifications" element={<NotificationsRoute allowedRoles={['Project Manager']} />} />
         <Route path="/admin/notifications" element={<NotificationsRoute allowedRoles={['Administrator']} />} />
-        <Route path="/tasks" element={<PageLayout><TasksPage /></PageLayout>} />
+        <Route path="/tasks" element={<PermissionPageRoute module="Tasks">{(user) => <TasksPage user={user} />}</PermissionPageRoute>} />
         <Route path="/projects" element={<ProjectsRoute />} />
         <Route path="/pm/projects" element={<PageLayout><PmProjects /></PageLayout>} />
         <Route path="/projects/new" element={<ProjectCreateRoute />} />
         <Route path="/projects/:projectId/edit" element={<ProjectEditRoute />} />
-        <Route path="/dependencies" element={<PageLayout><DependenciesPage /></PageLayout>} />
+        <Route path="/dependencies" element={<PermissionPageRoute module="Dependencies">{(user) => <DependenciesPage user={user} />}</PermissionPageRoute>} />
         <Route path="/calendar" element={<PageLayout><CalendarPage /></PageLayout>} />
         <Route path="/chat" element={<PageLayout><ChatPage /></PageLayout>} />
         <Route path="*" element={<Navigate to="/login" replace />} />
