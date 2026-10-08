@@ -34,19 +34,24 @@ const monthNames = [
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
-function formatDateStr(d) {
-  if (!d || isNaN(d.getTime())) return '';
+export function formatDateStr(d) {
+  if (!d || !(d instanceof Date) || isNaN(d.getTime())) return '';
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 }
 
-function withoutIcons(value = '') {
-  return value.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').trim();
+export function withoutIcons(value = '') {
+  if (value == null) return '';
+  return String(value).replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').trim();
 }
 
-function getVisibleRange(currentDate, viewMode) {
+export function getVisibleRange(currentDate, viewMode) {
+  if (!(currentDate instanceof Date) || isNaN(currentDate.getTime())) {
+    return { start: '', end: '' };
+  }
+
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
@@ -641,7 +646,7 @@ export default function CalendarPage() {
                         <div
                           key={event.id}
                           onClick={() => setSelectedEvent(event)}
-                          title={`${withoutIcons(event.fullTitle)} • ${event.project} • ${event.time}`}
+                      title={`${withoutIcons(event?.fullTitle ?? event?.title ?? '')} • ${event?.project ?? 'General'} • ${event?.time ?? ''}`}
                           style={{
                             ...styles.eventPill,
                             backgroundColor: catConfig.bg,
@@ -651,11 +656,11 @@ export default function CalendarPage() {
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', overflow: 'hidden' }}>
                             <span style={styles.eventTitleText}>
-                              {withoutIcons(event.title)}
+                          {withoutIcons(event?.title ?? '')}
                             </span>
                           </div>
                           <div style={styles.eventTimeText}>
-                            {event.time}
+                        {event?.time ?? ''}
                           </div>
                         </div>
                       );
@@ -740,7 +745,7 @@ export default function CalendarPage() {
           <div onClick={(e) => e.stopPropagation()} style={styles.modalCard}>
             {/* Modal Header */}
             <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>{withoutIcons(selectedEvent.fullTitle)}</h3>
+              <h3 style={styles.modalTitle}>{withoutIcons(selectedEvent?.fullTitle ?? selectedEvent?.title ?? '')}</h3>
               <button
                 type="button"
                 onClick={() => setSelectedEvent(null)}
@@ -759,7 +764,7 @@ export default function CalendarPage() {
                   <span className={styling("material-symbols-outlined")} style={{ fontSize: '16px', color: 'var(--color-slate-500)' }} aria-hidden="true">
                     folder
                   </span>
-                  {selectedEvent.project || 'General'}
+                  {selectedEvent?.project || 'General'}
                 </span>
               </div>
 
@@ -769,7 +774,7 @@ export default function CalendarPage() {
                   <span className={styling("material-symbols-outlined")} style={{ fontSize: '16px', color: 'var(--color-slate-500)' }} aria-hidden="true">
                     calendar_today
                   </span>
-                  {selectedEvent.dateKey}
+                  {selectedEvent?.dateKey}
                 </span>
               </div>
 
@@ -779,7 +784,7 @@ export default function CalendarPage() {
                   <span className={styling("material-symbols-outlined")} style={{ fontSize: '16px', color: 'var(--color-slate-500)' }} aria-hidden="true">
                     schedule
                   </span>
-                  {selectedEvent.time}
+                  {selectedEvent?.time}
                 </span>
               </div>
 
@@ -796,7 +801,7 @@ export default function CalendarPage() {
                     fontSize: '12px',
                   }}
                 >
-                  {selectedEvent.category}
+                  {selectedEvent?.category}
                 </span>
               </div>
 
@@ -813,18 +818,18 @@ export default function CalendarPage() {
                     color: 'var(--color-slate-700)',
                   }}
                 >
-                  {selectedEvent.status}
+                  {selectedEvent?.status}
                 </span>
               </div>
 
-              {selectedEvent.assignedTo && (
+              {selectedEvent?.assignedTo && (
                 <div style={styles.modalRow}>
                   <strong style={{ color: 'var(--color-slate-600)' }}>Assigned To:</strong>
                   <span>👤 {selectedEvent.assignedTo}</span>
                 </div>
               )}
 
-              {selectedEvent.description && (
+              {selectedEvent?.description && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px', paddingTop: '10px', borderTop: '1px solid var(--color-slate-100)' }}>
                   <strong style={{ fontSize: '12px', color: 'var(--color-slate-600)' }}>Description:</strong>
                   <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--color-slate-700)', lineHeight: '1.5', whiteSpace: 'pre-line' }}>
