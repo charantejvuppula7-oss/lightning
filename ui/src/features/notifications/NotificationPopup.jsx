@@ -2,6 +2,28 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { notificationService } from './notificationService.js';
 
+/* styling */
+const tailwindStyling = {
+  "notification": [
+    "[width:32px]",
+    "[height:32px]",
+    "[border:0]",
+    "[background:transparent]",
+    "[color:var(--color-slate-500)]",
+    "[cursor:pointer]",
+    "[display:grid]",
+    "[place-items:center]",
+    "[&_.material-symbols-outlined]:[font-size:20px]"
+  ]
+}
+const styling = value => {
+  const classes = typeof value === 'string' ? value : ''
+  const utilities = classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])
+  return [...new Set([...classes.split(/\s+/), ...utilities])].filter(Boolean).join(' ')
+}
+
+
+
 export function NotificationPopup() {
   const location = useLocation();
   const navigate = useNavigate();

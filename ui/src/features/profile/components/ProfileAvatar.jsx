@@ -1,5 +1,31 @@
 import React, { useRef } from 'react';
 
+/* styling */
+const tailwindStyling = {
+  "material-symbols-outlined": [
+    "[font-family:'Material_Symbols_Outlined']",
+    "[font-weight:normal]",
+    "[font-style:normal]",
+    "[font-size:20px]",
+    "[line-height:1]",
+    "[letter-spacing:normal]",
+    "[text-transform:none]",
+    "[white-space:nowrap]",
+    "[word-wrap:normal]",
+    "[direction:ltr]",
+    "[font-feature-settings:'liga']",
+    "[-webkit-font-smoothing:antialiased]",
+    "[&.sidebar-icon]:[font-size:20px]"
+  ]
+}
+const styling = value => {
+  const classes = typeof value === 'string' ? value : ''
+  const utilities = classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])
+  return [...new Set([...classes.split(/\s+/), ...utilities])].filter(Boolean).join(' ')
+}
+
+
+
 const styles = {
   avatarContainer: {
     position: 'relative',
@@ -60,7 +86,7 @@ export default function ProfileAvatar({ initials = '??', onPhotoChange }) {
         title="Change photo"
         aria-label="Change photo"
       >
-        <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--color-white)' }}>
+        <span className={styling("material-symbols-outlined")} style={{ fontSize: '16px', color: 'var(--color-white)' }}>
           photo_camera
         </span>
       </button>

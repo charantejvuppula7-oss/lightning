@@ -5,6 +5,217 @@ import { getRoleDashboard } from '../utils/roles.js'
 import logo from '../assets/lightning-logo-light.png'
 import icon from '../assets/lightning-icon.png'
 
+/* styling */
+const tailwindStyling = {
+  "material-symbols-outlined": [
+    "[font-family:'Material_Symbols_Outlined']",
+    "[font-weight:normal]",
+    "[font-style:normal]",
+    "[font-size:20px]",
+    "[line-height:1]",
+    "[letter-spacing:normal]",
+    "[text-transform:none]",
+    "[white-space:nowrap]",
+    "[word-wrap:normal]",
+    "[direction:ltr]",
+    "[font-feature-settings:'liga']",
+    "[-webkit-font-smoothing:antialiased]",
+    "[&.sidebar-icon]:[font-size:20px]"
+  ],
+  "sidebar": [
+    "[width:220px]",
+    "[min-width:220px]",
+    "[flex:0_0_220px]",
+    "[box-sizing:border-box]",
+    "[height:100dvh]",
+    "[min-height:0]",
+    "[position:sticky]",
+    "[top:0]",
+    "[align-self:flex-start]",
+    "[z-index:50]",
+    "[overflow:hidden]",
+    "[padding:16px_14px]",
+    "[background:var(--color-white)]",
+    "[border-right:1px_solid_var(--color-slate-200)]",
+    "[display:flex]",
+    "[flex-direction:column]",
+    "[transition:width_.25s_cubic-bezier(.4,0,.2,1),_flex-basis_.25s_cubic-bezier(.4,0,.2,1),_padding_.25s_ease]",
+    "[&.role-admin]:[width:240px]",
+    "[&.role-admin]:[min-width:240px]",
+    "[&.role-admin]:[flex-basis:240px]",
+    "[&.role-admin]:[padding:20px_16px]",
+    "[&.collapsed]:[width:68px]",
+    "[&.collapsed]:[min-width:68px]",
+    "[&.collapsed]:[flex-basis:68px]",
+    "[&.collapsed]:[padding:16px_8px]",
+    "[&.role-admin.collapsed]:[padding-top:20px]",
+    "[&.role-admin_.sidebar-brand_img]:[max-width:150px]",
+    "[&.role-admin_.sidebar-brand_img]:[height:30px]",
+    "[&.role-admin_.sidebar-link]:[font-size:13px]",
+    "[&.role-admin_.sidebar-logout]:[background:#fef2f2]",
+    "[&.role-admin_.sidebar-logout]:[color:#dc2626]",
+    "[&.role-admin_.sidebar-logout]:[border-radius:8px]",
+    "[&.role-admin_.sidebar-logout]:[font-size:13px]",
+    "[&.role-admin_.sidebar-logout:hover]:[background:#fee2e2]",
+    "[&.collapsed_.sidebar-brand]:[justify-content:center]",
+    "[&.collapsed_.sidebar-brand_.sidebar-logo]:[width:26px]",
+    "[&.collapsed_.sidebar-brand_.sidebar-logo]:[height:26px]",
+    "[&.collapsed_.sidebar-brand_.sidebar-logo]:[object-fit:contain]",
+    "[&.collapsed_.sidebar-label]:[display:none]",
+    "[&.collapsed_.sidebar-brand_button]:[margin:0]",
+    "[&.collapsed_.sidebar-link]:[justify-content:center]",
+    "[&.collapsed_.sidebar-link]:[padding-inline:0]",
+    "[&.collapsed_.sidebar-logout]:[justify-content:center]",
+    "[&.collapsed_.sidebar-logout]:[padding-inline:0]",
+    "max-[900px]:[width:68px]",
+    "max-[900px]:[min-width:68px]",
+    "max-[900px]:[flex-basis:68px]",
+    "max-[900px]:[padding:16px_8px]",
+    "max-[900px]:[&.role-admin]:[width:68px]",
+    "max-[900px]:[&.role-admin]:[min-width:68px]",
+    "max-[900px]:[&.role-admin]:[flex-basis:68px]",
+    "max-[900px]:[&.role-admin]:[padding:16px_8px]",
+    "max-[900px]:[&.role-admin_.sidebar-brand_.sidebar-mobile-logo]:[display:block]",
+    "max-[900px]:[&.role-admin_.sidebar-brand_.sidebar-mobile-logo]:[width:26px]",
+    "max-[900px]:[&.role-admin_.sidebar-brand_.sidebar-mobile-logo]:[height:26px]"
+  ],
+  "sidebar-brand": [
+    "[flex:0_0_40px]",
+    "[display:flex]",
+    "[align-items:center]",
+    "[justify-content:space-between]",
+    "[gap:8px]",
+    "[margin-bottom:16px]",
+    "[padding:0_2px]",
+    "[min-width:0]",
+    "[&_img]:[width:auto]",
+    "[&_img]:[max-width:140px]",
+    "[&_img]:[height:28px]",
+    "[&_img]:[object-fit:contain]",
+    "[&_img]:[object-position:left_center]",
+    "[&_.sidebar-mobile-logo]:[display:none]",
+    "[&_button]:[margin-left:auto]",
+    "[&_button]:[border:0]",
+    "[&_button]:[border-radius:6px]",
+    "[&_button]:[background:transparent]",
+    "[&_button]:[color:var(--color-slate-500)]",
+    "[&_button]:[cursor:pointer]",
+    "[&_button]:[line-height:1]",
+    "[&_button]:[padding:4px]",
+    "[&_button]:[display:grid]",
+    "[&_button]:[place-items:center]",
+    "[&_button:focus-visible]:[outline:2px_solid_var(--color-primary)]",
+    "[&_button:focus-visible]:[outline-offset:2px]",
+    "max-[900px]:[justify-content:center]",
+    "max-[900px]:[&_.sidebar-logo]:[display:none]",
+    "max-[900px]:[&_button]:[display:none]",
+    "max-[900px]:[&_.sidebar-mobile-logo]:[display:block]",
+    "max-[900px]:[&_.sidebar-mobile-logo]:[width:26px]",
+    "max-[900px]:[&_.sidebar-mobile-logo]:[height:26px]"
+  ],
+  "sidebar-nav": [
+    "[min-height:0]",
+    "[flex:1_1_0%]",
+    "[overflow-y:auto]",
+    "[overflow-x:hidden]",
+    "[overscroll-behavior:contain]",
+    "[display:flex]",
+    "[flex-direction:column]",
+    "[gap:4px]",
+    "[padding-right:4px]",
+    "[scrollbar-color:var(--color-slate-400)_var(--color-slate-50)]",
+    "max-[900px]:[padding-right:0]"
+  ],
+  "sidebar-link": [
+    "[width:100%]",
+    "[flex:0_0_auto]",
+    "[display:flex]",
+    "[align-items:center]",
+    "[gap:12px]",
+    "[padding:10px_12px]",
+    "[border:0]",
+    "[border-radius:8px]",
+    "[background:transparent]",
+    "[color:var(--color-slate-600)]",
+    "[text-decoration:none]",
+    "[text-align:left]",
+    "[font:inherit]",
+    "[font-size:14px]",
+    "[font-weight:500]",
+    "[white-space:nowrap]",
+    "[cursor:pointer]",
+    "[&:hover]:[background:var(--color-slate-50)]",
+    "[&:hover]:[color:var(--color-slate-900)]",
+    "[&.active]:[background:var(--color-primary-subtle)]",
+    "[&.active]:[color:var(--color-primary)]",
+    "[&.active]:[font-weight:600]",
+    "[&.active_.sidebar-icon]:[color:var(--color-primary)]",
+    "[&:focus-visible]:[outline:2px_solid_var(--color-primary)]",
+    "[&:focus-visible]:[outline-offset:2px]",
+    "max-[900px]:[justify-content:center]",
+    "max-[900px]:[padding-inline:0]"
+  ],
+  "sidebar-icon": [
+    "[width:20px]",
+    "[height:20px]",
+    "[flex:0_0_20px]",
+    "[color:var(--color-slate-500)]"
+  ],
+  "sidebar-footer": [
+    "[flex:0_0_auto]",
+    "[margin-top:auto]",
+    "[padding:12px_0_max(8px,_env(safe-area-inset-bottom))]",
+    "[border-top:1px_solid_var(--color-slate-100)]",
+    "[background:var(--color-white)]"
+  ],
+  "logout-icon": [
+    "[width:20px]",
+    "[flex:0_0_20px]",
+    "[text-align:center]",
+    "[font-size:20px]",
+    "[line-height:1]"
+  ],
+  "sidebar-logout": [
+    "[width:100%]",
+    "[border:0]",
+    "[border-radius:6px]",
+    "[background:var(--color-slate-200)]",
+    "[color:var(--color-slate-900)]",
+    "[display:flex]",
+    "[align-items:center]",
+    "[gap:10px]",
+    "[padding:10px_14px]",
+    "[font:inherit]",
+    "[font-size:14px]",
+    "[font-weight:600]",
+    "[text-align:left]",
+    "[cursor:pointer]",
+    "[white-space:nowrap]",
+    "[&:hover]:[background:var(--color-slate-300)]",
+    "[&:disabled]:[cursor:wait]",
+    "[&:disabled]:[opacity:.7]",
+    "[&:focus-visible]:[outline:2px_solid_var(--color-primary)]",
+    "[&:focus-visible]:[outline-offset:2px]",
+    "max-[900px]:[justify-content:center]",
+    "max-[900px]:[padding-inline:0]"
+  ],
+  "sidebar-logout-error": [
+    "[color:#b91c1c]",
+    "[font-size:12px]",
+    "[padding:6px_2px_0]"
+  ],
+  "sidebar-label": [
+    "max-[900px]:[display:none]"
+  ]
+}
+const styling = value => {
+  const classes = typeof value === 'string' ? value : ''
+  const utilities = classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])
+  return [...new Set([...classes.split(/\s+/), ...utilities])].filter(Boolean).join(' ')
+}
+
+
+
 const iconPaths = {
   dashboard: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18M9 12h12" /></>,
   projects: <><path d="M3 7h7l2 2h9l-2 11H3z" /><path d="M3 7V5h7l2 2" /></>,
@@ -43,7 +254,7 @@ function SidebarIcon({ name, role }) {
 
   if (!useCustomIcon) {
     return (
-      <span className="material-symbols-outlined sidebar-icon" aria-hidden="true">
+      <span className={styling("material-symbols-outlined sidebar-icon")} aria-hidden="true">
         {materialIcons[name]}
       </span>
     )
@@ -51,7 +262,7 @@ function SidebarIcon({ name, role }) {
 
   return (
     <svg
-      className="sidebar-icon"
+      className={styling("sidebar-icon")}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -100,23 +311,23 @@ export default function Sidebar({ active, effectiveRole = 'developer', permissio
   }
 
   return (
-    <aside className={`sidebar role-${effectiveRole}${collapsed ? ' collapsed' : ''}`}>
-      <div className="sidebar-brand">
-        <img className="sidebar-logo" src={collapsed ? icon : logo} alt="Lightning PDPM" />
-        <img className="sidebar-mobile-logo" src={icon} alt="" aria-hidden="true" />
+    <aside className={styling(`sidebar role-${effectiveRole}${collapsed ? ' collapsed' : ''}`)}>
+      <div className={styling("sidebar-brand")}>
+        <img className={styling("sidebar-logo")} src={collapsed ? icon : logo} alt="Lightning PDPM" />
+        <img className={styling("sidebar-mobile-logo")} src={icon} alt="" aria-hidden="true" />
         <button
           type="button"
           onClick={toggleCollapsed}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
         >
-          <span className="material-symbols-outlined" aria-hidden="true">
+          <span className={styling("material-symbols-outlined")} aria-hidden="true">
             {collapsed ? 'chevron_right' : 'chevron_left'}
           </span>
         </button>
       </div>
 
-      <nav className="sidebar-nav" aria-label="Main navigation">
+      <nav className={styling("sidebar-nav")} aria-label="Main navigation">
         {links.map(({ label, icon: iconName, to }) => {
           const href = to === 'dashboard' ? dashboardPath : to
           const isActive = href !== '#'
@@ -126,7 +337,7 @@ export default function Sidebar({ active, effectiveRole = 'developer', permissio
           const content = (
             <>
               <SidebarIcon name={iconName} role={effectiveRole} />
-              <span className="sidebar-label">{label}</span>
+              <span className={styling("sidebar-label")}>{label}</span>
             </>
           )
 
@@ -138,7 +349,7 @@ export default function Sidebar({ active, effectiveRole = 'developer', permissio
                 aria-label={label}
                 title={collapsed ? label : undefined}
                 onClick={() => setSelected({ label, path: active })}
-                className={className}
+                className={styling(className)}
               >
                 {content}
               </button>
@@ -153,7 +364,7 @@ export default function Sidebar({ active, effectiveRole = 'developer', permissio
               title={collapsed ? label : undefined}
               onClick={() => setSelected(null)}
               aria-current={isActive ? 'page' : undefined}
-              className={className}
+              className={styling(className)}
             >
               {content}
             </Link>
@@ -161,24 +372,24 @@ export default function Sidebar({ active, effectiveRole = 'developer', permissio
         })}
       </nav>
 
-      <div className="sidebar-footer">
+      <div className={styling("sidebar-footer")}>
         <button
           type="button"
-          className="sidebar-logout"
+          className={styling("sidebar-logout")}
           onClick={signOut}
           disabled={loggingOut}
           aria-label={loggingOut ? 'Logging out' : logoutLabel(effectiveRole)}
           title={collapsed ? logoutLabel(effectiveRole) : undefined}
         >
-          <span className="material-symbols-outlined logout-icon" aria-hidden="true">
+          <span className={styling("material-symbols-outlined logout-icon")} aria-hidden="true">
             logout
           </span>
-          <span className="sidebar-label">
+          <span className={styling("sidebar-label")}>
             {loggingOut ? 'Logging out...' : logoutLabel(effectiveRole)}
           </span>
         </button>
         {logoutError && (
-          <div role="alert" className="sidebar-logout-error">
+          <div role="alert" className={styling("sidebar-logout-error")}>
             {logoutError}
           </div>
         )}

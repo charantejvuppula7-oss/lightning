@@ -1,6 +1,40 @@
 import { useState, useEffect, useMemo } from 'react';
 import { notificationService } from './notificationService.js';
 
+/* styling */
+const tailwindStyling = {
+  "notification": [
+    "[width:32px]",
+    "[height:32px]",
+    "[border:0]",
+    "[background:transparent]",
+    "[color:var(--color-slate-500)]",
+    "[cursor:pointer]",
+    "[display:grid]",
+    "[place-items:center]",
+    "[&_.material-symbols-outlined]:[font-size:20px]"
+  ],
+  "priority": [
+    "[display:inline-flex]",
+    "[min-width:73px]",
+    "[height:36px]",
+    "[align-items:center]",
+    "[justify-content:center]",
+    "[border-radius:9px]",
+    "[font-size:11px]",
+    "[&.low]:[background:#c9d77f]",
+    "[&.high]:[background:#ef777b]",
+    "[&.medium]:[background:#bdc8f7]"
+  ]
+}
+const styling = value => {
+  const classes = typeof value === 'string' ? value : ''
+  const utilities = classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])
+  return [...new Set([...classes.split(/\s+/), ...utilities])].filter(Boolean).join(' ')
+}
+
+
+
 function getTimeAgo(timestamp) {
   if (!timestamp) return "Just now";
   const diff = Math.floor((Date.now() - new Date(timestamp).getTime()) / 1000);
@@ -147,7 +181,7 @@ export default function NotificationView({ searchQuery = "" }) {
 
   return (
     <div
-      className="notification-view-container"
+      className={styling("notification-view-container")}
       style={{
         display: "flex",
         flexDirection: "column",

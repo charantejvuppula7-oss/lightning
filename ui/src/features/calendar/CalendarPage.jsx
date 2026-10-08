@@ -1,7 +1,33 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchCalendarEvents } from './calendarApi.js';
-import { useProjectSelection } from '../projects/projectSelectionContext.js';
+import { useProjectSelection } from '../../app/hooks/index.js';
+
+/* styling */
+const tailwindStyling = {
+  "material-symbols-outlined": [
+    "[font-family:'Material_Symbols_Outlined']",
+    "[font-weight:normal]",
+    "[font-style:normal]",
+    "[font-size:20px]",
+    "[line-height:1]",
+    "[letter-spacing:normal]",
+    "[text-transform:none]",
+    "[white-space:nowrap]",
+    "[word-wrap:normal]",
+    "[direction:ltr]",
+    "[font-feature-settings:'liga']",
+    "[-webkit-font-smoothing:antialiased]",
+    "[&.sidebar-icon]:[font-size:20px]"
+  ]
+}
+const styling = value => {
+  const classes = typeof value === 'string' ? value : ''
+  const utilities = classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])
+  return [...new Set([...classes.split(/\s+/), ...utilities])].filter(Boolean).join(' ')
+}
+
+
 
 const monthNames = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -374,7 +400,7 @@ export default function CalendarPage() {
                 {monthNames[month]} {year}
                 {loading && (
                   <span
-                    className="material-symbols-outlined"
+                    className={styling("material-symbols-outlined")}
                     style={{ fontSize: '16px', color: 'var(--color-primary)', animation: 'spin 1s linear infinite' }}
                     aria-hidden="true"
                   >
@@ -730,7 +756,7 @@ export default function CalendarPage() {
               <div style={styles.modalRow}>
                 <strong style={{ color: 'var(--color-slate-600)' }}>Project:</strong>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--color-slate-500)' }} aria-hidden="true">
+                  <span className={styling("material-symbols-outlined")} style={{ fontSize: '16px', color: 'var(--color-slate-500)' }} aria-hidden="true">
                     folder
                   </span>
                   {selectedEvent.project || 'General'}
@@ -740,7 +766,7 @@ export default function CalendarPage() {
               <div style={styles.modalRow}>
                 <strong style={{ color: 'var(--color-slate-600)' }}>Date:</strong>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--color-slate-500)' }} aria-hidden="true">
+                  <span className={styling("material-symbols-outlined")} style={{ fontSize: '16px', color: 'var(--color-slate-500)' }} aria-hidden="true">
                     calendar_today
                   </span>
                   {selectedEvent.dateKey}
@@ -750,7 +776,7 @@ export default function CalendarPage() {
               <div style={styles.modalRow}>
                 <strong style={{ color: 'var(--color-slate-600)' }}>Schedule:</strong>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--color-slate-500)' }} aria-hidden="true">
+                  <span className={styling("material-symbols-outlined")} style={{ fontSize: '16px', color: 'var(--color-slate-500)' }} aria-hidden="true">
                     schedule
                   </span>
                   {selectedEvent.time}

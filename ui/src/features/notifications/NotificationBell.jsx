@@ -2,6 +2,55 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { notificationService } from './notificationService.js';
 
+/* styling */
+const tailwindStyling = {
+  "material-symbols-outlined": [
+    "[font-family:'Material_Symbols_Outlined']",
+    "[font-weight:normal]",
+    "[font-style:normal]",
+    "[font-size:20px]",
+    "[line-height:1]",
+    "[letter-spacing:normal]",
+    "[text-transform:none]",
+    "[white-space:nowrap]",
+    "[word-wrap:normal]",
+    "[direction:ltr]",
+    "[font-feature-settings:'liga']",
+    "[-webkit-font-smoothing:antialiased]",
+    "[&.sidebar-icon]:[font-size:20px]"
+  ],
+  "notification": [
+    "[width:32px]",
+    "[height:32px]",
+    "[border:0]",
+    "[background:transparent]",
+    "[color:var(--color-slate-500)]",
+    "[cursor:pointer]",
+    "[display:grid]",
+    "[place-items:center]",
+    "[&_.material-symbols-outlined]:[font-size:20px]"
+  ],
+  "priority": [
+    "[display:inline-flex]",
+    "[min-width:73px]",
+    "[height:36px]",
+    "[align-items:center]",
+    "[justify-content:center]",
+    "[border-radius:9px]",
+    "[font-size:11px]",
+    "[&.low]:[background:#c9d77f]",
+    "[&.high]:[background:#ef777b]",
+    "[&.medium]:[background:#bdc8f7]"
+  ]
+}
+const styling = value => {
+  const classes = typeof value === 'string' ? value : ''
+  const utilities = classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])
+  return [...new Set([...classes.split(/\s+/), ...utilities])].filter(Boolean).join(' ')
+}
+
+
+
 function renderFormattedMessage(text) {
   if (!text) return "";
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -139,7 +188,7 @@ export function NotificationBell({
   return (
     <div
       ref={containerRef}
-      className={`notification-bell-container ${className}`}
+      className={styling(`notification-bell-container ${className}`)}
       style={{ position: "relative", display: "inline-flex", alignItems: "center" }}
     >
       {/* Bell Trigger Button */}
@@ -174,7 +223,7 @@ export function NotificationBell({
         }}
       >
         <span
-          className="material-symbols-outlined"
+          className={styling("material-symbols-outlined")}
           style={{ fontSize: "21px", display: "block", lineHeight: 1 }}
         >
           notifications
@@ -336,11 +385,11 @@ export function NotificationBell({
                   <div
                     key={n.id || idx}
                     onClick={() => handleItemClick(n)}
-                    className={
+                    className={styling(
                       isHighlighted
                         ? "notif-row-highlighted"
                         : "notif-row-hover"
-                    }
+                    )}
                     style={{
                       display: "flex",
                       gap: "14px",

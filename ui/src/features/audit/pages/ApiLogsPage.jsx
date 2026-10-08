@@ -4,12 +4,110 @@ import AdminTable from '../components/AdminTable.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import Paginator from '../components/Paginator.jsx'
 
+/* styling */
+const tailwindStyling = {
+  "page-content": [
+    "[padding:28px]",
+    "max-[600px]:[padding:16px]"
+  ],
+  "page-heading": [
+    "[background:white]",
+    "[border:1px_solid_#e5e6eb]",
+    "[border-radius:12px]",
+    "[padding:19px_22px_0]",
+    "[margin-bottom:20px]",
+    "[&_h1]:[margin:0]",
+    "[&_h1]:[font-size:28px]",
+    "[&_h1]:[line-height:1.25]",
+    "[&_h1]:[letter-spacing:-.4px]",
+    "[&_h1]:[color:#172033]",
+    "[&_p]:[margin:4px_0_0]",
+    "[&_p]:[font-size:14px]",
+    "[&_p]:[color:#737986]"
+  ],
+  "admin-filters": [
+    "[display:flex]",
+    "[flex-wrap:wrap]",
+    "[gap:8px]",
+    "[margin-top:16px]",
+    "[margin-bottom:4px]"
+  ],
+  "admin-input": [
+    "[height:34px]",
+    "[border:1px_solid_var(--color-slate-200)]",
+    "[border-radius:6px]",
+    "[padding:0_10px]",
+    "[font:inherit]",
+    "[font-size:13px]",
+    "[color:var(--color-slate-900)]",
+    "[background:var(--color-white)]",
+    "[min-width:140px]",
+    "[&:focus]:[outline:2px_solid_var(--color-primary)]",
+    "[&:focus]:[outline-offset:2px]",
+    "[&:focus]:[border-color:var(--color-primary)]"
+  ],
+  "admin-input-wide": [
+    "[min-width:220px]"
+  ],
+  "admin-select": [
+    "[height:34px]",
+    "[border:1px_solid_var(--color-slate-200)]",
+    "[border-radius:6px]",
+    "[padding:0_10px]",
+    "[font:inherit]",
+    "[font-size:13px]",
+    "[color:var(--color-slate-900)]",
+    "[background:var(--color-white)]",
+    "[cursor:pointer]",
+    "[&:focus]:[outline:2px_solid_var(--color-primary)]",
+    "[&:focus]:[outline-offset:2px]"
+  ],
+  "admin-btn": [
+    "[height:34px]",
+    "[padding:0_16px]",
+    "[border:none]",
+    "[border-radius:6px]",
+    "[background:var(--color-primary)]",
+    "[color:#fff]",
+    "[font:inherit]",
+    "[font-size:13px]",
+    "[font-weight:600]",
+    "[cursor:pointer]",
+    "[&:hover]:[background:var(--color-primary-hover)]"
+  ],
+  "admin-btn-ghost": [
+    "[background:var(--color-slate-100)]",
+    "[color:var(--color-slate-600)]",
+    "[&:hover]:[background:var(--color-slate-200)]",
+    "[&:hover]:[color:var(--color-slate-900)]"
+  ],
+  "admin-meta": [
+    "[font-size:12px]",
+    "[color:var(--color-slate-500)]",
+    "[padding:8px_0_4px]"
+  ],
+  "admin-code": [
+    "[font-family:'Consolas','Menlo',monospace]",
+    "[font-size:12px]",
+    "[background:var(--color-slate-100)]",
+    "[padding:2px_5px]",
+    "[border-radius:4px]"
+  ]
+}
+const styling = value => {
+  const classes = typeof value === 'string' ? value : ''
+  const utilities = classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])
+  return [...new Set([...classes.split(/\s+/), ...utilities])].filter(Boolean).join(' ')
+}
+
+
+
 const PAGE_SIZE = 50
 
 const COLUMNS = [
   { key: 'created_at',       label: 'Time',         render: (v) => fmtDate(v) },
   { key: 'method',           label: 'Method',       render: (v) => <StatusBadge value={v} type="method" /> },
-  { key: 'path',             label: 'Path',         render: (v) => <code className="admin-code">{v}</code> },
+  { key: 'path',             label: 'Path',         render: (v) => <code className={styling("admin-code")}>{v}</code> },
   { key: 'status_code',      label: 'Status',       render: (v) => <StatusBadge value={v} type="status" /> },
   { key: 'response_time_ms', label: 'Duration (ms)',render: (v) => `${Number(v).toFixed(1)}` },
   { key: 'user_name',        label: 'User' },
@@ -62,14 +160,14 @@ export default function ApiLogsPage() {
   }
 
   return (
-    <div className="page-content">
-      <div className="page-heading">
+    <div className={styling("page-content")}>
+      <div className={styling("page-heading")}>
         <h1>API Logs</h1>
         <p>Every HTTP request captured by the API logging middleware.</p>
 
-        <form className="admin-filters" onSubmit={applyFilters}>
+        <form className={styling("admin-filters")} onSubmit={applyFilters}>
           <select
-            className="admin-select"
+            className={styling("admin-select")}
             value={draft.method}
             onChange={(e) => setDraft((d) => ({ ...d, method: e.target.value }))}
           >
@@ -79,23 +177,23 @@ export default function ApiLogsPage() {
             ))}
           </select>
           <input
-            className="admin-input"
+            className={styling("admin-input")}
             placeholder="Status code (e.g. 404)"
             value={draft.status}
             onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value }))}
           />
           <input
-            className="admin-input admin-input-wide"
+            className={styling("admin-input admin-input-wide")}
             placeholder="Path contains…"
             value={draft.path}
             onChange={(e) => setDraft((d) => ({ ...d, path: e.target.value }))}
           />
-          <button type="submit" className="admin-btn">Apply</button>
-          <button type="button" className="admin-btn admin-btn-ghost" onClick={clearFilters}>Clear</button>
+          <button type="submit" className={styling("admin-btn")}>Apply</button>
+          <button type="button" className={styling("admin-btn admin-btn-ghost")} onClick={clearFilters}>Clear</button>
         </form>
       </div>
 
-      <div className="admin-meta">
+      <div className={styling("admin-meta")}>
         {!loading && <span>{total.toLocaleString()} records</span>}
       </div>
 

@@ -8,6 +8,20 @@ import { authError } from '../../../utils/errors.js'
 import logo from '../../../assets/lightning-logo-light.png'
 import styles from '../styles/forgotStyles.js'
 
+/* styling */
+const tailwindStyling = {
+  'code-input': [
+    '[&:focus]:[border-color:var(--color-primary)]!',
+    '[&:focus]:[background:white]!',
+    '[&:focus]:[box-shadow:0_0_0_3px_rgba(37,99,235,.1)]!',
+  ],
+  'text-link': ['[&:hover]:[color:var(--color-primary-hover)]!'],
+}
+const styling = value => {
+  const classes = typeof value === 'string' ? value : ''
+  return [...new Set([...classes.split(/\s+/), ...classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])])].filter(Boolean).join(' ')
+}
+
 const titles = { forgot: 'Forgot your password?', verify: 'Verify your identity', reset: 'Create a new password' }
 
 const passwordChecks = [
@@ -173,7 +187,7 @@ export default function ForgotPasswordPage({ mode }) {
                     maxLength={1}
                     inputMode="numeric"
                     placeholder="-"
-                    className="code-input"
+                    className={styling('code-input')}
                     inputStyle={styles.codeInputBox}
                     disabled={loading}
                   />
@@ -326,7 +340,7 @@ export default function ForgotPasswordPage({ mode }) {
       </div>
       <div style={styles.helpText}>
         Need help signing in?{' '}
-        <a href="mailto:admin@lightning.com" className="text-link" style={styles.adminLink}>
+        <a href="mailto:admin@lightning.com" className={styling('text-link')} style={styles.adminLink}>
           Contact your administrator
         </a>
       </div>

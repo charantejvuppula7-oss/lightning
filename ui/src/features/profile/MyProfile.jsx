@@ -7,6 +7,32 @@ import Input from '../../components/ui/Input.jsx';
 import ProfileAvatar from './components/ProfileAvatar.jsx';
 import ProfileDetailRow from './components/ProfileDetailRow.jsx';
 
+/* styling */
+const tailwindStyling = {
+  "material-symbols-outlined": [
+    "[font-family:'Material_Symbols_Outlined']",
+    "[font-weight:normal]",
+    "[font-style:normal]",
+    "[font-size:20px]",
+    "[line-height:1]",
+    "[letter-spacing:normal]",
+    "[text-transform:none]",
+    "[white-space:nowrap]",
+    "[word-wrap:normal]",
+    "[direction:ltr]",
+    "[font-feature-settings:'liga']",
+    "[-webkit-font-smoothing:antialiased]",
+    "[&.sidebar-icon]:[font-size:20px]"
+  ]
+}
+const styling = value => {
+  const classes = typeof value === 'string' ? value : ''
+  const utilities = classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])
+  return [...new Set([...classes.split(/\s+/), ...utilities])].filter(Boolean).join(' ')
+}
+
+
+
 function ToastNotification({ toast, onClose }) {
   if (!toast) return null;
   const isError = toast.type === 'error';
@@ -33,7 +59,7 @@ function ToastNotification({ toast, onClose }) {
         animation: 'fadeIn 0.2s ease',
       }}
     >
-      <span className="material-symbols-outlined" style={{ fontSize: '18px' }} aria-hidden="true">
+      <span className={styling("material-symbols-outlined")} style={{ fontSize: '18px' }} aria-hidden="true">
         {isError ? 'error' : isSuccess ? 'check_circle' : 'info'}
       </span>
       <span>{toast.text}</span>
@@ -244,7 +270,7 @@ export function ProfileContent({ onBack }) {
               ariaLabel="Back"
               title="Back"
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--color-slate-500)' }}>
+              <span className={styling("material-symbols-outlined")} style={{ fontSize: '20px', color: 'var(--color-slate-500)' }}>
                 arrow_back
               </span>
             </Button>
@@ -305,7 +331,7 @@ export function ProfileContent({ onBack }) {
                 }}
                 style={styles.editBtn}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>
+                <span className={styling("material-symbols-outlined")} style={{ fontSize: '15px' }}>
                   edit
                 </span>
                 <span>Edit</span>

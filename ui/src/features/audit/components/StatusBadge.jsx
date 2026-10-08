@@ -1,3 +1,24 @@
+
+
+/* styling */
+const tailwindStyling = {
+  "admin-badge": [
+    "[display:inline-block]",
+    "[padding:2px_8px]",
+    "[border-radius:20px]",
+    "[font-size:11px]",
+    "[font-weight:700]",
+    "[text-transform:uppercase]",
+    "[letter-spacing:.04em]",
+    "[white-space:nowrap]"
+  ]
+}
+const styling = value => {
+  const classes = typeof value === 'string' ? value : ''
+  const utilities = classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])
+  return [...new Set([...classes.split(/\s+/), ...utilities])].filter(Boolean).join(' ')
+}
+
 /**
  * StatusBadge — coloured pill for HTTP status codes and action labels.
  *
@@ -7,7 +28,7 @@
  */
 export default function StatusBadge({ value, type = 'status' }) {
   const cls = getBadgeClass(value, type)
-  return <span className={`admin-badge admin-badge-${cls}`}>{value}</span>
+  return <span className={styling(`admin-badge admin-badge-${cls}`)}>{value}</span>
 }
 
 function getBadgeClass(value, type) {

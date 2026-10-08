@@ -2,12 +2,25 @@ import { useRef, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import Input from '../../../components/ui/Input.jsx'
 import Button from '../../../components/ui/Button.jsx'
-import useSession from '../../../hooks/useSession.js'
+import useSession from '../../../app/hooks/useSession.js'
 import { login } from '../api/authApi.js'
 import { authError } from '../../../utils/errors.js'
 import { getRoleDashboard } from '../../../utils/roles.js'
 import logo from '../../../assets/lightning-logo-light.png'
 import styles from '../styles/loginStyles.js'
+
+/* styling */
+const tailwindStyling = {
+  'login-container': [
+    '[&_.login-input:focus]:[border-color:#1557d8]!',
+    '[&_.login-input:focus]:[box-shadow:0_0_0_3px_rgba(21,87,216,.1)]!',
+  ],
+  'login-link': ['[&:hover]:[color:var(--color-primary-hover)]!'],
+}
+const styling = value => {
+  const classes = typeof value === 'string' ? value : ''
+  return [...new Set([...classes.split(/\s+/), ...classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])])].filter(Boolean).join(' ')
+}
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -43,7 +56,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="login-container" style={styles.container}>
+    <div className={styling('login-container')} style={styles.container}>
       <div style={styles.logoBox}>
         <img src={logo} alt="Lightning PDPM" style={{ height: 34, width: 'auto', display: 'block' }} />
       </div>
@@ -73,7 +86,7 @@ export default function LoginPage() {
           <div style={styles.field}>
             <div style={styles.labelRow}>
               <label htmlFor="password" style={styles.label}>Password</label>
-              <Link to="/forgot-password" className="login-link" style={styles.forgotLink}>Forgot Password?</Link>
+              <Link to="/forgot-password" className={styling('login-link')} style={styles.forgotLink}>Forgot Password?</Link>
             </div>
             <Input
               name="password"
