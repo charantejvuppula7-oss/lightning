@@ -33,5 +33,6 @@
   body { margin: 0; min-width: 320px; min-height: 100vh; }
   button, input, textarea { font-family: inherit; }
   #root { min-height: 100vh; }
+  .sidebar-nav::-webkit-scrollbar { display: none; }
   @keyframes spin { to { transform: rotate(360deg); } }
 }

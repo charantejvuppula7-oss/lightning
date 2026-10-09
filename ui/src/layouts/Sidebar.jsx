@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { logout } from '../features/auth/api/authApi.js'
-import { getRoleDashboard } from '../utils/roles.js'
+import { getRoleDashboard, roleSlug } from '../utils/roles.js'
+import Navbar from './Navbar.jsx'
+import packageInfo from '../../package.json'
 import logo from '../assets/lightning-logo-light.png'
 import icon from '../assets/lightning-icon.png'
 
@@ -52,10 +54,20 @@ const tailwindStyling = {
     "[&.role-admin_.sidebar-brand_img]:[max-width:150px]",
     "[&.role-admin_.sidebar-brand_img]:[height:30px]",
     "[&.role-admin_.sidebar-link]:[font-size:13px]",
+    "[&.role-pm_.sidebar-link]:[font-size:14px]",
+    "[&.role-developer_.sidebar-link]:[font-size:14px]",
+    "[&.role-user_.sidebar-link]:[font-size:14px]",
+    "[&.role-admin_.sidebar-logout]:[font-size:13px]",
+    "[&.role-pm_.sidebar-logout]:[font-size:14px]",
+    "[&.role-developer_.sidebar-logout]:[font-size:14px]",
+    "[&.role-user_.sidebar-logout]:[font-size:14px]",
+    "[&.role-admin_.sidebar-logout_.logout-icon]:[font-size:19px]",
+    "[&.role-pm_.sidebar-logout_.logout-icon]:[font-size:20px]",
+    "[&.role-developer_.sidebar-logout_.logout-icon]:[font-size:20px]",
+    "[&.role-user_.sidebar-logout_.logout-icon]:[font-size:20px]",
     "[&.role-admin_.sidebar-logout]:[background:#fef2f2]",
     "[&.role-admin_.sidebar-logout]:[color:#dc2626]",
     "[&.role-admin_.sidebar-logout]:[border-radius:8px]",
-    "[&.role-admin_.sidebar-logout]:[font-size:13px]",
     "[&.role-admin_.sidebar-logout:hover]:[background:#fee2e2]",
     "[&.collapsed_.sidebar-brand]:[justify-content:center]",
     "[&.collapsed_.sidebar-brand_.sidebar-logo]:[width:26px]",
@@ -106,12 +118,36 @@ const tailwindStyling = {
     "[&_button]:[place-items:center]",
     "[&_button:focus-visible]:[outline:2px_solid_var(--color-primary)]",
     "[&_button:focus-visible]:[outline-offset:2px]",
+    "[&_button_.material-symbols-outlined]:[font-size:20px]",
     "max-[900px]:[justify-content:center]",
     "max-[900px]:[&_.sidebar-logo]:[display:none]",
+    "max-[900px]:[&_.sidebar-version]:[display:none]",
     "max-[900px]:[&_button]:[display:none]",
     "max-[900px]:[&_.sidebar-mobile-logo]:[display:block]",
     "max-[900px]:[&_.sidebar-mobile-logo]:[width:26px]",
     "max-[900px]:[&_.sidebar-mobile-logo]:[height:26px]"
+  ],
+  "sidebar-brand-group": [
+    "[display:flex]",
+    "[align-items:center]",
+    "[gap:6px]",
+    "[min-width:0]"
+  ],
+  "sidebar-version": [
+    "[font-size:9px]",
+    "[line-height:1]",
+    "[font-weight:600]",
+    "[color:var(--color-slate-500)]",
+    "[white-space:nowrap]",
+    "[flex-shrink:0]"
+  ],
+  "sidebar-section-header": [
+    "[font-size:10px]",
+    "[font-weight:700]",
+    "[color:var(--color-slate-400)]",
+    "[text-transform:uppercase]",
+    "[letter-spacing:0.08em]",
+    "[padding:4px_10px_8px_10px]"
   ],
   "sidebar-nav": [
     "[min-height:0]",
@@ -123,7 +159,7 @@ const tailwindStyling = {
     "[flex-direction:column]",
     "[gap:4px]",
     "[padding-right:4px]",
-    "[scrollbar-color:var(--color-slate-400)_var(--color-slate-50)]",
+    "[scrollbar-width:none]",
     "max-[900px]:[padding-right:0]"
   ],
   "sidebar-link": [
@@ -159,6 +195,7 @@ const tailwindStyling = {
     "[width:20px]",
     "[height:20px]",
     "[flex:0_0_20px]",
+    "[font-size:20px]",
     "[color:var(--color-slate-500)]"
   ],
   "sidebar-footer": [
@@ -313,7 +350,18 @@ export default function Sidebar({ active, effectiveRole = 'developer', permissio
   return (
     <aside className={styling(`sidebar role-${effectiveRole}${collapsed ? ' collapsed' : ''}`)}>
       <div className={styling("sidebar-brand")}>
-        <img className={styling("sidebar-logo")} src={collapsed ? icon : logo} alt="Lightning PDPM" />
+        <div className={styling("sidebar-brand-group")}>
+          <img className={styling("sidebar-logo")} src={collapsed ? icon : logo} alt="Lightning PDPM" />
+          {!collapsed && (
+            <span
+              className={styling("sidebar-version")}
+              aria-label={packageInfo.version ? `Version ${packageInfo.version}` : 'Version 1.0.0'}
+              title={packageInfo.version ? `Version ${packageInfo.version}` : 'Version 1.0.0'}
+            >
+              v{packageInfo.version || '1.0.0'}
+            </span>
+          )}
+        </div>
         <img className={styling("sidebar-mobile-logo")} src={icon} alt="" aria-hidden="true" />
         <button
           type="button"
@@ -328,6 +376,11 @@ export default function Sidebar({ active, effectiveRole = 'developer', permissio
       </div>
 
       <nav className={styling("sidebar-nav")} aria-label="Main navigation">
+        {effectiveRole === 'admin' && !collapsed && (
+          <div className={styling("sidebar-section-header")}>
+            Administration
+          </div>
+        )}
         {links.map(({ label, icon: iconName, to }) => {
           const href = to === 'dashboard' ? dashboardPath : to
           const isActive = href !== '#'
@@ -395,6 +448,21 @@ export default function Sidebar({ active, effectiveRole = 'developer', permissio
         )}
       </div>
     </aside>
+  )
+}
+
+export function SidebarLayout({ user, children, searchQuery, onSearchChange }) {
+  const { pathname } = useLocation()
+  const effectiveRole = user ? roleSlug(user.role) : pathname.startsWith('/admin/') ? 'admin' : pathname.startsWith('/pm/') ? 'pm' : 'user'
+
+  return (
+    <div style={{ minHeight: '100dvh', display: 'flex', background: 'var(--color-slate-50)', color: 'var(--color-slate-900)' }}>
+      <Sidebar active={pathname.replace(/\/$/, '')} effectiveRole={effectiveRole} permissions={user?.permissions} />
+      <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <Navbar user={user} searchQuery={searchQuery} onSearchChange={onSearchChange} />
+        <main style={{ minWidth: 0, flex: 1 }}>{children}</main>
+      </div>
+    </div>
   )
 }
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { apiRequest } from '../../services/api/apiClient.js';
-import PageLayout from '../../layouts/PageLayout.jsx';
+import { SidebarLayout } from '../../layouts/Sidebar.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Input from '../../components/ui/Input.jsx';
 import ProfileAvatar from './components/ProfileAvatar.jsx';
@@ -481,9 +481,9 @@ export default function MyProfile({ user, onBack, embedded = false }) {
   }
 
   return (
-    <PageLayout user={user}>
+    <SidebarLayout user={user}>
       <ProfileContent onBack={handleBack} />
-    </PageLayout>
+    </SidebarLayout>
   );
 }
 

@@ -11,7 +11,7 @@ import ProjectEditorPage from '../../features/projects/editor/ProjectEditorPage.
 import PmProjects from '../../features/projects/pm_projects.jsx'
 import ProjectManagerDashboard from '../../modules/project-manager/dashboard.jsx'
 import UserDashboard from '../../modules/user/user_dashboard.jsx'
-import PageLayout from '../../layouts/PageLayout.jsx'
+import { SidebarLayout } from '../../layouts/Sidebar.jsx'
 import { MyProfile } from '../../features/profile/index.js'
 import NotificationsPage from '../../features/notifications/NotificationsPage.jsx'
 import { ApiLogsPage, AuditLogsPage, DatabaseExplorerPage } from '../../features/audit/index.js'
@@ -48,9 +48,9 @@ function DashboardRoute({ allowedRoles, variant }) {
   return (
     <ProtectedRoute allowedRoles={allowedRoles}>
       {(user) => (
-        <PageLayout user={user}>
+        <SidebarLayout user={user}>
           <Dashboard user={user} variant={variant} />
-        </PageLayout>
+        </SidebarLayout>
       )}
     </ProtectedRoute>
   )
@@ -68,32 +68,32 @@ function NotificationsRoute({ allowedRoles }) {
   const [searchQuery, setSearchQuery] = useState('')
   return (
     <ProtectedRoute allowedRoles={allowedRoles}>
-      {(user) => <PageLayout user={user} searchQuery={searchQuery} onSearchChange={(event) => setSearchQuery(event.target.value)}><NotificationsPage searchQuery={searchQuery} /></PageLayout>}
+      {(user) => <SidebarLayout user={user} searchQuery={searchQuery} onSearchChange={(event) => setSearchQuery(event.target.value)}><NotificationsPage searchQuery={searchQuery} /></SidebarLayout>}
     </ProtectedRoute>
   )
 }
 
 function ProjectsRoute() {
   return <ProtectedRoute requiredPermission={{ module: 'Projects', action: 'View' }}>
-    {(user) => <PageLayout user={user}><ProjectsPage user={user} /></PageLayout>}
+    {(user) => <SidebarLayout user={user}><ProjectsPage user={user} /></SidebarLayout>}
   </ProtectedRoute>
 }
 
 function ProjectCreateRoute() {
   return <ProtectedRoute requiredPermission={{ module: 'Projects', action: 'Create' }}>
-    {(user) => <PageLayout user={user}><ProjectEditorPage user={user} /></PageLayout>}
+    {(user) => <SidebarLayout user={user}><ProjectEditorPage user={user} /></SidebarLayout>}
   </ProtectedRoute>
 }
 
 function ProjectEditRoute() {
   return <ProtectedRoute requiredPermission={{ module: 'Projects', action: 'Edit' }}>
-    {(user) => <PageLayout user={user}><ProjectEditorPage user={user} /></PageLayout>}
+    {(user) => <SidebarLayout user={user}><ProjectEditorPage user={user} /></SidebarLayout>}
   </ProtectedRoute>
 }
 
 function PermissionPageRoute({ module, children }) {
   return <ProtectedRoute requiredPermission={{ module, action: 'View' }}>
-    {(user) => <PageLayout user={user}>{typeof children === 'function' ? children(user) : children}</PageLayout>}
+    {(user) => <SidebarLayout user={user}>{typeof children === 'function' ? children(user) : children}</SidebarLayout>}
   </ProtectedRoute>
 }
 
@@ -120,7 +120,7 @@ export default function AppRoutes() {
       <Route path="/tasks" element={<PermissionPageRoute module="Tasks">{(user) => <TasksPage user={user} />}</PermissionPageRoute>} />
       <Route path="/projects" element={<ProjectsRoute />} />
       <Route path="/pm/projects" element={<ProtectedRoute allowedRoles={['Project Manager']}>
-        {(user) => <PageLayout user={user}><PmProjects /></PageLayout>}
+        {(user) => <SidebarLayout user={user}><PmProjects /></SidebarLayout>}
       </ProtectedRoute>} />
       <Route path="/projects/new" element={<ProjectCreateRoute />} />
       <Route path="/projects/:projectId/edit" element={<ProjectEditRoute />} />
@@ -129,17 +129,17 @@ export default function AppRoutes() {
       <Route path="/chat" element={<PermissionPageRoute module="Projects"><ChatPage /></PermissionPageRoute>} />
       <Route path="/admin/api-logs" element={
         <ProtectedRoute allowedRoles={['Administrator']}>
-          {(user) => <PageLayout user={user}><ApiLogsPage /></PageLayout>}
+          {(user) => <SidebarLayout user={user}><ApiLogsPage /></SidebarLayout>}
         </ProtectedRoute>
       } />
       <Route path="/admin/audit-logs" element={
         <ProtectedRoute allowedRoles={['Administrator']}>
-          {(user) => <PageLayout user={user}><AuditLogsPage /></PageLayout>}
+          {(user) => <SidebarLayout user={user}><AuditLogsPage /></SidebarLayout>}
         </ProtectedRoute>
       } />
       <Route path="/admin/db-explorer" element={
         <ProtectedRoute allowedRoles={['Administrator']}>
-          {(user) => <PageLayout user={user}><DatabaseExplorerPage /></PageLayout>}
+          {(user) => <SidebarLayout user={user}><DatabaseExplorerPage /></SidebarLayout>}
         </ProtectedRoute>
       } />
       <Route path="*" element={<Navigate to="/login" replace />} />
