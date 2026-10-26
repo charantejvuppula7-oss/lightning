@@ -128,7 +128,8 @@ def request_password_reset(identifier):
         record, code = PasswordResetOTP.create_for_user(user)
 
     try:
-        sent, error = EmailService.send_password_reset_otp(user.email, code)
+        sent, error = EmailService.send_password_reset_otp(user.email, code,
+            f'{user.first_name} {user.last_name}'.strip() or user.user_name)
     except Exception as exc:
         sent, error = False, type(exc).__name__
     if not sent:

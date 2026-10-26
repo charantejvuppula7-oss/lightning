@@ -10,9 +10,14 @@ class RoleSerializer(serializers.ModelSerializer):
     """
     Serializer for the Role model handling name uniqueness and permission schema validation.
     """
+    user_count = serializers.SerializerMethodField()
+
+    def get_user_count(self, instance):
+        return instance.user_count if hasattr(instance,'user_count') else instance.userdata_set.count()
+
     class Meta:
         model = Role
-        fields = ('id', 'name', 'description', 'color', 'is_locked', 'permissions')
+        fields = ('id', 'name', 'description', 'color', 'is_locked', 'permissions', 'user_count')
         read_only_fields = ('id',)
 
     def validate_name(self, value):

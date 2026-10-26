@@ -5,8 +5,9 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError as ModelValidationError
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
-from api.models import ChatMention, Project, ProjectChatMessage, ProjectChatRoom, UserData
-from apps.notifications.models import Notification
+from api.models import ChatMention, Project, ProjectChatMessage, ProjectChatRoom, UserData, ResourceFile
+from apps.notifications.models import Notification, EmailOutbox
+from apps.notifications.email_outbox import enqueue_emails
 from apps.roles.permissions import require_permission
 
 
@@ -61,6 +62,12 @@ def save_chat_message(user, data):
         ValidationError: If parent message is invalid or outside the project room.
     """
     room = get_chat_room(data['project_id'], user, create=True)
+    attachment = None
+    if data.get('attachment_id'):
+        require_permission(user, 'Documents', 'View')
+        attachment = ResourceFile.objects.filter(pk=data['attachment_id'], project_id=data['project_id']).first()
+        if attachment is None:
+            raise ValidationError({'attachment_id': 'Attachment is not in this project.'})
     parent = None
     if data.get('parent_message_id'):
         parent = ProjectChatMessage.objects.filter(
@@ -72,7 +79,7 @@ def save_chat_message(user, data):
         try:
             message, created = ProjectChatMessage.objects.get_or_create(
                 room=room, sender=user, client_id=client_id,
-                defaults={'content': data['content'], 'parent_message': parent},
+                defaults={'content': data['content'], 'parent_message': parent, 'attachment': attachment},
             )
         except ModelValidationError:
             message = ProjectChatMessage.objects.filter(
@@ -82,7 +89,7 @@ def save_chat_message(user, data):
             created = False
     else:
         message = ProjectChatMessage.objects.create(room=room, sender=user,
-                                                    content=data['content'], parent_message=parent)
+                                                    content=data['content'], parent_message=parent, attachment=attachment)
         created = True
     if created:
         names = set(re.findall(r'(?<!\w)@([A-Za-z0-9_.-]+)', message.content))
@@ -100,5 +107,11 @@ def save_chat_message(user, data):
                 message=f'{user.user_name} mentioned you: "{message.content[:230]}"'[:300],
             ) for recipient in recipients
         ], ignore_conflicts=True)
+        enqueue_emails([(EmailOutbox.CHAT_MENTION, {
+            'to_email': recipient.email,
+            'sender_name': f'{user.first_name} {user.last_name}'.strip() or user.user_name,
+            'project_name': room.project.project_name, 'message': message.content,
+            'message_id': str(message.pk), 'mentioned_usernames': sorted(names),
+        }) for recipient in recipients if recipient.email])
     return message, created
 

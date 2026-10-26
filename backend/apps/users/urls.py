@@ -5,6 +5,7 @@ from apps.users.auth.views import (
     PasswordResetRequestView, PasswordResetVerifyView, PasswordResetConfirmView,
 )
 from apps.users.views import UserListCreateView, UserDetailView, ProjectUserWorkloadView, ProfileView
+from apps.users.options import UserOptionsView
 
 
 urlpatterns = [
@@ -17,6 +18,7 @@ urlpatterns = [
     path('auth/password-reset/confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
     path('profile/', ProfileView.as_view(), name='profile'),
     path('users/', UserListCreateView.as_view(), name='users-list'),
+    path('users/options/', UserOptionsView.as_view()),
     path('users/<uuid:user_id>/', UserDetailView.as_view(), name='users-detail'),
     path('projects/<uuid:project_id>/users/workload/', ProjectUserWorkloadView.as_view(),
          name='project-user-workload'),

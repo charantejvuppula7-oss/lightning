@@ -3,6 +3,8 @@
 Django 6 and DRF backend with session authentication, permission-based RBAC,
 explicit resource APIViews, PostgreSQL support, and ASGI event streams.
 
+Ubuntu 26.04 Nginx/systemd setup is documented in [deploy/README.md](../deploy/README.md).
+
 ## Structure
 
 ```text
@@ -112,6 +114,21 @@ Request middleware records safe request metadata and emits structured log lines.
 Business audit rows are written in the resource transaction, so an audit write
 failure rolls back the resource change. They remain separate from API request logs.
 
+## Log retention
+
+Audit and API request logs are retained for seven days. Run
+`python manage.py cleanup_logs` to delete existing records older than seven days;
+the cutoff uses each record's timestamp and leaves newer records untouched.
+
+On Windows, run `powershell -NoProfile -File scripts/install-log-cleanup.ps1`
+from the backend directory once. This installs or updates the current user's
+`Company_2_LogCleanup` scheduled task. It runs every 24 hours while that user is logged in,
+including when the API is stopped, and catches up after missed runs. Records may
+remain for up to 24 hours after reaching seven days. The task uses the backend
+virtual environment and database configuration; no additional dependency is needed.
+Other deployments should schedule `python manage.py cleanup_logs` every 24 hours using
+their existing job scheduler.
+
 ## Notifications and chat
 
 `python manage.py generate_due_notifications` checks tasks and dependencies with
@@ -146,7 +163,8 @@ accepts an email but before the sent mark is saved can result in a duplicate.
 
 ## Run and verify
 
-Set `USE_SQLITE=True` for the local SQLite database; PostgreSQL is the default.
+Use PostgreSQL for local development: `USE_SQLITE=False`, `POSTGRES_HOST=127.0.0.1`,
+`POSTGRES_PORT=5432`, `POSTGRES_DB=companydb`. These match the Company database.
 Run migrations before serving an existing database. A production deployment can
 set `DJANGO_SETTINGS_MODULE=config.settings.production` and must provide
 `SECRET_KEY` and `ALLOWED_HOSTS`.
@@ -157,3 +175,24 @@ set `DJANGO_SETTINGS_MODULE=config.settings.production` and must provide
 .\venv\Scripts\python.exe manage.py test
 .\venv\Scripts\python.exe -m uvicorn config.asgi:application --port 8000
 ```
+
+
+## Monitoring and database explorer
+
+The frontend uses shared controls in `ui/src/components/common`, its navbar in
+`ui/src/layouts`, and the three monitoring screens in `ui/src/features/audit`.
+Log state, pagination, formatting, and the page shell are shared within that feature.
+Backend queries, model registry, and record operations stay in `apps/admin_panel`.
+No additional database tables or migrations are required.
+
+- `GET /api/api-logs/`: filters by method, status code (including `2xx`, `4xx`, `5xx`), search and dates; returns filtered metrics, results and pagination.
+- `GET /api/audit-logs/`: filters by action, entity, search and dates; returns results and pagination. Admins, project managers and roles with Audit Logs.View may read it.
+- `GET /api/admin/database/tables/`: curated model metadata and counts.
+- `GET /api/admin/database/table/<key>/`: paginated, searchable and sortable records.
+- `GET/PUT/PATCH/DELETE /api/admin/database/table/<key>/<id>/`: inspect, validate updates, or delete records. Mutations require the normal session and CSRF token, record audit entries transactionally, and block deleting the active admin account.
+- `GET /api/search/?q=...`: navbar results scoped to existing resource permissions.
+
+The existing `/api/admin/logs/*` and `/api/admin/db/*` URLs alias the same views.
+The database explorer only exposes registered application models; password hashes
+and session keys are omitted. Existing record edits retain model validation and
+foreign-key protections. API-log polling is excluded from request logging.

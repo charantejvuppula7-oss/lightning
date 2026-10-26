@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Lighting v2 log cleanup every 24 hours
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+AccuracySec=1min
+Unit=lighting-v2-log-cleanup.service
+
+[Install]
+WantedBy=timers.target

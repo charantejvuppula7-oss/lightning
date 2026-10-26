@@ -37,7 +37,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         Raises:
             ValidationError: If project start/end dates conflict with existing sprints or milestones.
         """
-        require_project_members(self.context['request'].user, attrs)
+        require_project_members(self.context['request'].user, attrs, self.instance)
         validate_model_attributes(Project, self.instance, {
             key: value for key, value in attrs.items()
             if key in ('project_code', 'project_name', 'description', 'customer_link',
@@ -95,6 +95,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class InitialTaskSerializer(serializers.ModelSerializer):
+    description = serializers.CharField(required=False, allow_blank=True, default='')
     temp_id = serializers.CharField(max_length=100, required=False)
     sprint_ref = serializers.CharField(max_length=100, required=False)
     assigned_to = serializers.UUIDField()
@@ -250,8 +251,8 @@ class ProjectCreateSerializer(ProjectSerializer):
             if assignee not in member_ids or users[assignee].account_status != 'active':
                 item_errors['assigned_to'] = 'Assignee must be an active project member.'
             reviewer = task.get('review_by')
-            if reviewer and reviewer not in member_ids:
-                item_errors['review_by'] = 'Reviewer must be a project member.'
+            if reviewer and (reviewer not in member_ids or users[reviewer].account_status != 'active'):
+                item_errors['review_by'] = 'Reviewer must be an active project member.'
             if task.get('sprint_ref') and task['sprint_ref'] not in sprint_refs:
                 item_errors['sprint_ref'] = 'Sprint reference does not exist.'
             ref = task.get('temp_id')

@@ -1,4 +1,13 @@
 const styles = {
+  versionCardFooter: {
+    fontSize: '11.5px', color: 'var(--color-slate-400)', textAlign: 'center',
+    marginTop: '14px', fontWeight: '500', letterSpacing: '0.02em',
+  },
+  bottomPageVersion: {
+    position: 'absolute', bottom: '16px', left: '50%', transform: 'translateX(-50%)',
+    fontSize: '12px', color: 'var(--color-slate-400)', fontWeight: '500',
+    letterSpacing: '0.02em', pointerEvents: 'none',
+  },
   container: {
     display: "flex",
     justifyContent: "center",

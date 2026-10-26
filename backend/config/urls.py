@@ -14,10 +14,16 @@ When adding a new domain/feature:
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from apps.core.search import GlobalSearchView
+from apps.core.version import AppVersionView
 
 
 urlpatterns = [
+    path('api/user/app-version/', AppVersionView.as_view()),
+    path('api/search/', GlobalSearchView.as_view()),
     path('api/', include('apps.users.urls')),
+    path('api/', include('apps.approvals.urls')),
+    path('api/', include('apps.documents.urls')),
     path('api/', include('apps.roles.urls')),
     path('api/', include('apps.projects.urls')),
     path('api/', include('apps.features.urls')),

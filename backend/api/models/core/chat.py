@@ -65,7 +65,7 @@ class ProjectChatMessage(models.Model):
         on_delete=models.CASCADE,
         related_name='sent_project_messages'
     )
-    content = models.TextField()
+    content = models.TextField(blank=True)
     client_id = models.CharField(max_length=100, null=True, blank=True)
     attachment = models.ForeignKey(
         'ResourceFile',

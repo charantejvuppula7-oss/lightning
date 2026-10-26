@@ -1,227 +1,256 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useProjectSelection } from '../app/hooks/index.js'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import GlobalSearch from '../components/common/GlobalSearch.jsx'
+import ProjectSelector from '../components/common/ProjectSelector.jsx'
+import { navigateToSearchResult } from '../components/common/searchNavigation.js'
 import { NotificationBell } from '../features/notifications/NotificationBell.jsx'
 import { getSession } from '../features/auth/api/authApi.js'
+import { roleSlug } from '../utils/roles.js'
 
-/* styling */
-const tailwindStyling = {
-  "material-symbols-outlined": [
-    "[font-family:'Material_Symbols_Outlined']",
-    "[font-weight:normal]",
-    "[font-style:normal]",
-    "[font-size:20px]",
-    "[line-height:1]",
-    "[letter-spacing:normal]",
-    "[text-transform:none]",
-    "[white-space:nowrap]",
-    "[word-wrap:normal]",
-    "[direction:ltr]",
-    "[font-feature-settings:'liga']",
-    "[-webkit-font-smoothing:antialiased]",
-    "[&.sidebar-icon]:[font-size:20px]"
-  ],
-  "topbar": [
-    "[height:50px]",
-    "[min-height:50px]",
-    "[position:sticky]",
-    "[top:0]",
-    "[z-index:40]",
-    "[box-sizing:border-box]",
-    "[border-bottom:1px_solid_var(--color-slate-200)]",
-    "[display:flex]",
-    "[align-items:center]",
-    "[justify-content:space-between]",
-    "[gap:12px]",
-    "[padding:0_24px]",
-    "[background:var(--color-white)]",
-    "[&_button:focus-visible]:[outline:2px_solid_var(--color-primary)]",
-    "[&_button:focus-visible]:[outline-offset:2px]",
-    "max-[900px]:[padding:0_14px]",
-    "max-[600px]:[height:auto]",
-    "max-[600px]:[min-height:50px]",
-    "max-[600px]:[flex-wrap:wrap]",
-    "max-[600px]:[padding:8px_12px]"
-  ],
-  "project-select": [
-    "[min-width:136px]",
-    "[height:32px]",
-    "[border:1px_solid_var(--color-slate-200)]",
-    "[border-radius:8px]",
-    "[background:var(--color-white)]",
-    "[padding:0_12px]",
-    "[display:flex]",
-    "[align-items:center]",
-    "[gap:6px]",
-    "[justify-content:space-between]",
-    "[font:inherit]",
-    "[font-size:13px]",
-    "[font-weight:600]",
-    "[color:var(--color-slate-900)]",
-    "[&_.material-symbols-outlined]:[font-size:16px]",
-    "[&_.material-symbols-outlined]:[color:var(--color-slate-500)]",
-    "max-[600px]:[min-width:105px]"
-  ],
-  "project-switcher": [
-    "[position:relative]",
-    "[&_summary]:[cursor:pointer]",
-    "[&_summary]:[list-style:none]",
-    "[&_summary::-webkit-details-marker]:[display:none]"
-  ],
-  "project-select-label": [
-    "[max-width:180px]",
-    "[overflow:hidden]",
-    "[text-overflow:ellipsis]",
-    "[white-space:nowrap]"
-  ],
-  "project-switcher-menu": [
-    "[position:absolute]",
-    "[top:calc(100%_+_6px)]",
-    "[left:0]",
-    "[min-width:220px]",
-    "[max-height:320px]",
-    "[overflow-y:auto]",
-    "[padding:5px]",
-    "[background:var(--color-white)]",
-    "[border:1px_solid_var(--color-slate-200)]",
-    "[border-radius:8px]",
-    "[box-shadow:0_8px_20px_#17203320]",
-    "[z-index:50]",
-    "[&_button]:[width:100%]",
-    "[&_button]:[border:0]",
-    "[&_button]:[border-radius:5px]",
-    "[&_button]:[background:transparent]",
-    "[&_button]:[padding:8px_10px]",
-    "[&_button]:[text-align:left]",
-    "[&_button]:[font:inherit]",
-    "[&_button]:[font-size:13px]",
-    "[&_button]:[cursor:pointer]",
-    "[&_button:hover]:[background:var(--color-primary-subtle)]",
-    "[&_button:hover]:[color:var(--color-primary)]",
-    "[&_button[aria-current=\"true\"]]:[background:var(--color-primary-subtle)]",
-    "[&_button[aria-current=\"true\"]]:[color:var(--color-primary)]"
-  ],
-  "project-switcher-status": [
-    "[display:block]",
-    "[padding:8px_10px]",
-    "[color:var(--color-slate-500)]",
-    "[font-size:12px]"
-  ],
-  "topbar-actions": [
-    "[display:flex]",
-    "[align-items:center]",
-    "[gap:12px]",
-    "[min-width:0]",
-    "max-[600px]:[flex:1_1_100%]",
-    "max-[600px]:[gap:10px]"
-  ],
-  "search-box": [
-    "[width:260px]",
-    "[height:36px]",
-    "[display:flex]",
-    "[align-items:center]",
-    "[gap:12px]",
-    "[border:1px_solid_var(--color-slate-200)]",
-    "[border-radius:6px]",
-    "[padding:0_12px]",
-    "[color:var(--color-slate-400)]",
-    "[box-shadow:0_1px_4px_#1720330d]",
-    "[&_input]:[min-width:0]",
-    "[&_input]:[width:100%]",
-    "[&_input]:[border:0]",
-    "[&_input]:[outline:0]",
-    "[&_input]:[font:inherit]",
-    "[&_input]:[color:var(--color-slate-600)]",
-    "[&_input]:[font-size:15px]",
-    "[&_input]:[background:transparent]",
-    "[&_.material-symbols-outlined]:[font-size:20px]",
-    "[&_.material-symbols-outlined]:[flex:0_0_20px]",
-    "[&:focus-within]:[outline:2px_solid_var(--color-primary)]",
-    "[&:focus-within]:[outline-offset:2px]",
-    "max-[900px]:[width:min(260px,_35vw)]",
-    "max-[600px]:[flex:1]",
-    "max-[600px]:[width:auto]",
-    "max-[600px]:[min-width:0]",
-    "max-[600px]:[padding-inline:9px]"
-  ],
-  "avatar": [
-    "[width:32px]",
-    "[height:32px]",
-    "[flex:0_0_32px]",
-    "[border-radius:50%]",
-    "[display:grid]",
-    "[place-items:center]",
-    "[background:#f97316]",
-    "[color:white]",
-    "[font-size:12px]",
-    "[font-weight:700]"
-  ]
-}
-const styling = value => {
-  const classes = typeof value === 'string' ? value : ''
-  const utilities = classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])
-  return [...new Set([...classes.split(/\s+/), ...utilities])].filter(Boolean).join(' ')
-}
+const getPMInitials = user => `${(user.first_name || user.First_Name || '').trim()[0] || ''}${(user.last_name || user.Last_Name || '').trim()[0] || ''}`.toUpperCase()
 
+export default function Navbar({ role: roleProp, showProjectSelector, projects = [], projectOptions = [], selectedProjectId, selectedProjectName, selectedProject, activeProjectObj, onProjectSelect, title, subtitle, badge, icon, leftContent, showSearch = true, searchQuery, searchValue, onSearchChange, setSearchQuery, onSearchResult, localSearchData = {}, searchPlaceholder = 'Search tasks, docs, people....', searchStyle, showNotificationBell = true, onOpenNotifications, onOpenInbox, showAvatar = true, currentPM: propPM, currentUser: propUser, user: propGenericUser, avatarColor, avatarStyle, rightStyle, avatarInitials: propInitials, onAvatarClick, actions, rightContent, children, style, className }) {
+ const navigate = useNavigate()
+ const location = useLocation()
+ const role = roleSlug(roleProp || propGenericUser?.role || propUser?.role || propPM?.role)
+ const effectiveRole = location.pathname.startsWith('/admin/') ? 'admin' : role === 'admin' || role === 'pm' ? role : 'user'
+ const incoming = propPM || propUser || propGenericUser
+ const [sessionUser, setSessionUser] = useState(null)
+ useEffect(() => {
+   if (incoming) return
+   let active = true
+   getSession().then(data => { if (active) setSessionUser(data.user) }).catch(() => {})
+   return () => { active = false }
+ }, [incoming])
+ const currentUser = incoming || sessionUser
+  // Derive initials
+  const userInitials =
+    propInitials ||
+    (currentUser ? getPMInitials(currentUser) : "") ||
+    (effectiveRole === "admin" ? "AD" : effectiveRole === "user" ? "U" : "PM");
 
+  // Derive avatar display name for tooltip
+  const avatarTooltip =
+    currentUser?.User_Name ||
+    currentUser?.username ||
+    currentUser?.user_name ||
+    (currentUser
+      ? `${currentUser.first_name || currentUser.First_Name || ""} ${currentUser.last_name || currentUser.Last_Name || ""}`.trim()
+      : effectiveRole === "admin"
+      ? "Admin"
+      : effectiveRole === "user"
+      ? "My Profile"
+      : "Project Manager");
 
-export default function Navbar({ user, searchQuery, onSearchChange }) {
-  const { projects, selectedProjectId, setSelectedProjectId, loading, error, loadProjects } = useProjectSelection()
-  const dropdown = useRef(null)
-  const [sessionUser, setSessionUser] = useState(null)
-  useEffect(() => { loadProjects() }, [loadProjects])
-  useEffect(() => {
-    if (user) return
-    let active = true
-    getSession().then((data) => {
-      if (active) setSessionUser(data.user)
-    }).catch(() => {})
-    return () => { active = false }
-  }, [user])
-  useEffect(() => {
-    const closeOnOutsideClick = (event) => {
-      if (dropdown.current && !dropdown.current.contains(event.target)) dropdown.current.open = false
+  // Determine if project selector should display
+  const shouldShowProjectSelector =
+    typeof showProjectSelector === "boolean"
+      ? showProjectSelector
+      : !title && !leftContent;
+
+  // ── Search Callback ─────────────────────────────────────────────────────
+  const currentSearchVal = searchValue !== undefined ? searchValue : searchQuery;
+  const currentSearchChange = onSearchChange || (setSearchQuery ? (e) => setSearchQuery(e.target.value) : undefined);
+
+  const handleSearchResult = (item) => {
+    if (onSearchResult) {
+      onSearchResult(item);
+      return;
     }
-    document.addEventListener('pointerdown', closeOnOutsideClick)
-    return () => document.removeEventListener('pointerdown', closeOnOutsideClick)
-  }, [])
-  const selectedProject = projects.find((project) => project.id === selectedProjectId)
-  const currentUser = user || sessionUser
-  const initials = `${currentUser?.first_name?.trim()[0] || ''}${currentUser?.last_name?.trim()[0] || ''}`.toUpperCase() || '?'
+    navigateToSearchResult(item, navigate);
+  };
 
-  const selectProject = (id) => {
-    setSelectedProjectId(id)
-    dropdown.current.open = false
-  }
+  // ── Notification Click ──────────────────────────────────────────────────
+  const handleOpenInbox = () => {
+    if (onOpenNotifications) {
+      onOpenNotifications();
+      return;
+    }
+    if (onOpenInbox) {
+      onOpenInbox();
+      return;
+    }
+    if (effectiveRole === "pm") {
+      navigate("/pm/notifications");
+    } else if (effectiveRole === "user") {
+      navigate("/user/dashboard", { state: { tab: "notifications" } });
+    } else {
+      navigate("/admin/notifications");
+    }
+  };
 
-  return <header className={styling("topbar")}>
-    <details className={styling("project-switcher")} ref={dropdown}>
-      <summary className={styling("project-select")} aria-label="Select project">
-        <span className={styling("project-select-label")}>{selectedProject?.project_name || 'All Projects'}</span>
-        <span className={styling("material-symbols-outlined")} aria-hidden="true">expand_more</span>
-      </summary>
-      <div className={styling("project-switcher-menu")}>
-        {loading && <span className={styling("project-switcher-status")}>Loading projects…</span>}
-        {error && <button type="button" onClick={loadProjects}>Retry loading projects</button>}
-        {!error && <>
-          <button type="button" aria-current={selectedProjectId === 'all' ? 'true' : undefined} onClick={() => selectProject('all')}>All Projects</button>
-          {projects.map((project) => <button
-            type="button"
-            key={project.id}
-            aria-current={selectedProjectId === project.id ? 'true' : undefined}
-            onClick={() => selectProject(project.id)}
-          >{project.project_name}</button>)}
-          {!loading && projects.length === 0 && <span className={styling("project-switcher-status")}>No assigned projects</span>}
-        </>}
+  // ── Avatar Click ────────────────────────────────────────────────────────
+  const handleAvatarClick = () => {
+    if (onAvatarClick) {
+      onAvatarClick();
+      return;
+    }
+    if (effectiveRole === "pm") {
+      navigate("/pm/profile");
+    } else if (effectiveRole === "user") {
+      navigate("/user/profile");
+    } else {
+      navigate("/admin/profile");
+    }
+  };
+
+  // Avatar default colors by role
+  const resolvedAvatarBg =
+    avatarColor ||
+    (effectiveRole === "pm"
+      ? "var(--color-role-pm)"
+      : effectiveRole === "user"
+      ? "#1E3A8A"
+      : "var(--color-slate-900)");
+
+  return (
+    <header
+      className={`app-navbar ${effectiveRole}-navbar ${className || ""}`}
+      style={{
+        height: "50px",
+        minHeight: "50px",
+        maxHeight: "50px",
+        backgroundColor: "var(--color-white)",
+        borderBottom: "1px solid var(--color-slate-200)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 24px",
+        boxSizing: "border-box",
+        position: "sticky",
+        top: 0,
+        zIndex: 40,
+        width: "100%",
+        flexShrink: 0,
+        fontFamily: "'Inter', sans-serif",
+        ...style,
+      }}
+    >
+      {/* ── LEFT SECTION ──────────────────────────────────────────────── */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
+        {leftContent ? (
+          leftContent
+        ) : title ? (
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            {icon && (
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: "20px", color: "var(--color-primary)" }}
+              >
+                {icon}
+              </span>
+            )}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <h1
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: "700",
+                    color: "var(--color-slate-900)",
+                    margin: 0,
+                    lineHeight: "1.2",
+                  }}
+                >
+                  {title}
+                </h1>
+                {badge && (
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: "600",
+                      backgroundColor: "var(--color-primary-subtle)",
+                      color: "var(--color-primary)",
+                      padding: "2px 8px",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    {badge}
+                  </span>
+                )}
+              </div>
+              {subtitle && (
+                <span style={{ fontSize: "11px", color: "var(--color-slate-500)", display: "block" }}>
+                  {subtitle}
+                </span>
+              )}
+            </div>
+          </div>
+        ) : shouldShowProjectSelector ? (
+          <ProjectSelector
+            projects={projects}
+            projectOptions={projectOptions}
+            selectedProjectId={selectedProjectId}
+            selectedProjectName={selectedProjectName}
+            selectedProject={selectedProject || activeProjectObj?.Project_Name || activeProjectObj?.name}
+            onProjectSelect={onProjectSelect}
+            role={effectiveRole}
+            user={currentUser}
+          />
+        ) : null}
       </div>
-    </details>
-    <div className={styling("topbar-actions")}>
-      <label className={styling("search-box")}>
-        <span className={styling("material-symbols-outlined")} aria-hidden="true">search</span>
-        <input aria-label="Search" placeholder="Search tasks, docs, people...." value={searchQuery} onChange={onSearchChange} />
-      </label>
-      <NotificationBell />
-      <Link to="/profile" className={styling("avatar")} title="My Profile" style={{ textDecoration: 'none' }}>{initials}</Link>
-    </div>
-  </header>
+
+      {/* ── RIGHT SECTION ─────────────────────────────────────────────── */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0, ...rightStyle }}>
+        {/* Custom Actions (e.g. Refresh, Add Task, or extra buttons) */}
+        {actions}
+        {children}
+        {rightContent}
+
+        {/* Global Search */}
+        {showSearch && (
+          location.pathname.endsWith('/chat') && currentSearchChange ? <div style={{display:'flex',alignItems:'center',gap:8,width:220,height:34,border:'1px solid var(--color-slate-300)',borderRadius:8,padding:'0 12px',background:'white'}}><span className="material-symbols-outlined" style={{fontSize:18,color:'var(--color-slate-400)'}}>search</span><input aria-label="Search messages" placeholder={searchPlaceholder} value={currentSearchVal || ''} onChange={currentSearchChange} style={{border:0,outline:0,background:'none',width:'100%',font:'13px Inter,sans-serif'}} /></div> : <GlobalSearch
+            value={currentSearchVal}
+            onChange={currentSearchChange}
+            placeholder={searchPlaceholder}
+            localData={localSearchData}
+            dropdownAlignment="right"
+            style={{ width: "260px", ...searchStyle }}
+            onSelectResult={handleSearchResult}
+          />
+        )}
+
+        {/* Notification Bell */}
+        {showNotificationBell && (
+          <NotificationBell onOpenInbox={handleOpenInbox} />
+        )}
+
+        {/* User Profile Avatar */}
+        {showAvatar && (
+          <div
+            role="button" tabIndex={0} aria-label="Open my profile"
+            onKeyDown={event => { if (event.key === "Enter" || event.key === " ") handleAvatarClick() }}
+            onClick={handleAvatarClick}
+            title={avatarTooltip}
+            style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              backgroundColor: resolvedAvatarBg,
+              color: "var(--color-white)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "12px",
+              fontWeight: "700",
+              cursor: "pointer",
+              userSelect: "none",
+              flexShrink: 0,
+              boxShadow:
+                effectiveRole === "user"
+                  ? "0 2px 4px rgba(30, 58, 138, 0.25)"
+                  : effectiveRole === "pm"
+                  ? "0 2px 4px rgba(249, 115, 22, 0.25)"
+                  : "0 2px 4px rgba(37, 99, 235, 0.25)",
+              transition: "transform 0.15s ease",
+              ...avatarStyle,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.06)")}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+          >
+            {userInitials}
+          </div>
+        )}
+      </div>
+    </header>
+  );
 }

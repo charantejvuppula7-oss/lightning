@@ -10,7 +10,7 @@ from apps.notifications.services import schedule_assignment_notice
 from apps.core.views import ResourceAPIView
 
 
-TASK_QUERYSET = Task.objects.select_related('project', 'assigned_to', 'review_by', 'sprint', 'feature')
+TASK_QUERYSET = Task.objects.select_related('project', 'assigned_to', 'review_by', 'sprint', 'feature__Milestone').prefetch_related('dependencies', 'project__project_managers')
 
 
 class TaskListCreateView(ResourceAPIView):
@@ -33,7 +33,7 @@ class TaskListCreateView(ResourceAPIView):
         queryset = filter_tasks(self.authorized_queryset(request), request.query_params)
         paginator = ResourcePagination()
         page = paginator.paginate_queryset(queryset, request, view=self)
-        return paginator.get_paginated_response(TaskSerializer(page, many=True).data)
+        return paginator.get_paginated_response(TaskSerializer(page, many=True, context={'request': request}).data)
 
     def post(self, request):
         """
@@ -51,7 +51,7 @@ class TaskListCreateView(ResourceAPIView):
             instance = serializer.save()
             self.audit(request, instance, 'created')
             schedule_assignment_notice(instance, request.user)
-        return Response(TaskSerializer(instance).data, status=status.HTTP_201_CREATED)
+        return Response(TaskSerializer(instance, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
 
 class TaskDetailView(ResourceAPIView):
@@ -73,7 +73,7 @@ class TaskDetailView(ResourceAPIView):
             Response: Serialized task details.
         """
         instance = self.authorized_object(request, task_id)
-        return Response(TaskSerializer(instance).data)
+        return Response(TaskSerializer(instance, context={'request': request}).data)
 
     def put(self, request, task_id):
         """
@@ -95,7 +95,7 @@ class TaskDetailView(ResourceAPIView):
             self.audit(request, instance, 'updated')
             if instance.assigned_to_id != previous_assignee_id:
                 schedule_assignment_notice(instance, request.user)
-        return Response(TaskSerializer(instance).data)
+        return Response(TaskSerializer(instance, context={'request': request}).data)
 
     def patch(self, request, task_id):
         """
@@ -117,7 +117,7 @@ class TaskDetailView(ResourceAPIView):
             self.audit(request, instance, 'updated')
             if instance.assigned_to_id != previous_assignee_id:
                 schedule_assignment_notice(instance, request.user)
-        return Response(TaskSerializer(instance).data)
+        return Response(TaskSerializer(instance, context={'request': request}).data)
 
     def delete(self, request, task_id):
         """

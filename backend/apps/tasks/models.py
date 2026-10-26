@@ -106,8 +106,8 @@ class Task(models.Model):
         errors = {}
         if self.assigned_to_id not in members or self.assigned_to.account_status != 'active':
             errors['assigned_to'] = 'User is not an active project member.'
-        if self.review_by_id and self.review_by_id not in members:
-            errors['review_by'] = 'Reviewer is not a project member.'
+        if self.review_by_id and (self.review_by_id not in members or self.review_by.account_status != 'active'):
+            errors['review_by'] = 'Reviewer is not an active project member.'
         if self.sprint_id and self.sprint.project_id != self.project_id:
             errors['sprint'] = 'Sprint belongs to a different project.'
         if self.feature_id and self.feature.Milestone.project_id != self.project_id:

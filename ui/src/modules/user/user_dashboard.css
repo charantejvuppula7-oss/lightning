@@ -1,0 +1,47 @@
+.user-workspace {max-width:1440px;margin:0 auto;padding:24px 32px 60px;display:flex;flex-direction:column;gap:24px;color:var(--color-slate-900,#0f172a)}
+.user-workspace h1 {font-size:24px;font-weight:800;letter-spacing:-.3px;margin:0 0 4px}
+.user-workspace header p {font-size:13px;font-weight:500;color:var(--color-slate-500,#64748b);margin:0}
+.user-workspace h2 {font-size:15px;font-weight:700;margin:0 0 12px}
+.workspace-metrics {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.workspace-metrics article {display:flex;align-items:center;gap:12px;padding:16px;border:1px solid #e5ebf2;border-radius:10px;background:white}
+.workspace-metrics img {width:40px;height:40px;object-fit:contain;border-radius:8px}
+.workspace-metrics strong {display:block;font-size:12px;font-weight:600;color:#64748b}
+.workspace-metrics b {display:block;font-size:18px;font-weight:800;margin-top:2px}
+.workspace-metrics .due {color:var(--color-danger,#dc2626)}
+.workspace-toolbar {display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px;font-size:12px}
+.workspace-toolbar label {flex:1;min-width:220px;height:32px;display:flex;align-items:center;gap:8px;border:1px solid #e2e8f0;border-radius:6px;background:white;padding:0 12px}
+.workspace-toolbar label span {font-size:17px;color:#94a3b8}
+.workspace-toolbar input {border:0;outline:0;background:transparent;width:100%;font:inherit;font-size:12.5px}
+.workspace-toolbar button {height:32px;padding:0 12px;border:1px solid #e2e8f0;background:white;border-radius:6px;font:inherit;cursor:pointer}
+.workspace-toolbar button.selected {background:#eff6ff;color:#2563eb;border-color:#bfdbfe}
+.workspace-toolbar>span {color:#64748b;font-size:12px}
+.workspace-milestones {display:flex;flex-direction:column;gap:16px}
+.workspace-milestone {border:1px solid #e5ebf2;border-radius:12px;overflow:hidden;background:white}
+.workspace-milestone-heading {display:flex;align-items:center;gap:10px;width:100%;padding:16px 20px;background:white;border:0;text-align:left;font:inherit;font-size:11px;cursor:pointer}
+.workspace-group-title {flex:1;min-width:0}
+.workspace-group-title strong {display:block;font-size:14px;font-weight:700}
+.workspace-group-title small {display:block;font-size:11px;color:#64748b;margin-top:4px}
+.workspace-badge {font-size:11px;font-weight:600;background:#eff6ff;color:#2563eb;border-radius:4px;padding:3px 7px}
+.workspace-badge.complete {background:#7cb96f;color:#172033}
+.workspace-meter {display:inline-block;width:70px;height:5px;background:#e5ebf2;border-radius:4px;overflow:hidden}
+.workspace-meter i {display:block;height:100%;background:#2563eb}
+.workspace-features {border-top:1px solid #e5ebf2;padding:8px 20px}
+.workspace-features details {padding:10px 0}
+.workspace-features summary {cursor:pointer;font-size:12px;color:#475569}
+.workspace-features summary>span {float:right;font-size:11px;color:#64748b}
+.workspace-task {display:flex;align-items:center;gap:10px;font-size:11px;padding:10px 0 6px 20px;border-bottom:1px solid #f1f5f9}
+.workspace-task>a {flex:1;color:#334155;text-decoration:none;font-weight:500}
+.workspace-task>a:hover {color:#2563eb;text-decoration:underline}
+.workspace-initials {width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#eff6ff;color:#2563eb;font-size:9px}
+.workspace-task time {color:#64748b;min-width:45px}
+.workspace-task-status {text-transform:capitalize;color:#475569}
+.workspace-activities {background:white;border:1px solid #e5ebf2;border-radius:12px;padding:20px 24px}
+.workspace-activities article {display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #f1f5f9;font-size:12px}
+.workspace-activities article:last-child {border-bottom:0}
+.workspace-activities article>span {color:#2563eb;background:#eff6ff;border-radius:50%;padding:5px;font-size:18px}
+.workspace-activities strong {flex:1;font-weight:500}
+.workspace-activities strong small {display:block;color:#64748b;margin-top:4px}
+.workspace-activities time {font-size:11px;color:#94a3b8}
+.workspace-empty {padding:20px;text-align:center;color:#64748b;font-size:13px}
+@media(max-width:1000px) {.workspace-metrics {grid-template-columns:repeat(2,minmax(0,1fr))}.user-workspace {padding:24px 20px}.workspace-meter {display:none}}
+@media(max-width:600px) {.user-workspace {padding:20px 12px}.workspace-task {gap:6px;padding-left:0;flex-wrap:wrap}.workspace-milestone-heading {padding:14px 12px}.workspace-features {padding:8px 12px}.workspace-metrics article {padding:12px;gap:8px}.workspace-metrics img {width:32px;height:32px}}

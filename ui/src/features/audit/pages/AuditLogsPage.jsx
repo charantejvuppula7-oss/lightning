@@ -1,224 +1,421 @@
-import { useState, useEffect, useCallback } from 'react'
-import { getAuditLogs } from '../api/adminApi.js'
-import AdminTable from '../components/AdminTable.jsx'
-import StatusBadge from '../components/StatusBadge.jsx'
 import Paginator from '../components/Paginator.jsx'
-
-/* styling */
-const tailwindStyling = {
-  "page-content": [
-    "[padding:28px]",
-    "max-[600px]:[padding:16px]"
-  ],
-  "page-heading": [
-    "[background:white]",
-    "[border:1px_solid_#e5e6eb]",
-    "[border-radius:12px]",
-    "[padding:19px_22px_0]",
-    "[margin-bottom:20px]",
-    "[&_h1]:[margin:0]",
-    "[&_h1]:[font-size:28px]",
-    "[&_h1]:[line-height:1.25]",
-    "[&_h1]:[letter-spacing:-.4px]",
-    "[&_h1]:[color:#172033]",
-    "[&_p]:[margin:4px_0_0]",
-    "[&_p]:[font-size:14px]",
-    "[&_p]:[color:#737986]"
-  ],
-  "admin-filters": [
-    "[display:flex]",
-    "[flex-wrap:wrap]",
-    "[gap:8px]",
-    "[margin-top:16px]",
-    "[margin-bottom:4px]"
-  ],
-  "admin-input": [
-    "[height:34px]",
-    "[border:1px_solid_var(--color-slate-200)]",
-    "[border-radius:6px]",
-    "[padding:0_10px]",
-    "[font:inherit]",
-    "[font-size:13px]",
-    "[color:var(--color-slate-900)]",
-    "[background:var(--color-white)]",
-    "[min-width:140px]",
-    "[&:focus]:[outline:2px_solid_var(--color-primary)]",
-    "[&:focus]:[outline-offset:2px]",
-    "[&:focus]:[border-color:var(--color-primary)]"
-  ],
-  "admin-select": [
-    "[height:34px]",
-    "[border:1px_solid_var(--color-slate-200)]",
-    "[border-radius:6px]",
-    "[padding:0_10px]",
-    "[font:inherit]",
-    "[font-size:13px]",
-    "[color:var(--color-slate-900)]",
-    "[background:var(--color-white)]",
-    "[cursor:pointer]",
-    "[&:focus]:[outline:2px_solid_var(--color-primary)]",
-    "[&:focus]:[outline-offset:2px]"
-  ],
-  "admin-btn": [
-    "[height:34px]",
-    "[padding:0_16px]",
-    "[border:none]",
-    "[border-radius:6px]",
-    "[background:var(--color-primary)]",
-    "[color:#fff]",
-    "[font:inherit]",
-    "[font-size:13px]",
-    "[font-weight:600]",
-    "[cursor:pointer]",
-    "[&:hover]:[background:var(--color-primary-hover)]"
-  ],
-  "admin-btn-ghost": [
-    "[background:var(--color-slate-100)]",
-    "[color:var(--color-slate-600)]",
-    "[&:hover]:[background:var(--color-slate-200)]",
-    "[&:hover]:[color:var(--color-slate-900)]"
-  ],
-  "admin-meta": [
-    "[font-size:12px]",
-    "[color:var(--color-slate-500)]",
-    "[padding:8px_0_4px]"
-  ],
-  "admin-badge": [
-    "[display:inline-block]",
-    "[padding:2px_8px]",
-    "[border-radius:20px]",
-    "[font-size:11px]",
-    "[font-weight:700]",
-    "[text-transform:uppercase]",
-    "[letter-spacing:.04em]",
-    "[white-space:nowrap]"
-  ],
-  "admin-badge-neutral": [
-    "[background:var(--color-slate-100)]",
-    "[color:var(--color-slate-600)]"
-  ]
-}
-const styling = value => {
-  const classes = typeof value === 'string' ? value : ''
-  const utilities = classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])
-  return [...new Set([...classes.split(/\s+/), ...utilities])].filter(Boolean).join(' ')
-}
+import logStyles from '../components/logStyles.js'
 
 
+import useLogHistory from '../hooks/useLogHistory.js'
+import DetailRow from '../components/LogDetailRow.jsx'
+import { formatLogDate as fmtDate } from '../logFormat.js'
+import AdminPageLayout from "../components/AdminPageLayout.jsx";
+import DatePicker from "../../../components/common/DatePicker.jsx";
+import Navbar from "../../../layouts/Navbar.jsx";
+import { FilterSelect, SearchBar } from "../../../components/common/SearchControls.jsx";
 
-const PAGE_SIZE = 50
+// ── Action badge colors map ──────────────────────────────────────────
+const ACTION_COLORS = {
+  login: { bg: "var(--color-success-bg)", text: "var(--color-success-dark)" },
+  logout: { bg: "var(--color-slate-100)", text: "var(--color-slate-600)" },
+  login_failed: { bg: "var(--color-danger-border)", text: "#b91c1c" },
+  created: { bg: "var(--color-primary-border)", text: "var(--color-primary-hover)" },
+  updated: { bg: "#fff7ed", text: "var(--color-role-pm-dark)" },
+  deleted: { bg: "var(--color-danger-border)", text: "#b91c1c" },
+  completed: { bg: "var(--color-success-bg)", text: "var(--color-success-dark)" },
+  status_changed: { bg: "#fff7ed", text: "var(--color-role-pm-dark)" },
+  uploaded: { bg: "#ccfbf1", text: "#0d9488" },
+  downloaded: { bg: "#cffafe", text: "#0891b2" },
+  assigned: { bg: "var(--color-primary-border)", text: "var(--color-primary-hover)" },
+  reassigned: { bg: "#fff7ed", text: "var(--color-role-pm-dark)" },
+  reordered: { bg: "#fff7ed", text: "var(--color-role-pm-dark)" },
+  access_denied: { bg: "var(--color-danger-border)", text: "#b91c1c" },
+  timer_paused: { bg: "var(--color-slate-100)", text: "var(--color-slate-600)" },
+  timer_resumed: { bg: "var(--color-success-bg)", text: "var(--color-success-dark)" },
+};
 
-const ACTIONS = [
-  'login', 'login_failed', 'logout', 'created', 'updated', 'deleted',
-  'completed', 'status_changed', 'uploaded', 'downloaded', 'assigned',
-  'reassigned', 'reordered', 'access_denied', 'timer_paused', 'timer_resumed',
-]
+// ── Entity type badge colors map ─────────────────────────────────────
+const ENTITY_COLORS = {
+  project: { bg: "#f3e8ff", text: "#7e22ce" },
+  task: { bg: "var(--color-primary-border)", text: "var(--color-primary-hover)" },
+  sprint: { bg: "#e0e7ff", text: "#3730a3" },
+  milestone: { bg: "#f3e8ff", text: "#7e22ce" },
+  feature: { bg: "#f3e8ff", text: "#7e22ce" },
+  resource_file: { bg: "#ccfbf1", text: "#0d9488" },
+  user_account: { bg: "#ffedd5", text: "var(--color-role-pm-dark)" },
+  dependency: { bg: "var(--color-primary-border)", text: "var(--color-primary-hover)" },
+  session: { bg: "var(--color-slate-100)", text: "var(--color-slate-600)" },
+};
 
-const ENTITY_TYPES = [
-  'project', 'task', 'sprint', 'milestone', 'feature',
-  'resource_file', 'user_account', 'role', 'dependency', 'session',
-]
-
-const COLUMNS = [
-  { key: 'timestamp',   label: 'Time',        render: (v) => fmtDate(v) },
-  { key: 'user_name',   label: 'User' },
-  { key: 'action',      label: 'Action',      render: (v) => <StatusBadge value={v} type="action" /> },
-  { key: 'entity_type', label: 'Entity Type', render: (v) => <span className={styling("admin-badge admin-badge-neutral")}>{v}</span> },
-  { key: 'entity_name', label: 'Entity',      render: (v) => v || '—' },
-  { key: 'description', label: 'Description', render: (v) => <span title={v}>{truncate(v, 60)}</span> },
-  { key: 'ip_address',  label: 'IP' },
-]
-
-function fmtDate(iso) {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleString('en-GB', { hour12: false })
-}
-
-function truncate(str, n) {
-  if (!str) return '—'
-  return str.length > n ? str.slice(0, n) + '…' : str
-}
-
-export default function AuditLogsPage() {
-  const [rows, setRows]       = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(null)
-  const [page, setPage]       = useState(1)
-  const [total, setTotal]     = useState(0)
-  const [filters, setFilters] = useState({ action: '', entity_type: '', user: '' })
-  const [draft, setDraft]     = useState({ action: '', entity_type: '', user: '' })
-
-  const totalPages = Math.ceil(total / PAGE_SIZE)
-
-  const load = useCallback(async (p, f) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await getAuditLogs({ page: p, page_size: PAGE_SIZE, ...f })
-      setRows(data.results ?? [])
-      setTotal(data.count ?? 0)
-    } catch {
-      setError('Failed to load audit logs. Make sure you are signed in as Administrator.')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => { load(page, filters) }, [page, filters, load])
-
-  function applyFilters(e) {
-    e.preventDefault()
-    setPage(1)
-    setFilters({ ...draft })
-  }
-
-  function clearFilters() {
-    const empty = { action: '', entity_type: '', user: '' }
-    setDraft(empty)
-    setFilters(empty)
-    setPage(1)
-  }
-
+export default function AuditLogsPage({ user }) {
+  const { logs, pagination, filters, setFilters, loading, error, selectedLog, setSelectedLog, autoRefresh, setAutoRefresh, fetchLogs, handleFilterChange, handleSearch, clearFilters } = useLogHistory('audit-logs', { action: '', entity_type: '', search: '', date_from: '', date_to: '' })
+  // ── render ─────────────────────────────────────────────────────────
   return (
-    <div className={styling("page-content")}>
-      <div className={styling("page-heading")}>
-        <h1>Audit Logs</h1>
-        <p>Immutable record of every user action performed in the system.</p>
+    <AdminPageLayout user={user}>
 
-        <form className={styling("admin-filters")} onSubmit={applyFilters}>
-          <select
-            className={styling("admin-select")}
-            value={draft.action}
-            onChange={(e) => setDraft((d) => ({ ...d, action: e.target.value }))}
-          >
-            <option value="">All Actions</option>
-            {ACTIONS.map((a) => <option key={a} value={a}>{a}</option>)}
-          </select>
-          <select
-            className={styling("admin-select")}
-            value={draft.entity_type}
-            onChange={(e) => setDraft((d) => ({ ...d, entity_type: e.target.value }))}
-          >
-            <option value="">All Entities</option>
-            {ENTITY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
-          <input
-            className={styling("admin-input")}
-            placeholder="Username contains…"
-            value={draft.user}
-            onChange={(e) => setDraft((d) => ({ ...d, user: e.target.value }))}
-          />
-          <button type="submit" className={styling("admin-btn")}>Apply</button>
-          <button type="button" className={styling("admin-btn admin-btn-ghost")} onClick={clearFilters}>Clear</button>
-        </form>
+      {/* Sidebar — Admin or PM depending on route */}
+
+
+      {/* Main Container */}
+      <div style={s.mainContainer}>
+        {/* Top Navbar */}
+        <Navbar user={user} />
+
+        {/* Page Body */}
+        <div style={s.pageBody}>
+          {/* ── Title Row ─────────────────────────────────────────────── */}
+          <div style={s.titleRow}>
+            <div>
+              <h1 style={s.pageTitle}>Audit Logs</h1>
+              <span style={s.pageSubtitle}>Security audit trail & activity history</span>
+            </div>
+            <div style={s.titleActions}>
+              <label style={s.toggleLabel}>
+                <input
+                  type="checkbox"
+                  checked={autoRefresh}
+                  onChange={() => setAutoRefresh(!autoRefresh)}
+                  style={{ marginRight: 6, accentColor: "var(--color-primary)", cursor: "pointer" }}
+                />
+                Auto-refresh (10s)
+              </label>
+              <button
+                type="button"
+                onClick={() => fetchLogs(pagination.page)}
+                style={s.refreshBtn}
+                title="Refresh"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                  refresh
+                </span>
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          {/* ── Filters ───────────────────────────────────────────────── */}
+          <form onSubmit={handleSearch} style={s.filterBar}>
+            <SearchBar
+              name="search"
+              placeholder="Search description, user or entity…"
+              value={filters.search}
+              onChange={handleFilterChange}
+            />
+            <FilterSelect
+              name="action"
+              value={filters.action}
+              onChange={handleFilterChange}
+              minWidth="140px"
+            >
+              <option value="">All Actions</option>
+              {Object.keys(ACTION_COLORS).map((act) => (
+                <option key={act} value={act}>
+                  {act.replace("_", " ").toUpperCase()}
+                </option>
+              ))}
+            </FilterSelect>
+            <FilterSelect
+              name="entity_type"
+              value={filters.entity_type}
+              onChange={handleFilterChange}
+              minWidth="140px"
+            >
+              <option value="">All Entity Types</option>
+              {Object.keys(ENTITY_COLORS).map((ent) => (
+                <option key={ent} value={ent}>
+                  {ent.replace("_", " ").toUpperCase()}
+                </option>
+              ))}
+            </FilterSelect>
+            <div style={{ width: "150px" }}>
+              <DatePicker
+                value={filters.date_from}
+                onChange={(val) => setFilters((prev) => ({ ...prev, date_from: val }))}
+                allowPastDates={true}
+                placeholder="From date"
+                style={{ height: "38px" }}
+              />
+            </div>
+            <div style={{ width: "150px" }}>
+              <DatePicker
+                value={filters.date_to}
+                onChange={(val) => setFilters((prev) => ({ ...prev, date_to: val }))}
+                allowPastDates={true}
+                placeholder="To date"
+                style={{ height: "38px" }}
+              />
+            </div>
+            <button type="submit" style={s.applyBtn}>
+              Apply
+            </button>
+            <button type="button" onClick={clearFilters} style={s.clearBtn}>
+              Clear
+            </button>
+          </form>
+
+          {error && <div role="alert">{error}</div>}
+          {/* ── Table ─────────────────────────────────────────────────── */}
+          <div style={s.tableCard}>
+            {loading && (
+              <div style={s.loadingOverlay}>
+                <div style={s.spinnerLg} />
+              </div>
+            )}
+            <div style={{ overflowX: "auto" }}>
+              <table style={s.table}>
+                <thead>
+                  <tr>
+                    <th style={s.th}>Timestamp</th>
+                    <th style={s.th}>User</th>
+                    <th style={s.th}>Action</th>
+                    <th style={s.th}>Entity Type</th>
+                    <th style={s.th}>Entity Name</th>
+                    <th style={{ ...s.th, width: "100%" }}>Description</th>
+                    <th style={s.th}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs.length === 0 && !loading && (
+                    <tr>
+                      <td colSpan={7} style={s.emptyCell}>
+                        No audit logs found.
+                      </td>
+                    </tr>
+                  )}
+                  {logs.map((log) => {
+                    const ac = ACTION_COLORS[log.action] || { bg: "var(--color-slate-100)", text: "var(--color-slate-600)" };
+                    const ec = ENTITY_COLORS[log.entity_type] || { bg: "var(--color-slate-100)", text: "var(--color-slate-600)" };
+                    return (
+                      <tr key={log.id} className="audit-row" style={s.tr}>
+                        <td style={s.td}>{fmtDate(log.timestamp)}</td>
+                        <td style={{ ...s.td, fontWeight: 600 }}>{log.user}</td>
+                        <td style={s.td}>
+                          <span
+                            style={{
+                              ...s.badge,
+                              backgroundColor: ac.bg,
+                              color: ac.text,
+                            }}
+                          >
+                            {log.action.replace("_", " ")}
+                          </span>
+                        </td>
+                        <td style={s.td}>
+                          <span
+                            style={{
+                              ...s.badge,
+                              backgroundColor: ec.bg,
+                              color: ec.text,
+                            }}
+                          >
+                            {log.entity_type.replace("_", " ")}
+                          </span>
+                        </td>
+                        <td style={{ ...s.td, ...s.entityCell, fontWeight: 500 }}>{log.entity_name || "—"}</td>
+                        <td style={{ ...s.td, ...s.descCell }}>{log.description}</td>
+                        <td style={s.td}>
+                          <button
+                            onClick={() => setSelectedLog(log)}
+                            style={s.detailBtn}
+                          >
+                            Details
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <Paginator pagination={pagination} onPage={fetchLogs} />
+          </div>
+        </div>
       </div>
 
-      <div className={styling("admin-meta")}>
-        {!loading && <span>{total.toLocaleString()} records</span>}
-      </div>
-
-      <AdminTable columns={COLUMNS} rows={rows} loading={loading} error={error} />
-      <Paginator page={page} totalPages={totalPages} onPage={setPage} />
-    </div>
-  )
+      {/* ── Detail modal ──────────────────────────────────────────── */}
+      {selectedLog && (
+        <div style={s.overlay} onClick={() => setSelectedLog(null)}>
+          <div style={s.modal} onClick={(e) => e.stopPropagation()}>
+            <div style={s.modalHeader}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: "20px", color: "var(--color-primary)" }}>
+                  history
+                </span>
+                <h2 style={s.modalTitle}>Audit Log Details</h2>
+              </div>
+              <button onClick={() => setSelectedLog(null)} style={s.closeBtn}>
+                ✕
+              </button>
+            </div>
+            <div style={s.modalBody}>
+              <DetailRow label="Timestamp" value={fmtDate(selectedLog.timestamp)} />
+              <DetailRow label="User" value={selectedLog.user} />
+              <DetailRow label="Action" value={selectedLog.action} />
+              <DetailRow label="Entity Type" value={selectedLog.entity_type} />
+              <DetailRow label="Entity ID" value={selectedLog.entity_id || "—"} />
+              <DetailRow label="Entity Name" value={selectedLog.entity_name || "—"} />
+              <DetailRow label="Description" value={selectedLog.description} />
+              <DetailRow label="Request Path" value={selectedLog.request_path || "—"} />
+              <DetailRow label="IP Address" value={selectedLog.ip_address || "—"} />
+              <div style={s.detailRow}>
+                <span style={s.detailLabel}>Context</span>
+                <span style={s.detailValue}>
+                  <pre style={s.jsonPre}>
+                    {JSON.stringify(selectedLog.context, null, 2)}
+                  </pre>
+                </span>
+              </div>
+              {(selectedLog.old_values || selectedLog.new_values) && (
+                <>
+                  <div style={s.detailRow}>
+                    <span style={s.detailLabel}>Old Values</span>
+                    <span style={s.detailValue}>
+                      <pre style={s.jsonPre}>
+                        {JSON.stringify(selectedLog.old_values, null, 2)}
+                      </pre>
+                    </span>
+                  </div>
+                  <div style={s.detailRow}>
+                    <span style={s.detailLabel}>New Values</span>
+                    <span style={s.detailValue}>
+                      <pre style={s.jsonPre}>
+                        {JSON.stringify(selectedLog.new_values, null, 2)}
+                      </pre>
+                    </span>
+                  </div>
+                </>
+              )}
+              <div style={s.detailRow}>
+                <span style={s.detailLabel}>User Agent</span>
+                <span
+                  style={{
+                    ...s.detailValue,
+                    wordBreak: "break-all",
+                    fontSize: 12,
+                    textAlign: "left",
+                  }}
+                >
+                  {selectedLog.user_agent || "—"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </AdminPageLayout>
+  );
 }
+
+// ── Small helper components ──────────────────────────────────────────
+
+const s = { ...logStyles, ...{
+  "titleRow": {
+    "display": "flex",
+    "alignItems": "center",
+    "justifyContent": "space-between",
+    "marginBottom": "18px"
+  },
+  "pageTitle": {
+    "fontSize": "18px",
+    "fontWeight": "700",
+    "color": "var(--color-slate-900)",
+    "margin": 0,
+    "letterSpacing": "-0.2px"
+  },
+  "pageSubtitle": {
+    "fontSize": "12px",
+    "color": "var(--color-slate-500)",
+    "marginTop": "3px",
+    "display": "block"
+  },
+  "titleActions": {
+    "display": "flex",
+    "alignItems": "center",
+    "gap": "14px"
+  },
+  "refreshBtn": {
+    "display": "flex",
+    "alignItems": "center",
+    "gap": "6px",
+    "padding": "6px 14px",
+    "height": "34px",
+    "backgroundColor": "var(--color-white)",
+    "border": "1px solid var(--color-slate-300)",
+    "borderRadius": "8px",
+    "fontSize": "13px",
+    "fontWeight": "500",
+    "color": "var(--color-slate-700)",
+    "cursor": "pointer",
+    "transition": "all 0.15s ease"
+  },
+  "pageBody": {
+    "padding": "24px 32px",
+    "flex": 1
+  },
+  "applyBtn": {
+    "height": "38px",
+    "padding": "0 22px",
+    "backgroundColor": "var(--color-primary)",
+    "color": "var(--color-white)",
+    "border": "none",
+    "borderRadius": "8px",
+    "fontWeight": "600",
+    "fontSize": "13px",
+    "cursor": "pointer",
+    "boxShadow": "0 1px 2px rgba(37, 99, 235, 0.15)",
+    "transition": "background-color 0.15s ease"
+  },
+  "clearBtn": {
+    "height": "38px",
+    "padding": "0 18px",
+    "backgroundColor": "var(--color-white)",
+    "color": "var(--color-slate-700)",
+    "border": "1px solid var(--color-slate-300)",
+    "borderRadius": "8px",
+    "fontWeight": "500",
+    "fontSize": "13px",
+    "cursor": "pointer",
+    "transition": "background-color 0.15s ease"
+  },
+  "descCell": {
+    "maxWidth": 320,
+    "overflow": "hidden",
+    "textOverflow": "ellipsis",
+    "whiteSpace": "normal"
+  },
+  "entityCell": {
+    "maxWidth": 180,
+    "overflow": "hidden",
+    "textOverflow": "ellipsis",
+    "whiteSpace": "normal"
+  },
+  "badge": {
+    "display": "inline-block",
+    "padding": "4px 10px",
+    "borderRadius": "12px",
+    "fontWeight": "600",
+    "fontSize": "11px",
+    "letterSpacing": "0.03em",
+    "textTransform": "capitalize"
+  },
+  "modal": {
+    "backgroundColor": "var(--color-white)",
+    "borderRadius": "14px",
+    "width": "90%",
+    "maxWidth": "640px",
+    "maxHeight": "85vh",
+    "overflow": "auto",
+    "boxShadow": "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+    "border": "1px solid var(--color-slate-200)"
+  },
+  "jsonPre": {
+    "margin": "8px 0 0",
+    "padding": "12px",
+    "backgroundColor": "var(--color-slate-50)",
+    "border": "1px solid var(--color-slate-200)",
+    "borderRadius": "8px",
+    "fontFamily": "'Roboto Mono', monospace",
+    "fontSize": "12px",
+    "overflowX": "auto",
+    "color": "var(--color-slate-700)",
+    "textAlign": "left"
+  }
+} }

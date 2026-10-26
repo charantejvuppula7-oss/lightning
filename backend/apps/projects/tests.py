@@ -37,7 +37,8 @@ class AssignedProjectListTests(TestCase):
             date_of_joining=date(2025, 1, 1), role_link=Role.objects.create(name='admin'),
         )
         client.force_authenticate(user=admin)
-        self.assertEqual(client.get('/api/projects/assigned/').data['results'], [])
+        admin_projects = client.get('/api/projects/assigned/').data['results']
+        self.assertEqual({row['project_name'] for row in admin_projects}, {'Assigned', 'Private'})
 
 
 class ProjectSetupTests(TestCase):
@@ -97,7 +98,7 @@ class ProjectSetupTests(TestCase):
                     'feature_name': 'Authentication', 'description': 'Login',
                     'feature_start_date': '2026-10-02', 'feature_due_date': '2026-11-01T00:00:00Z',
                     'tasks': [{
-                        'temp_id': 'task-one', 'Task_Name': 'Login API', 'description': 'Implement login',
+                        'temp_id': 'task-one', 'Task_Name': 'Login API', 'description': '',
                         'assigned_to': str(self.admin.pk), 'review_by': str(self.admin.pk),
                         'planned_start_date': '2026-10-03', 'Due_Date': '2026-10-15',
                         'Remarks': '{"priority":"medium"}', 'sprint_ref': 'sprint-one',
@@ -126,6 +127,7 @@ class ProjectSetupTests(TestCase):
         self.assertEqual(Milestones.objects.filter(project_id=project_id).count(), 1)
         self.assertEqual(Milestone_Features.objects.filter(Milestone__project_id=project_id).count(), 1)
         self.assertEqual(Task.objects.filter(project_id=project_id).count(), 1)
+        self.assertEqual(Task.objects.get(project_id=project_id).description, '')
 
         detail = self.client.get(f'/api/projects/{project_id}/setup/')
         self.assertEqual(detail.status_code, 200)
@@ -139,3 +141,30 @@ class ProjectSetupTests(TestCase):
         self.assertEqual(updated.status_code, 200, updated.data)
         self.assertEqual(updated.data['customer_name'], 'Acme Updated')
         self.assertEqual(updated.data['resource_links'], ['https://example.com/updated'])
+
+
+    def test_workspace_uses_real_selected_project_data_and_scopes_tasks(self):
+        project = Project.objects.create(project_name='Real workspace',created_by=self.admin)
+        milestone = Milestones.objects.create(project=project,name='Real delivery',description='',due_date=date(2026,11,30),created_by=self.admin,updated_by=self.admin)
+        feature = Milestone_Features.objects.create(Milestone=milestone,feature_name='Real feature')
+        role = Role.objects.create(name='Workspace reader',permissions={'Projects':{'View':True},'Tasks':{'View':True}})
+        member = UserData.objects.create(user_name='workspace_member',employee_id='WM1',first_name='Workspace',last_name='Member',email='workspace@example.com',password='unused',date_of_joining=date(2025,1,1),role_link=role)
+        project.team_members.add(member)
+        own = Task.objects.create(project=project,feature=feature,assigned_to=member,Task_Name='Real assigned task',description='')
+        Task.objects.create(project=project,feature=feature,assigned_to=self.admin,Task_Name='Manager task',description='')
+        self.assertEqual(self.client.patch(f'/api/tasks/{own.pk}/status/',{'status':'completed'},format='json').status_code,200)
+        response = self.client.get(f'/api/workspace/?project={project.pk}')
+        self.assertEqual(response.status_code,200,response.data)
+        self.assertEqual(response.data['project']['project_name'],'Real workspace')
+        self.assertEqual(response.data['project']['milestones'][0]['name'],'Real delivery')
+        self.assertEqual(response.data['project']['milestones'][0]['progress'],50)
+        self.assertEqual(response.data['stats']['tasks'],2)
+        self.assertTrue(response.data['activities'])
+        self.client.force_authenticate(member)
+        response = self.client.get(f'/api/workspace/?project={project.pk}')
+        self.assertEqual(response.status_code,200,response.data)
+        self.assertEqual([row['id'] for row in response.data['tasks']],[own.pk])
+        self.assertEqual(response.data['stats']['tasks'],1)
+        self.assertEqual(response.data['project']['progress'],100)
+        private = Project.objects.create(project_name='Not assigned',created_by=self.admin)
+        self.assertEqual(self.client.get(f'/api/workspace/?project={private.pk}').status_code,404)

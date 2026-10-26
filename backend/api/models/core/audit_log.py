@@ -2,11 +2,11 @@
 Audit Log Model
 ~~~~~~~~~~~~~~~~
 
-Stores a permanent, immutable record of every user action in the system.
+Stores a record of user actions retained for seven days.
 Every create, update, delete, status change, login, and logout is captured
 here with full hierarchical context.
 
-These records are stored only — they are NOT displayed in any UI.
+Expired records are removed by the scheduled cleanup_logs command.
 """
 
 from django.db import models

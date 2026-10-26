@@ -13,7 +13,7 @@ from apps.projects.serializers import ProjectSerializer, ProjectCreateSerializer
 from apps.projects.services import create_project
 from apps.projects.filters import filter_projects
 from apps.core.views import ResourceAPIView
-from apps.roles.permissions import assigned_projects, has_permission, is_admin, require_permission
+from apps.roles.permissions import allowed_projects, has_permission, is_admin, require_permission
 
 
 PROJECT_QUERYSET = Project.objects.select_related('created_by', 'customer_link', 'priority_link', 'project_type_link').prefetch_related('team_members', 'project_managers', 'departments', 'links')
@@ -42,9 +42,18 @@ class ProjectSetupOptionsView(APIView):
                    for action in ('read', 'create', 'update')):
             raise PermissionDenied('Access denied.')
         users = UserData.objects.filter(account_status='active')
+        project = None
+        if request.query_params.get('project'):
+            from django.shortcuts import get_object_or_404
+            from rest_framework import serializers
+            project_id = serializers.UUIDField().run_validation(request.query_params['project'])
+            project = get_object_or_404(allowed_projects(request.user),pk=project_id)
         if not is_admin(request.user):
             from django.db.models import Q
-            users = users.filter(Q(pk=request.user.pk) | Q(manager=request.user))
+            scope = Q(pk=request.user.pk) | Q(manager=request.user)
+            if project:
+                scope |= Q(assigned_projects=project) | Q(managed_projects=project) | Q(default_projects=project) | Q(pk=project.created_by_id)
+            users = users.filter(scope).distinct()
         return Response({
             'customers': list(Customer.objects.order_by('name').values('id', 'name')),
             'priorities': list(Priority.objects.order_by('sort_order', 'name').values('id', 'name')),
@@ -73,7 +82,7 @@ class AssignedProjectListView(APIView):
         Returns:
             Response: Paginated project id/name tuples.
         """
-        projects = assigned_projects(request.user).order_by('project_name', 'pk').values('id', 'project_name')
+        projects = allowed_projects(request.user).order_by('project_name', 'pk').values('id', 'project_name')
         paginator = ResourcePagination()
         page = paginator.paginate_queryset(projects, request, view=self)
         return paginator.get_paginated_response(page)

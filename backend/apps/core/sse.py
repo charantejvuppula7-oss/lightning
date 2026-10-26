@@ -12,6 +12,12 @@ from django.db.models import Q
 from django.http import StreamingHttpResponse
 from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.renderers import JSONRenderer
+
+
+class EventStreamRenderer(JSONRenderer):
+    media_type = 'text/event-stream'
+    format = 'event-stream'
 
 
 logger = logging.getLogger(__name__)
@@ -103,7 +109,7 @@ def stream_response(fetch, cursor, event_name, presence_fetch=None):
             if presence_fetch is not None:
                 presence = await sync_to_async(presence_fetch, thread_sensitive=True)()
                 if presence != previous_presence:
-                    body = json.dumps({'users': presence}, cls=DjangoJSONEncoder, separators=(',', ':'))
+                    body = json.dumps(presence if isinstance(presence, dict) else {'users': presence}, cls=DjangoJSONEncoder, separators=(',', ':'))
                     yield f'event: typing_changed\ndata: {body}\n\n'.encode()
                     previous_presence = presence
             if monotonic() - last_heartbeat >= 15:

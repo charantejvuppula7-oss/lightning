@@ -6,6 +6,7 @@ Django Shared/Base Settings
 from pathlib import Path
 import os
 import sys
+from dotenv import load_dotenv
 
 # Configure PostgreSQL libpq and avoid Smart App Control binary blocks on Windows
 if sys.platform == 'win32':
@@ -28,6 +29,7 @@ if sys.platform == 'win32':
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # config/settings/base.py -> parent.parent.parent is backend/
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+load_dotenv(BASE_DIR / '.env')
 
 # Security settings
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-local-development-only')
@@ -150,8 +152,8 @@ else:
             'NAME': os.environ.get('POSTGRES_DB', 'companydb'),
             'USER': os.environ.get('POSTGRES_USER', 'postgres'),
             'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'root'),
-            'HOST': os.environ.get('POSTGRES_HOST', ''),
-            'PORT': os.environ.get('POSTGRES_PORT', '5433'),
+            'HOST': os.environ.get('POSTGRES_HOST', '127.0.0.1'),
+            'PORT': os.environ.get('POSTGRES_PORT', '5432'),
             'CONN_MAX_AGE': 0,
         }
     }
@@ -261,7 +263,8 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'webmaster@localhost')
 SERVER_EMAIL = os.environ.get('SERVER_EMAIL', DEFAULT_FROM_EMAIL)
 EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', 10))
-FRONTEND_URL = os.environ.get('FRONTEND_URL') or 'http://localhost:3000'
+FRONTEND_URL = os.environ.get('FRONTEND_URL') or 'http://localhost:5173'
+GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
 
 # ---------------------------------------------------------------------------
 # Microsoft Graph API — transactional email notifications

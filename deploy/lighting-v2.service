@@ -1,0 +1,17 @@
+[Unit]
+Description=Lighting v2 API
+After=network.target postgresql.service
+
+[Service]
+User=tachyon-pc-1
+WorkingDirectory=/home/tachyon-pc-1/Documents/company/lighting_v2.0/backend
+Environment=DJANGO_SETTINGS_MODULE=config.settings.production
+ExecStart=/home/tachyon-pc-1/Documents/company/lighting_v2.0/backend/venv/bin/python -m uvicorn config.asgi:application --host 127.0.0.1 --port 8084 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

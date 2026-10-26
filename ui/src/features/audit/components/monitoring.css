@@ -1,0 +1,4 @@
+.api-row:hover, .audit-row:hover, .db-row:hover { background-color: var(--color-slate-50) !important; }
+.tbl-nav-item { transition: all .15s ease; cursor: pointer; }
+.tbl-nav-item:hover:not(.active) { background-color: var(--color-slate-100); }
+.spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--color-slate-200); border-top-color: var(--color-primary); border-radius: 50%; animation: spin .7s linear infinite; }

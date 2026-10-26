@@ -10,6 +10,7 @@ class Notification(models.Model):
     TASK_OVERDUE = 'task_overdue'
     DEPENDENCY_DUE_TODAY = 'dependency_due_today'
     DEPENDENCY_OVERDUE = 'dependency_overdue'
+    DEPENDENCY_NUDGE = 'dependency_nudge'
     CHAT_MENTION = 'chat_mention'
     TYPES = [
         (TASK_ASSIGNED, 'Task assigned'),
@@ -18,6 +19,7 @@ class Notification(models.Model):
         (DEPENDENCY_DUE_TODAY, 'Dependency due today'),
         (DEPENDENCY_OVERDUE, 'Dependency overdue'),
         (CHAT_MENTION, 'Chat mention'),
+        (DEPENDENCY_NUDGE, 'Dependency nudge'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -34,6 +36,7 @@ class Notification(models.Model):
         constraints = [models.UniqueConstraint(
             fields=['user', 'notification_type', 'resource_id', 'notification_date'],
             name='unique_deadline_notification_per_day',
+            condition=~models.Q(notification_type='dependency_nudge'),
         )]
         indexes = [models.Index(fields=['user', 'is_read', '-created_at'],
                                 name='notification_user_unread_idx')]
@@ -43,7 +46,8 @@ class Notification(models.Model):
 class EmailOutbox(models.Model):
     ACCOUNT_CREATED = 'account_created'
     TASK_ASSIGNED = 'task_assigned'
-    KINDS = [(ACCOUNT_CREATED, 'Account created'), (TASK_ASSIGNED, 'Task assigned')]
+    CHAT_MENTION = 'chat_mention'
+    KINDS = [(ACCOUNT_CREATED, 'Account created'), (TASK_ASSIGNED, 'Task assigned'), (CHAT_MENTION, 'Chat mention')]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     kind = models.CharField(max_length=30, choices=KINDS)

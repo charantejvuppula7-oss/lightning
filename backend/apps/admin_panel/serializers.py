@@ -15,13 +15,14 @@ class ApiLogSerializer(serializers.ModelSerializer):
     """Serializes a single API request log row for the admin logs table."""
 
     user_name = serializers.SerializerMethodField()
+    user = serializers.CharField(source='user.user_name', default=None, read_only=True)
 
     class Meta:
         model = ApiRequestLog
         fields = [
-            'id', 'request_id', 'user_name', 'method', 'path',
+            'id', 'request_id', 'user', 'user_name', 'method', 'path',
             'status_code', 'response_time_ms', 'ip_address',
-            'user_agent', 'request_body_size', 'created_at',
+            'user_agent', 'query_params', 'request_body_size', 'created_at',
         ]
 
     def get_user_name(self, obj):
@@ -32,13 +33,14 @@ class AuditLogSerializer(serializers.ModelSerializer):
     """Serializes a single audit log entry for the admin audit table."""
 
     user_name = serializers.SerializerMethodField()
+    user = serializers.CharField(source='user.user_name', default=None, read_only=True)
 
     class Meta:
         model = AuditLog
         fields = [
-            'id', 'user_name', 'action', 'entity_type', 'entity_id',
+            'id', 'user', 'user_name', 'action', 'entity_type', 'entity_id',
             'entity_name', 'description', 'context', 'old_values',
-            'new_values', 'ip_address', 'request_path', 'timestamp',
+            'new_values', 'user_agent', 'ip_address', 'request_path', 'timestamp',
         ]
 
     def get_user_name(self, obj):

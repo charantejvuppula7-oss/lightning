@@ -4,6 +4,25 @@
 
 @layer base {
   :root {
+    --color-primary-light: #3B82F6;
+    --color-primary-border: #DBEAFE;
+    --color-slate-700: #334155;
+    --color-slate-800: #1E293B;
+    --color-black: #000000;
+    --color-indigo: #6366F1;
+    --color-success: #10B981;
+    --color-success-dark: #15803D;
+    --color-success-bg: #DCFCE7;
+    --color-danger-dark: #DC2626;
+    --color-danger-bg: #FEF2F2;
+    --color-danger-border: #FEE2E2;
+    --color-warning: #F59E0B;
+    --color-warning-dark: #D97706;
+    --color-warning-bg: #FEF3C7;
+    --color-role-pm: #F97316;
+    --color-role-pm-dark: #EA580C;
+    --color-role-admin: #0F172A;
+    --color-role-dev: #1E3A8A;
     font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     color: #172033;
     background: #f7f8fc;

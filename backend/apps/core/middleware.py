@@ -36,7 +36,7 @@ class ApiLogMiddleware:
             HttpResponse: Outgoing response with injected 'X-Request-ID' header.
         """
         request.request_id = str(uuid.uuid4())
-        if not request.path.startswith('/api/'):
+        if not request.path.startswith('/api/') or request.path.startswith(('/api/api-logs/', '/api/admin/logs/api/')):
             return self.get_response(request)
 
         start_time = time.monotonic()

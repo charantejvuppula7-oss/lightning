@@ -1,0 +1,12 @@
+[Unit]
+Description=Delete Lighting v2 audit and API logs older than seven days
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=tachyon-pc-1
+WorkingDirectory=/home/tachyon-pc-1/Documents/company/lighting_v2.0/backend
+Environment=DJANGO_SETTINGS_MODULE=config.settings.production
+ExecStart=/home/tachyon-pc-1/Documents/company/lighting_v2.0/backend/venv/bin/python manage.py cleanup_logs
+NoNewPrivileges=true
+PrivateTmp=true

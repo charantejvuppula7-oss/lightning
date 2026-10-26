@@ -62,3 +62,20 @@ class NotificationFlowTests(TestCase):
         self.assertEqual(message.pk, duplicate.pk)
         self.assertEqual(Notification.objects.filter(user=self.recipient,
                          notification_type=Notification.CHAT_MENTION).count(), 1)
+
+
+    def test_browser_event_stream_accept_header_is_supported(self):
+        from asgiref.sync import async_to_sync
+        from apps.chat.views import ChatStreamView
+        from apps.notifications.views import NotificationStreamView
+        for view, path, kwargs in [(ChatStreamView, f'/api/projects/{self.project.pk}/chat/stream/', {'project_id':self.project.pk}), (NotificationStreamView, '/api/notifications/stream/', {})]:
+            request = self.factory.get(path, HTTP_ACCEPT='text/event-stream')
+            force_authenticate(request, user=self.sender)
+            response = view.as_view()(request, **kwargs)
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response['Content-Type'].startswith('text/event-stream'))
+            async def consume():
+                stream = response.streaming_content
+                self.assertEqual(await anext(stream), b': connected\n\n')
+                await stream.aclose()
+            async_to_sync(consume)()

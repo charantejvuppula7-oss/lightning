@@ -12,6 +12,9 @@ Account creation and task assignment notification helpers.
 """
 
 import logging
+import re
+from html import escape
+from urllib.parse import quote
 import requests
 from django.conf import settings
 
@@ -43,7 +46,7 @@ class _GraphMailClient:
 
     def _get_access_token(self) -> str:
         """Acquire a short-lived OAuth2 access token via client credentials."""
-        url = self._TOKEN_URL.format(tenant_id=self._tenant_id)
+        url = self._TOKEN_URL.format(tenant_id=quote(self._tenant_id, safe=''))
         resp = requests.post(
             url,
             data={
@@ -55,10 +58,7 @@ class _GraphMailClient:
             timeout=15,
         )
         if resp.status_code != 200:
-            error_desc = resp.json().get("error_description", resp.text)
-            raise RuntimeError(
-                f"Graph token request failed [{resp.status_code}]: {error_desc}"
-            )
+            raise RuntimeError(f'Graph authentication failed (HTTP {resp.status_code}).')
         return resp.json()["access_token"]
 
     def send(self, to_email: str, subject: str, html_body: str) -> tuple:
@@ -74,11 +74,11 @@ class _GraphMailClient:
             return False, 'Email provider is not configured.'
         try:
             token = self._get_access_token()
-        except RuntimeError as exc:
-            logger.error("Graph API token error: %s", exc)
-            return False, str(exc)
+        except (RuntimeError, requests.RequestException, ValueError, KeyError) as exc:
+            logger.warning('Graph authentication failed: %s', type(exc).__name__)
+            return False, 'Email provider authentication is unavailable.'
 
-        url = self._SEND_URL.format(sender=self._sender_upn)
+        url = self._SEND_URL.format(sender=quote(self._sender_upn, safe=''))
         payload = {
             "message": {
                 "subject": subject,
@@ -133,7 +133,7 @@ class EmailService:
     """Service for composing and sending transactional emails via Microsoft Graph API."""
 
     @staticmethod
-    def send_password_reset_otp(to_email, otp_code):
+    def send_password_reset_otp(to_email, otp_code, user_display_name=''):
         """
         Send a one-time password (OTP) verification code for password reset.
 
@@ -146,9 +146,24 @@ class EmailService:
         """
         return _GraphMailClient().send(
             to_email, 'Password reset verification code',
-            f'<p>Your password reset code is <strong>{otp_code}</strong>.</p>'
-            '<p>It expires in 10 minutes. If you did not request it, ignore this email.</p>',
+            f'<div style="font-family:Arial,sans-serif;max-width:540px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">'
+            '<div style="background:#1e293b;padding:24px;color:white;text-align:center"><h2>Password Reset</h2><p>PROJECT LIGHTNING PLATFORM</p></div>'
+            f'<div style="padding:28px"><p>Hello <strong>{escape(user_display_name or to_email)}</strong>,</p>'
+            '<p>Use this verification code to reset your password:</p>'
+            f'<p style="font-size:32px;letter-spacing:6px;font-weight:bold;text-align:center">{escape(str(otp_code))}</p>'
+            '<p>This code expires in 10 minutes. If you did not request it, ignore this email.</p></div></div>',
         )
+
+    @staticmethod
+    def send_chat_mention_email(to_email, sender_name, project_name, message, message_id, mentioned_usernames):
+        names = '|'.join(re.escape(name) for name in sorted(mentioned_usernames, key=len, reverse=True))
+        parts = re.split(rf'(@(?:{names}))(?!\w)', message, flags=re.IGNORECASE) if names else [message]
+        content = ''.join(f'<strong style="color:#2563eb;background:#eff6ff">{escape(part)}</strong>'
+                          if index % 2 else escape(part) for index, part in enumerate(parts))
+        url = f"{settings.FRONTEND_URL.rstrip('/')}/notifications?resourceId={quote(str(message_id), safe='')}"
+        return _GraphMailClient().send(to_email, f'Chat mention in {project_name}',
+            f'<p>{escape(sender_name)} mentioned you in <strong>{escape(project_name)}</strong>.</p>'
+            f'<div style="white-space:pre-wrap">{content}</div><p><a href="{escape(url, quote=True)}">Open notification</a></p>')
 
     @staticmethod
     def send_account_created_email(
@@ -172,7 +187,10 @@ class EmailService:
             (True,  "Email sent successfully")  on success
             (False, "<error>")                  on failure
         """
-        creator_str = f" by <strong>{creator_name}</strong>" if creator_name else ""
+        user_display_name = escape(user_display_name or username)
+        username = escape(username)
+        reset_password_url = escape(reset_password_url, quote=True)
+        creator_str = f" by <strong>{escape(creator_name)}</strong>" if creator_name else ""
         subject = "Welcome to Tachyon - Your Account Has Been Created"
 
         html_body = f"""<!DOCTYPE html>
@@ -289,12 +307,15 @@ class EmailService:
 
         Called by the outbox worker after the database transaction commits.
         """
-        due_str = f"<strong>{due_date}</strong>" if due_date else "<em>No due date set</em>"
+        user_display_name = escape(user_display_name)
+        subject = f"New Task Assigned: {task_name}"
+        task_name = escape(task_name)
+        project_name = escape(project_name)
+        due_str = f"<strong>{escape(str(due_date))}</strong>" if due_date else "<em>No due date set</em>"
         assigner_str = (
-            f"<p>Assigned by: <strong>{assigned_by_name}</strong></p>"
+            f"<p>Assigned by: <strong>{escape(assigned_by_name)}</strong></p>"
             if assigned_by_name else ""
         )
-        subject = f"New Task Assigned: {task_name}"
 
         html_body = f"""<!DOCTYPE html>
 <html>

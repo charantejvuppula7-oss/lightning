@@ -12,6 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 
 from django.db import transaction
+from django.db import close_old_connections
 from django.db.models import F, Q
 from django.utils import timezone
 
@@ -44,8 +45,16 @@ def enqueue_emails(messages):
     if jobs:
         def dispatch():
             for job in jobs:
-                mail_pool.submit(deliver_email, job.pk)
+                mail_pool.submit(deliver_in_background, job.pk)
         transaction.on_commit(dispatch, robust=True)
+
+
+def deliver_in_background(job_id):
+    close_old_connections()
+    try:
+        return deliver_email(job_id)
+    finally:
+        close_old_connections()
 
 
 def deliver_email(job_id):
@@ -81,6 +90,8 @@ def deliver_email(job_id):
             sent, error = EmailService.send_account_created_email(**job.payload)
         elif job.kind == EmailOutbox.TASK_ASSIGNED:
             sent, error = EmailService.send_task_assigned_email(**job.payload)
+        elif job.kind == EmailOutbox.CHAT_MENTION:
+            sent, error = EmailService.send_chat_mention_email(**job.payload)
         else:
             raise ValueError('Unknown email kind.')
         if not sent:

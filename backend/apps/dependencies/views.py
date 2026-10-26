@@ -2,14 +2,15 @@ from django.db import transaction
 from rest_framework import status
 from rest_framework.response import Response
 
-from api.models import TaskDependency
+from api.models import TaskDependency, AuditLog
 from apps.core.pagination import ResourcePagination
 from apps.core.views import ResourceAPIView
-from apps.dependencies.serializers import DependencySerializer
+from apps.dependencies.serializers import DependencySerializer, can_manage_dependency
+from rest_framework.exceptions import PermissionDenied
 from apps.dependencies.filters import filter_dependencies
 
 
-DEPENDENCY_QUERYSET = TaskDependency.objects.select_related('task__project', 'depends_on', 'assigned_to')
+DEPENDENCY_QUERYSET = TaskDependency.objects.select_related('task__project', 'task__assigned_to', 'task__feature__Milestone', 'depends_on', 'assigned_to', 'review_by')
 
 
 class DependencyListCreateView(ResourceAPIView):
@@ -32,7 +33,15 @@ class DependencyListCreateView(ResourceAPIView):
         queryset = filter_dependencies(self.authorized_queryset(request), request.query_params)
         paginator = ResourcePagination()
         page = paginator.paginate_queryset(queryset, request, view=self)
-        return paginator.get_paginated_response(DependencySerializer(page, many=True).data)
+        history = {}
+        for item in AuditLog.objects.filter(entity_type='dependency', entity_id__in=[dep.pk for dep in page]).select_related('user').order_by('-timestamp')[:500]:
+            records = history.setdefault(str(item.entity_id), [])
+            if len(records) < 5:
+                person = item.user
+                records.append({'author': (person.first_name[:1] + person.last_name[:1]) if person else '?',
+                    'title': f'{DependencySerializer.person_name(person)} {item.action.replace("_", " ")}',
+                    'date': item.timestamp.strftime('%d %b %Y')})
+        return paginator.get_paginated_response(DependencySerializer(page, many=True, context={'history': history}).data)
 
     def post(self, request):
         """
@@ -105,6 +114,8 @@ class DependencyDetailView(ResourceAPIView):
         """
         with transaction.atomic():
             instance = self.authorized_object(request, dependency_id, lock=True)
+            if not can_manage_dependency(request.user, instance.task):
+                raise PermissionDenied('Only the task owner or project manager can delete this dependency.')
             self.audit(request, instance, 'deleted')
             instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

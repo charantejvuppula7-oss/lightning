@@ -11,6 +11,8 @@ from api.models import Project, Role, UserData
 
 
 MODULE_ACTIONS = {
+    'Dashboard': ('View', 'Create', 'Edit', 'Delete'),
+    'Audit Logs': ('View', 'Create', 'Edit', 'Delete'),
     'Tasks': ('View', 'Create', 'Edit', 'Delete'),
     'Features': ('View', 'Create', 'Edit', 'Delete'),
     'Milestones': ('View', 'Create', 'Edit', 'Delete'),
@@ -357,7 +359,7 @@ def require_user_relationships(actor, data, instance=None):
             require_project_scope(actor, project)
 
 
-def require_project_members(actor, data):
+def require_project_members(actor, data, project=None):
     """
     Validate that team members and managers assigned to a project fall within the actor's scope.
 
@@ -370,8 +372,11 @@ def require_project_members(actor, data):
     """
     if is_admin(actor):
         return
+    existing = set()
+    if project and (project.created_by_id == actor.pk or project.project_managers.filter(pk=actor.pk).exists()):
+        existing = set(project.team_members.values_list('pk',flat=True)) | set(project.project_managers.values_list('pk',flat=True)) | {project.created_by_id}
     for field in ('team_members', 'project_managers'):
-        if any(user.pk != actor.pk and user.manager_id != actor.pk for user in data.get(field, [])):
+        if any(user.pk != actor.pk and user.manager_id != actor.pk and user.pk not in existing for user in data.get(field, [])):
             raise PermissionDenied('User outside your scope.')
 
 

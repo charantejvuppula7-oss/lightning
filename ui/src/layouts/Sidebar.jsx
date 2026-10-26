@@ -1,257 +1,13 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { logout } from '../features/auth/api/authApi.js'
-import { getRoleDashboard, roleSlug } from '../utils/roles.js'
+import { roleSlug } from '../utils/roles.js'
+import { sidebarItems, sidebarItemActive } from './sidebarNavigation.js'
 import Navbar from './Navbar.jsx'
-import packageInfo from '../../package.json'
-import logo from '../assets/lightning-logo-light.png'
-import icon from '../assets/lightning-icon.png'
-
-/* styling */
-const tailwindStyling = {
-  "material-symbols-outlined": [
-    "[font-family:'Material_Symbols_Outlined']",
-    "[font-weight:normal]",
-    "[font-style:normal]",
-    "[font-size:20px]",
-    "[line-height:1]",
-    "[letter-spacing:normal]",
-    "[text-transform:none]",
-    "[white-space:nowrap]",
-    "[word-wrap:normal]",
-    "[direction:ltr]",
-    "[font-feature-settings:'liga']",
-    "[-webkit-font-smoothing:antialiased]",
-    "[&.sidebar-icon]:[font-size:20px]"
-  ],
-  "sidebar": [
-    "[width:220px]",
-    "[min-width:220px]",
-    "[flex:0_0_220px]",
-    "[box-sizing:border-box]",
-    "[height:100dvh]",
-    "[min-height:0]",
-    "[position:sticky]",
-    "[top:0]",
-    "[align-self:flex-start]",
-    "[z-index:50]",
-    "[overflow:hidden]",
-    "[padding:16px_14px]",
-    "[background:var(--color-white)]",
-    "[border-right:1px_solid_var(--color-slate-200)]",
-    "[display:flex]",
-    "[flex-direction:column]",
-    "[transition:width_.25s_cubic-bezier(.4,0,.2,1),_flex-basis_.25s_cubic-bezier(.4,0,.2,1),_padding_.25s_ease]",
-    "[&.role-admin]:[width:240px]",
-    "[&.role-admin]:[min-width:240px]",
-    "[&.role-admin]:[flex-basis:240px]",
-    "[&.role-admin]:[padding:20px_16px]",
-    "[&.collapsed]:[width:68px]",
-    "[&.collapsed]:[min-width:68px]",
-    "[&.collapsed]:[flex-basis:68px]",
-    "[&.collapsed]:[padding:16px_8px]",
-    "[&.role-admin.collapsed]:[padding-top:20px]",
-    "[&.role-admin_.sidebar-brand_img]:[max-width:150px]",
-    "[&.role-admin_.sidebar-brand_img]:[height:30px]",
-    "[&.role-admin_.sidebar-link]:[font-size:13px]",
-    "[&.role-pm_.sidebar-link]:[font-size:14px]",
-    "[&.role-developer_.sidebar-link]:[font-size:14px]",
-    "[&.role-user_.sidebar-link]:[font-size:14px]",
-    "[&.role-admin_.sidebar-logout]:[font-size:13px]",
-    "[&.role-pm_.sidebar-logout]:[font-size:14px]",
-    "[&.role-developer_.sidebar-logout]:[font-size:14px]",
-    "[&.role-user_.sidebar-logout]:[font-size:14px]",
-    "[&.role-admin_.sidebar-logout_.logout-icon]:[font-size:19px]",
-    "[&.role-pm_.sidebar-logout_.logout-icon]:[font-size:20px]",
-    "[&.role-developer_.sidebar-logout_.logout-icon]:[font-size:20px]",
-    "[&.role-user_.sidebar-logout_.logout-icon]:[font-size:20px]",
-    "[&.role-admin_.sidebar-logout]:[background:#fef2f2]",
-    "[&.role-admin_.sidebar-logout]:[color:#dc2626]",
-    "[&.role-admin_.sidebar-logout]:[border-radius:8px]",
-    "[&.role-admin_.sidebar-logout:hover]:[background:#fee2e2]",
-    "[&.collapsed_.sidebar-brand]:[justify-content:center]",
-    "[&.collapsed_.sidebar-brand_.sidebar-logo]:[width:26px]",
-    "[&.collapsed_.sidebar-brand_.sidebar-logo]:[height:26px]",
-    "[&.collapsed_.sidebar-brand_.sidebar-logo]:[object-fit:contain]",
-    "[&.collapsed_.sidebar-label]:[display:none]",
-    "[&.collapsed_.sidebar-brand_button]:[margin:0]",
-    "[&.collapsed_.sidebar-link]:[justify-content:center]",
-    "[&.collapsed_.sidebar-link]:[padding-inline:0]",
-    "[&.collapsed_.sidebar-logout]:[justify-content:center]",
-    "[&.collapsed_.sidebar-logout]:[padding-inline:0]",
-    "max-[900px]:[width:68px]",
-    "max-[900px]:[min-width:68px]",
-    "max-[900px]:[flex-basis:68px]",
-    "max-[900px]:[padding:16px_8px]",
-    "max-[900px]:[&.role-admin]:[width:68px]",
-    "max-[900px]:[&.role-admin]:[min-width:68px]",
-    "max-[900px]:[&.role-admin]:[flex-basis:68px]",
-    "max-[900px]:[&.role-admin]:[padding:16px_8px]",
-    "max-[900px]:[&.role-admin_.sidebar-brand_.sidebar-mobile-logo]:[display:block]",
-    "max-[900px]:[&.role-admin_.sidebar-brand_.sidebar-mobile-logo]:[width:26px]",
-    "max-[900px]:[&.role-admin_.sidebar-brand_.sidebar-mobile-logo]:[height:26px]"
-  ],
-  "sidebar-brand": [
-    "[flex:0_0_40px]",
-    "[display:flex]",
-    "[align-items:center]",
-    "[justify-content:space-between]",
-    "[gap:8px]",
-    "[margin-bottom:16px]",
-    "[padding:0_2px]",
-    "[min-width:0]",
-    "[&_img]:[width:auto]",
-    "[&_img]:[max-width:140px]",
-    "[&_img]:[height:28px]",
-    "[&_img]:[object-fit:contain]",
-    "[&_img]:[object-position:left_center]",
-    "[&_.sidebar-mobile-logo]:[display:none]",
-    "[&_button]:[margin-left:auto]",
-    "[&_button]:[border:0]",
-    "[&_button]:[border-radius:6px]",
-    "[&_button]:[background:transparent]",
-    "[&_button]:[color:var(--color-slate-500)]",
-    "[&_button]:[cursor:pointer]",
-    "[&_button]:[line-height:1]",
-    "[&_button]:[padding:4px]",
-    "[&_button]:[display:grid]",
-    "[&_button]:[place-items:center]",
-    "[&_button:focus-visible]:[outline:2px_solid_var(--color-primary)]",
-    "[&_button:focus-visible]:[outline-offset:2px]",
-    "[&_button_.material-symbols-outlined]:[font-size:20px]",
-    "max-[900px]:[justify-content:center]",
-    "max-[900px]:[&_.sidebar-logo]:[display:none]",
-    "max-[900px]:[&_.sidebar-version]:[display:none]",
-    "max-[900px]:[&_button]:[display:none]",
-    "max-[900px]:[&_.sidebar-mobile-logo]:[display:block]",
-    "max-[900px]:[&_.sidebar-mobile-logo]:[width:26px]",
-    "max-[900px]:[&_.sidebar-mobile-logo]:[height:26px]"
-  ],
-  "sidebar-brand-group": [
-    "[display:flex]",
-    "[align-items:center]",
-    "[gap:6px]",
-    "[min-width:0]"
-  ],
-  "sidebar-version": [
-    "[font-size:9px]",
-    "[line-height:1]",
-    "[font-weight:600]",
-    "[color:var(--color-slate-500)]",
-    "[white-space:nowrap]",
-    "[flex-shrink:0]"
-  ],
-  "sidebar-section-header": [
-    "[font-size:10px]",
-    "[font-weight:700]",
-    "[color:var(--color-slate-400)]",
-    "[text-transform:uppercase]",
-    "[letter-spacing:0.08em]",
-    "[padding:4px_10px_8px_10px]"
-  ],
-  "sidebar-nav": [
-    "[min-height:0]",
-    "[flex:1_1_0%]",
-    "[overflow-y:auto]",
-    "[overflow-x:hidden]",
-    "[overscroll-behavior:contain]",
-    "[display:flex]",
-    "[flex-direction:column]",
-    "[gap:4px]",
-    "[padding-right:4px]",
-    "[scrollbar-width:none]",
-    "max-[900px]:[padding-right:0]"
-  ],
-  "sidebar-link": [
-    "[width:100%]",
-    "[flex:0_0_auto]",
-    "[display:flex]",
-    "[align-items:center]",
-    "[gap:12px]",
-    "[padding:10px_12px]",
-    "[border:0]",
-    "[border-radius:8px]",
-    "[background:transparent]",
-    "[color:var(--color-slate-600)]",
-    "[text-decoration:none]",
-    "[text-align:left]",
-    "[font:inherit]",
-    "[font-size:14px]",
-    "[font-weight:500]",
-    "[white-space:nowrap]",
-    "[cursor:pointer]",
-    "[&:hover]:[background:var(--color-slate-50)]",
-    "[&:hover]:[color:var(--color-slate-900)]",
-    "[&.active]:[background:var(--color-primary-subtle)]",
-    "[&.active]:[color:var(--color-primary)]",
-    "[&.active]:[font-weight:600]",
-    "[&.active_.sidebar-icon]:[color:var(--color-primary)]",
-    "[&:focus-visible]:[outline:2px_solid_var(--color-primary)]",
-    "[&:focus-visible]:[outline-offset:2px]",
-    "max-[900px]:[justify-content:center]",
-    "max-[900px]:[padding-inline:0]"
-  ],
-  "sidebar-icon": [
-    "[width:20px]",
-    "[height:20px]",
-    "[flex:0_0_20px]",
-    "[font-size:20px]",
-    "[color:var(--color-slate-500)]"
-  ],
-  "sidebar-footer": [
-    "[flex:0_0_auto]",
-    "[margin-top:auto]",
-    "[padding:12px_0_max(8px,_env(safe-area-inset-bottom))]",
-    "[border-top:1px_solid_var(--color-slate-100)]",
-    "[background:var(--color-white)]"
-  ],
-  "logout-icon": [
-    "[width:20px]",
-    "[flex:0_0_20px]",
-    "[text-align:center]",
-    "[font-size:20px]",
-    "[line-height:1]"
-  ],
-  "sidebar-logout": [
-    "[width:100%]",
-    "[border:0]",
-    "[border-radius:6px]",
-    "[background:var(--color-slate-200)]",
-    "[color:var(--color-slate-900)]",
-    "[display:flex]",
-    "[align-items:center]",
-    "[gap:10px]",
-    "[padding:10px_14px]",
-    "[font:inherit]",
-    "[font-size:14px]",
-    "[font-weight:600]",
-    "[text-align:left]",
-    "[cursor:pointer]",
-    "[white-space:nowrap]",
-    "[&:hover]:[background:var(--color-slate-300)]",
-    "[&:disabled]:[cursor:wait]",
-    "[&:disabled]:[opacity:.7]",
-    "[&:focus-visible]:[outline:2px_solid_var(--color-primary)]",
-    "[&:focus-visible]:[outline-offset:2px]",
-    "max-[900px]:[justify-content:center]",
-    "max-[900px]:[padding-inline:0]"
-  ],
-  "sidebar-logout-error": [
-    "[color:#b91c1c]",
-    "[font-size:12px]",
-    "[padding:6px_2px_0]"
-  ],
-  "sidebar-label": [
-    "max-[900px]:[display:none]"
-  ]
-}
-const styling = value => {
-  const classes = typeof value === 'string' ? value : ''
-  const utilities = classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])
-  return [...new Set([...classes.split(/\s+/), ...utilities])].filter(Boolean).join(' ')
-}
-
-
+import useAppVersion from '../app/hooks/useAppVersion.js'
+import lightningLogoLight from '../assets/lightning-logo-light.png'
+import lightningIcon from '../assets/lightning-icon.png'
+import './sidebar.css'
 
 const iconPaths = {
   dashboard: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18M9 12h12" /></>,
@@ -291,15 +47,15 @@ function SidebarIcon({ name, role }) {
 
   if (!useCustomIcon) {
     return (
-      <span className={styling("material-symbols-outlined sidebar-icon")} aria-hidden="true">
-        {materialIcons[name]}
+      <span className="material-symbols-outlined sidebar-icon" aria-hidden="true">
+        {materialIcons[name] || name}
       </span>
     )
   }
 
   return (
     <svg
-      className={styling("sidebar-icon")}
+      className="sidebar-icon"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -313,142 +69,334 @@ function SidebarIcon({ name, role }) {
   )
 }
 
-export default function Sidebar({ active, effectiveRole = 'developer', permissions = {}, onLogout }) {
+export default function Sidebar({ active: currentPath, effectiveRole: role = 'developer', permissions = {}, canAccessChat = false, onLogout, isCollapsed: controlledCollapsed, onToggle }) {
   const navigate = useNavigate()
-  const storageKey = `${effectiveRole}-sidebar-collapsed`
-  const [collapsed, setCollapsed] = useState(() => localStorage.getItem(storageKey) === 'true')
-  const [selected, setSelected] = useState(null)
+  const effectiveRole = ['admin', 'pm'].includes(role) ? role : 'user'
+  const userRole = !['admin', 'pm'].includes(effectiveRole)
+  const storageKey = userRole ? (localStorage.getItem('dev-sidebar-collapsed') !== null ? 'dev-sidebar-collapsed' : 'user-sidebar-collapsed') : `${effectiveRole}-sidebar-collapsed`
+  const [internalCollapsed, setInternalCollapsed] = useState(() => localStorage.getItem(storageKey) === 'true')
+  const isCollapsed = controlledCollapsed ?? internalCollapsed
   const [loggingOut, setLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState('')
-  const dashboardPath = getRoleDashboard(effectiveRole)
-  const links = getSidebarElements(permissions, effectiveRole)
-
-  const signOut = async () => {
-    if (onLogout) {
-      await onLogout()
-      return
-    }
+  const version = useAppVersion()
+  const isLoadingVersion = false
+  const menuItems = sidebarItems(effectiveRole, permissions, canAccessChat)
+  const handleToggle = () => {
+    if (onToggle) return onToggle()
+    setInternalCollapsed(previous => {
+      localStorage.setItem(storageKey, String(!previous))
+      return !previous
+    })
+  }
+  const handleLogout = async () => {
     if (loggingOut) return
     setLoggingOut(true)
     setLogoutError('')
     try {
-      await logout()
+      if (onLogout) await onLogout()
+      else await logout()
+      for (const key of ['pm_current_user', 'user_session']) {
+        localStorage.removeItem(key)
+        sessionStorage.removeItem(key)
+      }
       navigate('/login', { replace: true })
     } catch {
       setLogoutError('Unable to log out. Please try again.')
       setLoggingOut(false)
     }
   }
-  const toggleCollapsed = () => {
-    setCollapsed((value) => {
-      const nextValue = !value
-      localStorage.setItem(storageKey, String(nextValue))
-      return nextValue
-    })
-  }
+  const sidebarWidth = isCollapsed ? "68px" : effectiveRole === "admin" ? "240px" : "220px";
+  const sidebarPadding = isCollapsed
+    ? effectiveRole === "admin"
+      ? "20px 8px"
+      : "16px 8px"
+    : effectiveRole === "admin"
+      ? "20px 16px"
+      : "16px 14px";
 
   return (
-    <aside className={styling(`sidebar role-${effectiveRole}${collapsed ? ' collapsed' : ''}`)}>
-      <div className={styling("sidebar-brand")}>
-        <div className={styling("sidebar-brand-group")}>
-          <img className={styling("sidebar-logo")} src={collapsed ? icon : logo} alt="Lightning PDPM" />
-          {!collapsed && (
-            <span
-              className={styling("sidebar-version")}
-              aria-label={packageInfo.version ? `Version ${packageInfo.version}` : 'Version 1.0.0'}
-              title={packageInfo.version ? `Version ${packageInfo.version}` : 'Version 1.0.0'}
-            >
-              v{packageInfo.version || '1.0.0'}
-            </span>
+    <div
+      className={`app-sidebar ${effectiveRole}-sidebar`}
+      style={{
+        width: sidebarWidth,
+        minWidth: sidebarWidth,
+        padding: sidebarPadding,
+        transition: "width 0.25s cubic-bezier(0.4, 0, 0.2, 1), padding 0.25s ease",
+        background: "var(--color-white)",
+        borderRight: "1px solid var(--color-slate-200)",
+        display: "flex",
+        flexDirection: "column",
+        flexShrink: 0,
+        boxSizing: "border-box",
+        height: "100dvh",
+        maxHeight: "100dvh",
+        minHeight: 0,
+        position: "sticky",
+        top: 0,
+        alignSelf: "flex-start",
+        overflow: "hidden",
+        zIndex: 50,
+        fontFamily: "'Inter', sans-serif",
+      }}
+    >
+      <style>{`
+        .shared-sidebar-scrollable {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .shared-sidebar-scrollable::-webkit-scrollbar {
+          display: none;
+        }
+        .shared-sidebar-nav-btn:hover {
+          background-color: var(--color-slate-50) !important;
+          color: var(--color-slate-900) !important;
+        }
+        .shared-sidebar-nav-btn.active {
+          background-color: var(--color-primary-subtle) !important;
+          color: var(--color-primary) !important;
+        }
+        .shared-sidebar-nav-btn.active:hover {
+          background-color: var(--color-primary-subtle) !important;
+          color: var(--color-primary) !important;
+        }
+        .shared-sidebar-logout-btn-slate:hover {
+          background-color: var(--color-slate-300) !important;
+        }
+        .shared-sidebar-logout-btn-red:hover {
+          background-color: var(--color-danger-border) !important;
+        }
+      `}</style>
+
+      {/* Top Header: Logo + Toggle Button */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: isCollapsed ? "center" : "space-between",
+          height: "40px",
+          padding: "0 2px",
+          width: "100%",
+          boxSizing: "border-box",
+          flexShrink: 0,
+          marginBottom: effectiveRole === "user" ? "20px" : "16px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            overflow: "hidden",
+            textDecoration: "none",
+          }}
+        >
+          {isCollapsed ? (
+            <img
+              src={lightningIcon}
+              alt="Lightning PDPM"
+              style={{
+                width: effectiveRole === "admin" ? "30px" : "26px",
+                height: effectiveRole === "admin" ? "30px" : "26px",
+                borderRadius: effectiveRole === "admin" ? "6px" : "4px",
+                objectFit: "contain",
+                display: "block",
+                flexShrink: 0,
+              }}
+            />
+          ) : (
+            <>
+              <img
+                src={lightningLogoLight}
+                alt="Lightning PDPM"
+                style={{
+                  height: effectiveRole === "admin" ? "30px" : "28px",
+                  width: "auto",
+                  maxWidth: effectiveRole === "admin" ? "150px" : "140px",
+                  objectFit: "contain",
+                  display: "block",
+                  flexShrink: 1,
+                }}
+              />
+              {(version || isLoadingVersion) && (
+                <span
+                  aria-label={version ? `Version ${version}` : "Loading version"}
+                  title={version ? `Version ${version}` : "Loading version"}
+                  style={{
+                    flexShrink: 0,
+                    fontSize: "9px",
+                    lineHeight: 1,
+                    fontWeight: "600",
+                    color: "var(--color-slate-500)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {version ? `v${version}` : "v..."}
+                </span>
+              )}
+            </>
           )}
         </div>
-        <img className={styling("sidebar-mobile-logo")} src={icon} alt="" aria-hidden="true" />
+
         <button
           type="button"
-          onClick={toggleCollapsed}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          onClick={handleToggle}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"} aria-expanded={!isCollapsed}
+          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "var(--color-slate-500)",
+            padding: "4px",
+            borderRadius: "6px",
+            transition: "all 0.15s ease",
+            flexShrink: 0,
+            marginRight: isCollapsed ? 0 : "-6px",
+          }}
         >
-          <span className={styling("material-symbols-outlined")} aria-hidden="true">
-            {collapsed ? 'chevron_right' : 'chevron_left'}
+          <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
+            {isCollapsed ? "chevron_right" : "chevron_left"}
           </span>
         </button>
       </div>
 
-      <nav className={styling("sidebar-nav")} aria-label="Main navigation">
-        {effectiveRole === 'admin' && !collapsed && (
-          <div className={styling("sidebar-section-header")}>
+      {/* Navigation Menu (Scrollable between Logo and Logout) */}
+      <div
+        className="shared-sidebar-scrollable"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "4px",
+          flex: "1 1 0%",
+          minHeight: 0,
+          overflowY: "auto",
+          overflowX: "hidden",
+          overscrollBehavior: "contain",
+          paddingRight: isCollapsed ? "0px" : "4px",
+        }}
+      >
+        {effectiveRole === "admin" && !isCollapsed && (
+          <div
+            style={{
+              fontSize: "10px",
+              fontWeight: "700",
+              color: "var(--color-slate-400)",
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              padding: "4px 10px 8px 10px",
+            }}
+          >
             Administration
           </div>
         )}
-        {links.map(({ label, icon: iconName, to }) => {
-          const href = to === 'dashboard' ? dashboardPath : to
-          const isActive = href !== '#'
-            ? active === href || active.startsWith(`${href}/`)
-            : selected?.label === label && selected.path === active
-          const className = `sidebar-link${isActive ? ' active' : ''}`
-          const content = (
-            <>
-              <SidebarIcon name={iconName} role={effectiveRole} />
-              <span className={styling("sidebar-label")}>{label}</span>
-            </>
-          )
 
-          if (href === '#') {
-            return (
-              <button
-                key={label}
-                type="button"
-                aria-label={label}
-                title={collapsed ? label : undefined}
-                onClick={() => setSelected({ label, path: active })}
-                className={styling(className)}
-              >
-                {content}
-              </button>
-            )
-          }
+        {menuItems.map((item) => {
+          const active = sidebarItemActive(item, currentPath, effectiveRole);
+          const itemKey = item.id || item.label;
 
           return (
-            <Link
-              key={label}
-              to={href}
-              aria-label={label}
-              title={collapsed ? label : undefined}
-              onClick={() => setSelected(null)}
-              aria-current={isActive ? 'page' : undefined}
-              className={styling(className)}
+            <div
+              key={itemKey}
+              className={`shared-sidebar-nav-btn ${active ? "active" : ""}`}
+              role="link" tabIndex={0} aria-label={item.label} aria-current={active ? "page" : undefined}
+              onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); navigate(item.path); } }}
+              title={isCollapsed ? item.label : ""}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: isCollapsed ? "10px 0" : "10px 12px",
+                justifyContent: isCollapsed ? "center" : "flex-start",
+                borderRadius: "8px",
+                fontSize: effectiveRole === "admin" ? "13px" : "14px",
+                fontWeight: active ? "600" : "500",
+                color: active ? "var(--color-primary)" : "var(--color-slate-600)",
+                backgroundColor: active ? "var(--color-primary-subtle)" : "transparent",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+                userSelect: "none",
+              }}
+              onClick={() => navigate(item.path)}
             >
-              {content}
-            </Link>
-          )
-        })}
-      </nav>
+              <SidebarIcon name={item.icon} role={effectiveRole} />
+              {!isCollapsed && (
+                <>
+                  <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1 }}>
+                    {item.label}
+                  </span>
 
-      <div className={styling("sidebar-footer")}>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {logoutError && <div role="alert">{logoutError}</div>}
+      {/* Logout button (Pinned at Bottom) */}
+      <div
+        style={{
+          marginTop: "auto",
+          flex: "0 0 auto",
+          position: "sticky",
+          bottom: 0,
+          zIndex: 1,
+          paddingTop: effectiveRole === "admin" ? "14px" : "12px",
+          paddingBottom: "max(8px, env(safe-area-inset-bottom))",
+          borderTop: "1px solid var(--color-slate-100)",
+          width: "100%",
+          backgroundColor: "var(--color-white)",
+        }}
+      >
         <button
           type="button"
-          className={styling("sidebar-logout")}
-          onClick={signOut}
+          className={effectiveRole === "admin" ? "shared-sidebar-logout-btn-red" : "shared-sidebar-logout-btn-slate"}
+          title={isCollapsed ? (effectiveRole === "admin" ? "Sign Out" : "Logout") : ""}
+          aria-label={effectiveRole === "admin" ? "Sign Out" : "Logout"}
+          onClick={handleLogout}
           disabled={loggingOut}
-          aria-label={loggingOut ? 'Logging out' : logoutLabel(effectiveRole)}
-          title={collapsed ? logoutLabel(effectiveRole) : undefined}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: effectiveRole === "admin" ? "12px" : "10px",
+            padding: isCollapsed
+              ? "10px 0"
+              : effectiveRole === "admin"
+                ? "10px 12px"
+                : "10px 14px",
+            justifyContent: isCollapsed ? "center" : "flex-start",
+            borderRadius: effectiveRole === "admin" ? "8px" : "6px",
+            fontSize: effectiveRole === "admin" ? "13px" : "14px",
+            fontWeight: "600",
+            color: effectiveRole === "admin" ? "var(--color-danger-dark)" : "var(--color-slate-800)",
+            backgroundColor: effectiveRole === "admin" ? "var(--color-danger-bg)" : "var(--color-slate-200)",
+            cursor: "pointer",
+            transition: "all 0.15s ease",
+            userSelect: "none",
+            width: "100%",
+            border: "none",
+            fontFamily: "inherit",
+            textAlign: "left",
+          }}
         >
-          <span className={styling("material-symbols-outlined logout-icon")} aria-hidden="true">
+          <span
+            className="material-symbols-outlined"
+            style={{
+              fontSize: `${effectiveRole === "admin" ? 19 : 20}px`,
+              color: effectiveRole === "admin" ? "var(--color-danger-dark)" : "var(--color-slate-800)",
+            }}
+            aria-hidden="true"
+          >
             logout
           </span>
-          <span className={styling("sidebar-label")}>
-            {loggingOut ? 'Logging out...' : logoutLabel(effectiveRole)}
-          </span>
+          {!isCollapsed && (effectiveRole === "admin" ? "Sign Out" : "Logout")}
         </button>
-        {logoutError && (
-          <div role="alert" className={styling("sidebar-logout-error")}>
-            {logoutError}
-          </div>
-        )}
       </div>
-    </aside>
-  )
+    </div>
+  );
 }
 
 export function SidebarLayout({ user, children, searchQuery, onSearchChange }) {
@@ -457,39 +405,11 @@ export function SidebarLayout({ user, children, searchQuery, onSearchChange }) {
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', background: 'var(--color-slate-50)', color: 'var(--color-slate-900)' }}>
-      <Sidebar active={pathname.replace(/\/$/, '')} effectiveRole={effectiveRole} permissions={user?.permissions} />
+      <Sidebar active={pathname.replace(/\/$/, '')} effectiveRole={effectiveRole} permissions={user?.permissions} canAccessChat={user?.can_access_chat} />
       <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Navbar user={user} searchQuery={searchQuery} onSearchChange={onSearchChange} />
         <main style={{ minWidth: 0, flex: 1 }}>{children}</main>
       </div>
     </div>
   )
-}
-
-function logoutLabel(role) {
-  return role === 'admin' ? 'Sign Out' : 'Logout'
-}
-
-const navigation = [
-  { label: 'Dashboard', icon: 'dashboard', to: 'dashboard' },
-  { label: 'Projects', icon: 'projects', to: '/projects', module: 'Projects' },
-  { label: 'Tasks', icon: 'tasks', to: '/tasks', module: 'Tasks' },
-  { label: 'Dependencies', icon: 'dependencies', to: '/dependencies', module: 'Dependencies' },
-  { label: 'Users', icon: 'users', to: '#', module: 'User Management' },
-  { label: 'Chat', icon: 'chat', to: '/chat', module: 'Projects' },
-  { label: 'Approvals', icon: 'approvals', to: '#', adminOnly: true },
-  { label: 'Workload', icon: 'workload', to: '#', module: 'TeamWorLoad' },
-  { label: 'Roles & Permissions', icon: 'roles', to: '#', module: 'Roles & permissions' },
-  { label: 'Calendar', icon: 'calendar', to: '/calendar', module: 'Tasks' },
-  { label: 'Documents', icon: 'document', to: '#', module: 'Documents' },
-  { label: 'Audit Logs', icon: 'audit', to: '/admin/audit-logs', adminOnly: true },
-  { label: 'Database Explorer', icon: 'database', to: '/admin/db-explorer', adminOnly: true },
-  { label: 'API Logs', icon: 'audit', to: '/admin/api-logs', adminOnly: true },
-]
-
-function getSidebarElements(permissions, role) {
-  return navigation.filter(item => {
-    if (item.adminOnly) return role === 'admin'
-    return !item.module || permissions?.[item.module]?.View === true
-  })
 }

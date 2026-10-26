@@ -1527,7 +1527,7 @@ export default function ProjectEditorPage({ user }) {
 
   useEffect(() => {
     let active = true
-    Promise.all([projectOptions(), ...(projectId ? [projectSetup(projectId), projectFiles(projectId)] : [])])
+    Promise.all([projectOptions(projectId), ...(projectId ? [projectSetup(projectId), projectFiles(projectId)] : [])])
       .then(([choices, project, files]) => {
         if (!active) return
         setOptions(choices)
@@ -1718,7 +1718,7 @@ export default function ProjectEditorPage({ user }) {
       await (projectId ? updateProject(projectId, form, initial, originalFiles) : createProject(form, projectOnlyCreation))
       if (!projectId) localStorage.removeItem(draftKey)
       await loadProjects()
-      navigate('/projects', { state: { saved: projectId ? 'Project updated.' : 'Project created.' } })
+      navigate(roleSlug(user?.role) === 'admin' ? '/admin/all-projects' : '/pm/projects', { state: { saved: projectId ? 'Project updated.' : 'Project created.' } })
     } catch (error) {
       setMessage(readableError(error))
     } finally { setSaving(false) }

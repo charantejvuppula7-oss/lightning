@@ -16,7 +16,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 
-USER_QUERYSET = UserData.objects.select_related('role_link', 'department_link').prefetch_related('default_projects', 'skills__skill_link')
+USER_QUERYSET = UserData.objects.select_related('role_link', 'department_link', 'manager').prefetch_related('default_projects', 'skills__skill_link')
 
 
 class UserListCreateView(ResourceAPIView):
@@ -165,6 +165,8 @@ class ProjectUserWorkloadView(APIView):
         paginator = ResourcePagination()
         page = paginator.paginate_queryset(users, request, view=self)
         user_ids = [user.pk for user in page]
+        from apps.users.workload import weekly_availability
+        availability = weekly_availability(project, user_ids)
 
         task_counts = {user_id: {} for user_id in user_ids}
         for row in (Task.objects.filter(project=project, assigned_to_id__in=user_ids)
@@ -185,6 +187,9 @@ class ProjectUserWorkloadView(APIView):
                 'user_name': user.user_name,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
+                'designation': user.designation,
+                'department': user.department_link.name if user.department_link else '',
+                'availability': availability[user.pk],
                 'task_counts': tasks,
                 'dependency_counts': dependencies,
                 'active_tasks': sum(count for state, count in tasks.items() if state != 'completed'),

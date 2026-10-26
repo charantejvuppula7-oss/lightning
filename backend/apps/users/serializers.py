@@ -17,6 +17,11 @@ class UserSerializer(serializers.ModelSerializer):
     role = serializers.CharField(write_only=True, required=False)
     department = serializers.CharField(write_only=True, required=False)
     skills = serializers.ListField(child=serializers.CharField(max_length=100), write_only=True, required=False)
+    manager_name = serializers.SerializerMethodField()
+
+    def get_manager_name(self, instance):
+        manager = instance.manager
+        return f'{manager.first_name} {manager.last_name}'.strip() if manager else ''
     INPUT_ALIASES = {
         'User_Name': 'user_name', 'username': 'user_name', 'Employee_ID': 'employee_id',
         'Employee_Id': 'employee_id', 'First_Name': 'first_name', 'Last_Name': 'last_name',
@@ -42,7 +47,7 @@ class UserSerializer(serializers.ModelSerializer):
                   'department_link', 'date_of_joining', 'employment_type',
                   'manager', 'phone_number', 'location', 'role_link',
                   'account_status', 'bio', 'linkedin_profile', 'github_profile',
-                  'default_projects', 'role', 'department', 'skills', 'created_at', 'updated_at')
+                  'default_projects', 'role', 'department', 'skills', 'created_at', 'updated_at', 'manager_name')
         read_only_fields = ('id', 'created_at', 'updated_at')
         extra_kwargs = {'user_name': {'validators': []}, 'email': {'validators': []}}
 

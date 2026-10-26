@@ -8,6 +8,7 @@ import { authError } from '../../../utils/errors.js'
 import { getRoleDashboard } from '../../../utils/roles.js'
 import logo from '../../../assets/lightning-logo-light.png'
 import styles from '../styles/loginStyles.js'
+import useAppVersion from '../../../app/hooks/useAppVersion.js'
 
 /* styling */
 const tailwindStyling = {
@@ -23,6 +24,7 @@ const styling = value => {
 }
 
 export default function LoginPage() {
+  const version = useAppVersion()
   const navigate = useNavigate()
   const { state } = useLocation()
   const { status, user } = useSession()
@@ -110,7 +112,9 @@ export default function LoginPage() {
         <div style={styles.footerTerms}>
           By continuing you agree to Lightning's <span style={styles.footerLink}>Terms</span> and <span style={styles.footerLink}>Privacy Notice</span>
         </div>
+        <div style={styles.versionCardFooter}>v{version}</div>
       </div>
+      <div style={styles.bottomPageVersion}>v{version}</div>
     </div>
   )
 }

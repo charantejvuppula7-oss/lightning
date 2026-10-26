@@ -72,6 +72,7 @@ export default function AddDependencyModal({ isOpen, onClose, task, tasks = [], 
   const [taskId, setTaskId] = useState('')
   const [dependsOn, setDependsOn] = useState('')
   const [assignedTo, setAssignedTo] = useState('')
+  const [reviewer, setReviewer] = useState('')
   const [description, setDescription] = useState('')
   const [dependencyType, setDependencyType] = useState('')
   const [dueDate, setDueDate] = useState('')
@@ -80,7 +81,7 @@ export default function AddDependencyModal({ isOpen, onClose, task, tasks = [], 
   const allowed = canUsePermission({ ...user, permissions: permissions || user?.permissions }, 'Dependencies', 'Create')
   const selectedTask = task?.id || task?.pk || task?.task || taskId
 
-  const close = () => { setTaskId(''); setDependsOn(''); setAssignedTo(''); setDescription(''); setDependencyType(''); setDueDate(''); setError(''); onClose() }
+  const close = () => { setTaskId(''); setDependsOn(''); setAssignedTo(''); setReviewer(''); setDescription(''); setDependencyType(''); setDueDate(''); setError(''); onClose() }
 
   const submit = async event => {
     event.preventDefault()
@@ -95,7 +96,7 @@ export default function AddDependencyModal({ isOpen, onClose, task, tasks = [], 
       const result = await apiRequest('/dependencies/', { method: 'POST', body: {
         task: selectedTask, depends_on: dependsOn || null,
         description: description.trim(), dependency_type: dependencyType,
-        assigned_to: assignedTo || null, due_date: dueDate || null,
+        assigned_to: assignedTo || null, review_by: reviewer || null, due_date: dueDate || null,
       } })
       onCreated?.(result)
       close()
@@ -111,6 +112,7 @@ export default function AddDependencyModal({ isOpen, onClose, task, tasks = [], 
       <ModalField label="Dependency type" required><select value={dependencyType} onChange={event => setDependencyType(event.target.value)}><option value="">Select type</option><option value="mandatory">Mandatory dependency</option><option value="optional">Optional dependency</option></select></ModalField>
       <ModalField label="Description" required><textarea rows={3} value={description} onChange={event => setDescription(event.target.value)} placeholder="Describe the dependency" /></ModalField>
       <div className={styling("project-modal-row")}><ModalField label="Assigned to" required><select value={assignedTo} onChange={event => setAssignedTo(event.target.value)}><option value="">Select team member</option>{users.map(person => <option key={person.id} value={person.id}>{displayName(person)}</option>)}</select></ModalField><ModalField label="Due date" required><input type="date" value={dueDate} onChange={event => setDueDate(event.target.value)} /></ModalField></div>
+      <ModalField label="Reviewer"><select value={reviewer} onChange={event => setReviewer(event.target.value)}><option value="">None (No Reviewer)</option>{users.map(person => <option key={person.id} value={person.id}>{displayName(person)}</option>)}</select></ModalField>
       {error && <p className={styling("project-modal-error")} role="alert">{error}</p>}
       <div className={styling("project-modal-actions")}><button type="button" onClick={close} disabled={saving}>Cancel</button><button className={styling("primary")} type="submit" disabled={saving}>{saving ? 'Adding…' : 'Add Dependency'}</button></div>
     </form>

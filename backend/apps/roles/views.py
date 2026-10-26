@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Count
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -34,7 +35,7 @@ class RoleListCreateView(ResourceAPIView):
     List existing roles or create a new custom role.
     """
     resource = 'role'
-    queryset = Role.objects.all()
+    queryset = Role.objects.annotate(user_count=Count('userdata'))
 
     def get(self, request):
         """

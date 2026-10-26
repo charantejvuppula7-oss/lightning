@@ -36,6 +36,7 @@ class TaskDependency(models.Model):
         max_length=20,
         choices=DEPENDENCY_TYPE_CHOICES,
         default='optional',
+        db_default='optional',
     )
     assigned_to = models.ForeignKey(
         'UserData',
@@ -57,11 +58,14 @@ class TaskDependency(models.Model):
             ('started', 'Started'),
             ('in_progress', 'In Progress'),
             ('paused', 'Paused'),
+            ('in_review', 'In Review'),
             ('completed', 'Completed'),
         ],
         default='started',
         help_text="Status of the dependency",
     )
+    review_by = models.ForeignKey('api.UserData', on_delete=models.SET_NULL, null=True, blank=True, related_name='dependency_reviews')
+    submission = models.JSONField(default=dict, blank=True)
     Time_Taken = models.DurationField(null=True, blank=True)
     start_Time = models.DateTimeField(null=True, blank=True)
     pause_Time = models.DateTimeField(null=True, blank=True)
@@ -108,6 +112,10 @@ class TaskDependency(models.Model):
                     if current not in visited:
                         visited.add(current)
                         pending.extend(edges.get(current, ()))
+        if self.review_by_id:
+            reviewer = UserData.objects.filter(pk=self.review_by_id, account_status='active').first()
+            if reviewer is None or not (reviewer.pk == project.created_by_id or project.project_managers.filter(pk=reviewer.pk).exists() or project.team_members.filter(pk=reviewer.pk).exists() or project.members.filter(pk=reviewer.pk).exists()):
+                errors['review_by'] = 'Reviewer must be an active project member.'
         if self.assigned_to_id:
             is_member = UserData.objects.filter(pk=self.assigned_to_id, account_status='active').filter(
                 Q(pk=project.created_by_id) | Q(assigned_projects=project) |

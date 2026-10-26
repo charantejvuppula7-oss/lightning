@@ -16,7 +16,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.core.pagination import ResourcePagination
-from apps.core.sse import after_cursor, event_cursor, stream_response
+from apps.core.sse import EventStreamRenderer, after_cursor, event_cursor, stream_response
+from rest_framework.renderers import JSONRenderer
 from apps.notifications.models import Notification
 from apps.notifications.serializers import NotificationSerializer
 from api.models import ProjectChatMessage, Task, TaskDependency, UserData
@@ -72,6 +73,7 @@ class NotificationStreamView(APIView):
     Pushes new notification events to the client in real-time. Supports client-side
     reconnection via standard `Last-Event-ID` cursor headers.
     """
+    renderer_classes = [EventStreamRenderer, JSONRenderer]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
