@@ -60,9 +60,9 @@ export default function ProjectOverviewPage({ user }) {
     {feedback}{location.state?.saved && <p role="status">{location.state.saved}</p>}
     {error && <p role="alert">{error} <button onClick={reload}>Retry</button></p>}
     {loading ? <p role="status">Loading projects…</p> : <>
-      <div className="pm-project-cards">{projects.map(item => <button key={item.id} className={`pm-project-card${project?.id === item.id ? ' selected' : ''}`} onClick={() => select(item)}>
-        <div className="pm-project-card-top"><strong>{item.project_name}</strong><span className={`project-state ${(statusOverrides[item.id] || item.status).toLowerCase()}`}>{statusOverrides[item.id] || item.status}</span></div>
-        <p>{item.milestones[0] ? `M1- ${item.milestones[0].name}` : '—'}</p><div className="project-progress-row"><div className="project-progress"><i style={{ width: `${item.progress}%` }} /></div><span>{item.progress}%</span></div>
+      <div className="pm-project-cards">{projects.map(item => <button type="button" key={item.id} className={project?.id === item.id ? 'pm-project-card selected' : 'pm-project-card'} aria-pressed={project?.id === item.id} onClick={() => select(item)}>
+        <div className="pm-project-card-top"><strong title={item.project_name}>{item.project_name}</strong><span className={`project-state ${(statusOverrides[item.id] || item.status).toLowerCase()}`}>{statusOverrides[item.id] || item.status}</span></div>
+        <p title={item.milestones[0]?.name}>{item.milestones[0] ? `M1- ${item.milestones[0].name}` : '—'}</p><div className="project-progress-row"><div className="project-progress"><i style={{ width: `${item.progress}%` }} /></div><span>{item.progress}%</span></div>
         <p className="project-due">Due: {formatDate(item.end_date)}</p><div className="project-counts"><span><span className="material-symbols-outlined">link</span>{item.dependency_count} dependency</span><span><span className="material-symbols-outlined">block</span>{item.blocker_count} blocker</span></div>
       </button>)}</div>
       {!projects.length && <p>No matching projects.</p>}

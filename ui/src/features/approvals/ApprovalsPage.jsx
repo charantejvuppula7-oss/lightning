@@ -49,7 +49,7 @@ export default function ApprovalsPage({ user }) {
         ['Awaiting Review', data.reviews.length, 'assignment_turned_in', 'green'],
         ['Blocking', data.dependencies.length, 'block', 'blue'],
         ['Overdue Approvals', [...data.reviews, ...data.dependencies].filter(row => row.due_date && new Date(row.due_date) < new Date(new Date().toDateString())).length, 'star', 'red']].map(([title, count, icon, color]) =>
-        <article key={title} className={color}><span className="material-symbols-outlined">{icon}</span><div><p>{title}</p><strong>{count}</strong></div></article>)}
+        <article key={title} className={color}><span aria-hidden="true"><span className="material-symbols-outlined">{icon}</span></span><div><p>{title}</p><strong>{count}</strong></div></article>)}
     </div>
     <div className="approval-tabs">{[['task', 'Work Review', data.reviews.length], ['dependency', 'Dependency', data.dependencies.length]].map(([key, title, count]) =>
       <button key={key} className={tab === key ? 'active' : ''} onClick={() => { setTab(key); setPage(1); setStatus(''); setMember('') }}>{title} ({count})</button>)}
