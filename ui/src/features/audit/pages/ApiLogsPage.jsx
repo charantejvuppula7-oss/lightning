@@ -1,14 +1,12 @@
 import Paginator from '../components/Paginator.jsx'
-import logStyles from '../components/logStyles.js'
-
 
 import useLogHistory from '../hooks/useLogHistory.js'
 import DetailRow from '../components/LogDetailRow.jsx'
 import { formatLogDate as fmtDate } from '../logFormat.js'
-import AdminPageLayout from "../components/AdminPageLayout.jsx";
-import DatePicker from "../../../components/common/DatePicker.jsx";
+import MonitoringLayout from "../components/MonitoringLayout.jsx";
+import DatePicker from "../../../shared/components/DatePicker.jsx";
 import MonitoringHeader from '../components/MonitoringHeader.jsx'
-import { FilterSelect, SearchBar } from "../../../components/common/SearchControls.jsx";
+import { FilterSelect, SearchBar } from "../../../shared/components/SearchControls.jsx";
 
 // ── Method badge colour map ──────────────────────────────────────────
 const METHOD_COLORS = {
@@ -42,39 +40,38 @@ export default function ApiLogsPage({ user }) {
   const { logs, metrics, pagination, filters, setFilters, loading, error, selectedLog, setSelectedLog, autoRefresh, setAutoRefresh, fetchLogs, handleFilterChange, handleSearch, clearFilters } = useLogHistory('api-logs', { method: '', status_code: '', search: '', date_from: '', date_to: '' })
   // ── render ─────────────────────────────────────────────────────────
   return (
-    <AdminPageLayout user={user}>
+    <MonitoringLayout user={user}>
 
       {/* Admin Sidebar */}
 
-
       {/* Main Container */}
-      <div style={s.mainContainer}>
+      <div className="flex-1! flex! flex-col! min-w-0! h-screen! overflow-y-auto!">
         {/* Top Header */}
-        <MonitoringHeader user={user} title="API Request Logs" subtitle="Monitor and inspect all incoming API requests" icon="speed" actionsGap={14} actions={<><label style={s.toggleLabel}>
+        <MonitoringHeader user={user} title="API Request Logs" subtitle="Monitor and inspect all incoming API requests" icon="speed" actionsGap={14} actions={<><label className="text-[13px]! [color:var(--color-slate-600)]! flex! items-center! cursor-pointer!">
               <input
                 type="checkbox"
                 checked={autoRefresh}
                 onChange={() => setAutoRefresh(!autoRefresh)}
-                style={{ marginRight: 6 }}
+                className="mr-[6px]!"
               />
               Auto-refresh (10s)
             </label>
             <button
               type="button"
               onClick={() => fetchLogs(pagination.page)}
-              style={s.refreshBtn}
+              className="flex! items-center! gap-[6px]! p-[8px_14px]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-300)]! rounded-[8px]! text-[13px]! font-semibold! [color:var(--color-slate-600)]! cursor-pointer! [transition:all_0.15s_ease]!"
               title="Refresh"
             >
-              <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+              <span className={"material-symbols-outlined" + " " + "text-[18px]!"} >
                 refresh
               </span>
               Refresh
             </button></>} />
 
         {/* Page Body */}
-        <div style={s.pageBody}>
+        <div className="p-[32px]! flex-1!">
           {/* ── Metrics cards ─────────────────────────────────────────── */}
-          <div style={s.metricsRow}>
+          <div className="grid! grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))]! gap-[16px]! mb-[28px]!">
             <MetricCard
               label="Total Requests"
               value={metrics.total_requests.toLocaleString()}
@@ -113,7 +110,7 @@ export default function ApiLogsPage({ user }) {
           </div>
 
           {/* ── Filters ───────────────────────────────────────────────── */}
-          <form onSubmit={handleSearch} style={s.filterBar}>
+          <form onSubmit={handleSearch} className="flex! gap-[10px]! flex-wrap! mb-[20px]! items-center!">
             <SearchBar
               name="search"
               placeholder="Search path or user…"
@@ -142,58 +139,58 @@ export default function ApiLogsPage({ user }) {
               <option value="4xx">4xx Client Error</option>
               <option value="5xx">5xx Server Error</option>
             </FilterSelect>
-            <div style={{ width: "150px" }}>
+            <div className="w-[150px]!">
               <DatePicker
                 value={filters.date_from}
                 onChange={(val) => setFilters((prev) => ({ ...prev, date_from: val }))}
                 allowPastDates={true}
                 placeholder="From date"
-                style={{ height: "38px" }}
+                controlClassName="[height:38px]!"
               />
             </div>
-            <div style={{ width: "150px" }}>
+            <div className="w-[150px]!">
               <DatePicker
                 value={filters.date_to}
                 onChange={(val) => setFilters((prev) => ({ ...prev, date_to: val }))}
                 allowPastDates={true}
                 placeholder="To date"
-                style={{ height: "38px" }}
+                controlClassName="[height:38px]!"
               />
             </div>
-            <button type="submit" style={s.applyBtn}>
+            <button type="submit" className="h-[38px]! p-[0_20px]! [background-color:var(--color-primary)]! [color:var(--color-white)]! border-0! rounded-[8px]! font-semibold! text-[13px]! cursor-pointer! [box-shadow:0_2px_4px_rgba(37,_99,_235,_0.2)]!">
               Apply
             </button>
-            <button type="button" onClick={clearFilters} style={s.clearBtn}>
+            <button type="button" onClick={clearFilters} className="h-[38px]! p-[0_16px]! [background-color:var(--color-white)]! [color:var(--color-primary)]! [border:1px_solid_var(--color-primary)]! rounded-[8px]! font-semibold! text-[13px]! cursor-pointer!">
               Clear
             </button>
           </form>
 
           {error && <div role="alert">{error}</div>}
           {/* ── Table ─────────────────────────────────────────────────── */}
-          <div style={s.tableCard}>
+          <div className="relative! [background-color:var(--color-white)]! rounded-[12px]! [border:1px_solid_var(--color-slate-200)]! overflow-hidden! [box-shadow:0_1px_3px_rgba(0,_0,_0,_0.04)]!">
             {loading && (
-              <div style={s.loadingOverlay}>
-                <div style={s.spinnerLg} />
+              <div className="absolute! [inset:0]! [background-color:rgba(255,255,255,0.7)]! flex! justify-center! items-center! z-[5]! rounded-[12px]!">
+                <div className="w-[36px]! h-[36px]! [border:3px_solid_var(--color-slate-200)]! [border-top-color:var(--color-primary)]! rounded-[50%]! [animation:spin_0.8s_linear_infinite]!" />
               </div>
             )}
-            <div style={{ overflowX: "auto" }}>
-              <table style={s.table}>
+            <div className="overflow-x-auto!">
+              <table className="w-full! [border-collapse:collapse]! text-[13px]! text-left!">
                 <thead>
                   <tr>
-                    <th style={s.th}>Timestamp</th>
-                    <th style={s.th}>Method</th>
-                    <th style={s.th}>Endpoint</th>
-                    <th style={s.th}>User</th>
-                    <th style={s.th}>Status</th>
-                    <th style={s.th}>Latency</th>
-                    <th style={s.th}>IP Address</th>
-                    <th style={s.th}>Actions</th>
+                    <th className="p-[12px_16px]! [background-color:var(--color-slate-50)]! [border-bottom:1px_solid_var(--color-slate-200)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [text-transform:uppercase]! tracking-[0.04em]! whitespace-nowrap!">Timestamp</th>
+                    <th className="p-[12px_16px]! [background-color:var(--color-slate-50)]! [border-bottom:1px_solid_var(--color-slate-200)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [text-transform:uppercase]! tracking-[0.04em]! whitespace-nowrap!">Method</th>
+                    <th className="p-[12px_16px]! [background-color:var(--color-slate-50)]! [border-bottom:1px_solid_var(--color-slate-200)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [text-transform:uppercase]! tracking-[0.04em]! whitespace-nowrap!">Endpoint</th>
+                    <th className="p-[12px_16px]! [background-color:var(--color-slate-50)]! [border-bottom:1px_solid_var(--color-slate-200)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [text-transform:uppercase]! tracking-[0.04em]! whitespace-nowrap!">User</th>
+                    <th className="p-[12px_16px]! [background-color:var(--color-slate-50)]! [border-bottom:1px_solid_var(--color-slate-200)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [text-transform:uppercase]! tracking-[0.04em]! whitespace-nowrap!">Status</th>
+                    <th className="p-[12px_16px]! [background-color:var(--color-slate-50)]! [border-bottom:1px_solid_var(--color-slate-200)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [text-transform:uppercase]! tracking-[0.04em]! whitespace-nowrap!">Latency</th>
+                    <th className="p-[12px_16px]! [background-color:var(--color-slate-50)]! [border-bottom:1px_solid_var(--color-slate-200)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [text-transform:uppercase]! tracking-[0.04em]! whitespace-nowrap!">IP Address</th>
+                    <th className="p-[12px_16px]! [background-color:var(--color-slate-50)]! [border-bottom:1px_solid_var(--color-slate-200)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [text-transform:uppercase]! tracking-[0.04em]! whitespace-nowrap!">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {logs.length === 0 && !loading && (
                     <tr>
-                      <td colSpan={8} style={s.emptyCell}>
+                      <td colSpan={8} className="text-center! p-[40px]! [color:var(--color-slate-400)]! text-[14px]!">
                         No logs found.
                       </td>
                     </tr>
@@ -202,46 +199,42 @@ export default function ApiLogsPage({ user }) {
                     const mc = METHOD_COLORS[log.method] || METHOD_COLORS.GET;
                     const sc = getStatusColor(log.status_code);
                     return (
-                      <tr key={log.id} className="api-row" style={s.tr}>
-                        <td style={s.td}>{fmtDate(log.created_at)}</td>
-                        <td style={s.td}>
+                      <tr key={log.id} className={"api-row" + " " + "[border-bottom:1px_solid_var(--color-slate-100)]! [transition:background-color_0.12s_ease]!"} >
+                        <td className="p-[12px_16px]! whitespace-nowrap! [color:var(--color-slate-800)]! [vertical-align:middle]!">{fmtDate(log.created_at)}</td>
+                        <td className="p-[12px_16px]! whitespace-nowrap! [color:var(--color-slate-800)]! [vertical-align:middle]!">
                           <span
-                            style={{
-                              ...s.badge,
-                              backgroundColor: mc.bg,
-                              color: mc.text,
-                            }}
+                            className="inline-block! p-[3px_10px]! rounded-[12px]! font-semibold! text-[11px]! tracking-[0.03em]!" style={{
+  backgroundColor: mc.bg,
+  color: mc.text
+}}
                           >
                             {log.method}
                           </span>
                         </td>
-                        <td style={{ ...s.td, ...s.pathCell }}>{log.path}</td>
-                        <td style={{ ...s.td, fontWeight: 600 }}>{log.user || "Anonymous"}</td>
-                        <td style={s.td}>
+                        <td className="p-[12px_16px]! whitespace-nowrap! [color:var(--color-slate-800)]! [vertical-align:middle]! max-w-[260px]! overflow-hidden! text-ellipsis! [font-family:'Roboto_Mono',_monospace]! text-[12px]!">{log.path}</td>
+                        <td className="p-[12px_16px]! whitespace-nowrap! [color:var(--color-slate-800)]! [vertical-align:middle]! font-semibold!">{log.user || "Anonymous"}</td>
+                        <td className="p-[12px_16px]! whitespace-nowrap! [color:var(--color-slate-800)]! [vertical-align:middle]!">
                           <span
-                            style={{
-                              ...s.badge,
-                              backgroundColor: sc.bg,
-                              color: sc.text,
-                            }}
+                            className="inline-block! p-[3px_10px]! rounded-[12px]! font-semibold! text-[11px]! tracking-[0.03em]!" style={{
+  backgroundColor: sc.bg,
+  color: sc.text
+}}
                           >
                             {log.status_code}
                           </span>
                         </td>
                         <td
-                          style={{
-                            ...s.td,
-                            color: getLatencyColor(log.response_time_ms),
-                            fontWeight: 600,
-                          }}
+                          className="p-[12px_16px]! whitespace-nowrap! [vertical-align:middle]! font-semibold!" style={{
+  color: getLatencyColor(log.response_time_ms)
+}}
                         >
                           {log.response_time_ms} ms
                         </td>
-                        <td style={s.td}>{log.ip_address || "—"}</td>
-                        <td style={s.td}>
+                        <td className="p-[12px_16px]! whitespace-nowrap! [color:var(--color-slate-800)]! [vertical-align:middle]!">{log.ip_address || "—"}</td>
+                        <td className="p-[12px_16px]! whitespace-nowrap! [color:var(--color-slate-800)]! [vertical-align:middle]!">
                           <button
                             onClick={() => setSelectedLog(log)}
-                            style={s.detailBtn}
+                            className="p-[5px_12px]! [background-color:transparent]! [color:var(--color-primary)]! [border:1px_solid_var(--color-primary)]! rounded-[6px]! text-[12px]! font-semibold! cursor-pointer! [transition:all_0.15s_ease]!"
                           >
                             Details
                           </button>
@@ -261,20 +254,20 @@ export default function ApiLogsPage({ user }) {
 
       {/* ── Detail modal ──────────────────────────────────────────── */}
       {selectedLog && (
-        <div style={s.overlay} onClick={() => setSelectedLog(null)}>
-          <div style={s.modal} onClick={(e) => e.stopPropagation()}>
-            <div style={s.modalHeader}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span className="material-symbols-outlined" style={{ fontSize: "20px", color: "var(--color-primary)" }}>
+        <div className="fixed! [inset:0]! [background-color:rgba(15,_23,_42,_0.45)]! [backdrop-filter:blur(4px)]! flex! justify-center! items-center! z-[1000]!" onClick={() => setSelectedLog(null)}>
+          <div className="[background-color:var(--color-white)]! rounded-[14px]! w-[90%]! max-w-[600px]! max-h-[85vh]! overflow-auto! [box-shadow:0_25px_50px_-12px_rgba(0,_0,_0,_0.25)]! [border:1px_solid_var(--color-slate-200)]!" onClick={(e) => e.stopPropagation()}>
+            <div className="flex! justify-between! items-center! p-[18px_24px]! [border-bottom:1px_solid_var(--color-slate-200)]!">
+              <div className="flex! items-center! gap-[10px]!">
+                <span className={"material-symbols-outlined" + " " + "text-[20px]! [color:var(--color-primary)]!"} >
                   speed
                 </span>
-                <h2 style={s.modalTitle}>Request Details</h2>
+                <h2 className="m-0! text-[17px]! font-bold! [color:var(--color-slate-900)]!">Request Details</h2>
               </div>
-              <button onClick={() => setSelectedLog(null)} style={s.closeBtn}>
+              <button onClick={() => setSelectedLog(null)} className="[background:none]! border-0! text-[18px]! cursor-pointer! [color:var(--color-slate-400)]! leading-[1]!">
                 ✕
               </button>
             </div>
-            <div style={s.modalBody}>
+            <div className="p-[20px_24px]!">
               <DetailRow
                 label="Timestamp"
                 value={fmtDate(selectedLog.created_at)}
@@ -299,14 +292,10 @@ export default function ApiLogsPage({ user }) {
                 label="Query Params"
                 value={selectedLog.query_params || "—"}
               />
-              <div style={s.detailRow}>
-                <span style={s.detailLabel}>User Agent</span>
+              <div className="flex! flex-col! p-[12px_0]! [border-bottom:1px_solid_var(--color-slate-100)]! gap-[4px]!">
+                <span className="text-[12px]! font-semibold! [color:var(--color-slate-500)]! [text-transform:uppercase]! tracking-[0.04em]!">User Agent</span>
                 <span
-                  style={{
-                    ...s.detailValue,
-                    wordBreak: "break-all",
-                    fontSize: 12,
-                  }}
+                  className="text-[12px]! [color:var(--color-slate-900)]! leading-[1.5]! [word-break:break-all]!"
                 >
                   {selectedLog.user_agent || "—"}
                 </span>
@@ -315,7 +304,7 @@ export default function ApiLogsPage({ user }) {
           </div>
         </div>
       )}
-    </AdminPageLayout>
+    </MonitoringLayout>
   );
 }
 
@@ -323,14 +312,17 @@ export default function ApiLogsPage({ user }) {
 
 function MetricCard({ label, value, icon, iconBg, iconColor }) {
   return (
-    <div style={s.metricCard}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+    <div className="[background-color:var(--color-white)]! rounded-[12px]! p-[18px_20px]! [border:1px_solid_var(--color-slate-200)]! [box-shadow:0_1px_3px_rgba(0,_0,_0,_0.04)]!">
+      <div className="flex! justify-between! items-start!">
         <div>
-          <div style={s.metricLabel}>{label}</div>
-          <div style={s.metricValue}>{value}</div>
+          <div className="text-[12px]! font-semibold! [color:var(--color-slate-500)]! [text-transform:uppercase]! tracking-[0.04em]!">{label}</div>
+          <div className="text-[26px]! font-extrabold! [color:var(--color-slate-900)]! mt-[4px]!">{value}</div>
         </div>
-        <div style={{ ...s.metricIconBox, backgroundColor: iconBg, color: iconColor }}>
-          <span className="material-symbols-outlined" style={{ fontSize: "24px" }}>
+        <div className="w-[44px]! h-[44px]! rounded-[10px]! flex! items-center! justify-center!" style={{
+  backgroundColor: iconBg,
+  color: iconColor
+}}>
+          <span className={"material-symbols-outlined" + " " + "text-[24px]!"} >
             {icon}
           </span>
         </div>
@@ -338,120 +330,3 @@ function MetricCard({ label, value, icon, iconBg, iconColor }) {
     </div>
   );
 }
-
-const s = { ...logStyles, ...{
-  "refreshBtn": {
-    "display": "flex",
-    "alignItems": "center",
-    "gap": "6px",
-    "padding": "8px 14px",
-    "backgroundColor": "var(--color-white)",
-    "border": "1px solid var(--color-slate-300)",
-    "borderRadius": "8px",
-    "fontSize": "13px",
-    "fontWeight": "600",
-    "color": "var(--color-slate-600)",
-    "cursor": "pointer",
-    "transition": "all 0.15s ease"
-  },
-  "avatarCircle": {
-    "width": "34px",
-    "height": "34px",
-    "borderRadius": "50%",
-    "backgroundColor": "var(--color-slate-900)",
-    "color": "var(--color-white)",
-    "display": "flex",
-    "alignItems": "center",
-    "justifyContent": "center",
-    "fontSize": "12px",
-    "fontWeight": "700",
-    "cursor": "pointer",
-    "border": "2px solid var(--color-slate-200)"
-  },
-  "pageBody": {
-    "padding": "32px",
-    "flex": 1
-  },
-  "metricsRow": {
-    "display": "grid",
-    "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))",
-    "gap": "16px",
-    "marginBottom": "28px"
-  },
-  "metricCard": {
-    "backgroundColor": "var(--color-white)",
-    "borderRadius": "12px",
-    "padding": "18px 20px",
-    "border": "1px solid var(--color-slate-200)",
-    "boxShadow": "0 1px 3px rgba(0, 0, 0, 0.04)"
-  },
-  "metricIconBox": {
-    "width": "44px",
-    "height": "44px",
-    "borderRadius": "10px",
-    "display": "flex",
-    "alignItems": "center",
-    "justifyContent": "center"
-  },
-  "metricValue": {
-    "fontSize": "26px",
-    "fontWeight": "800",
-    "color": "var(--color-slate-900)",
-    "marginTop": "4px"
-  },
-  "metricLabel": {
-    "fontSize": "12px",
-    "fontWeight": "600",
-    "color": "var(--color-slate-500)",
-    "textTransform": "uppercase",
-    "letterSpacing": "0.04em"
-  },
-  "applyBtn": {
-    "height": "38px",
-    "padding": "0 20px",
-    "backgroundColor": "var(--color-primary)",
-    "color": "var(--color-white)",
-    "border": "none",
-    "borderRadius": "8px",
-    "fontWeight": "600",
-    "fontSize": "13px",
-    "cursor": "pointer",
-    "boxShadow": "0 2px 4px rgba(37, 99, 235, 0.2)"
-  },
-  "clearBtn": {
-    "height": "38px",
-    "padding": "0 16px",
-    "backgroundColor": "var(--color-white)",
-    "color": "var(--color-primary)",
-    "border": "1px solid var(--color-primary)",
-    "borderRadius": "8px",
-    "fontWeight": "600",
-    "fontSize": "13px",
-    "cursor": "pointer"
-  },
-  "pathCell": {
-    "maxWidth": 260,
-    "overflow": "hidden",
-    "textOverflow": "ellipsis",
-    "fontFamily": "'Roboto Mono', monospace",
-    "fontSize": 12
-  },
-  "badge": {
-    "display": "inline-block",
-    "padding": "3px 10px",
-    "borderRadius": "12px",
-    "fontWeight": "600",
-    "fontSize": "11px",
-    "letterSpacing": "0.03em"
-  },
-  "modal": {
-    "backgroundColor": "var(--color-white)",
-    "borderRadius": "14px",
-    "width": "90%",
-    "maxWidth": "600px",
-    "maxHeight": "85vh",
-    "overflow": "auto",
-    "boxShadow": "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-    "border": "1px solid var(--color-slate-200)"
-  }
-} }

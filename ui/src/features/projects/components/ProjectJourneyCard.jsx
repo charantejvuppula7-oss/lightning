@@ -17,43 +17,6 @@ function getProjectStatus(project) {
   return STATUS_MAP[raw] || { label: "Active", bg: "var(--color-primary-border)", color: "var(--color-primary-hover)" };
 }
 
-const ACTION_BTN_STYLE = {
-  backgroundColor: "#ffffff",
-  border: "1px solid #E2E8F0",
-  borderRadius: "6px",
-  padding: "6px 14px",
-  fontSize: "13px",
-  fontWeight: "600",
-  color: "#2D3748",
-  cursor: "pointer",
-  transition: "all 0.15s ease",
-  whiteSpace: "nowrap",
-  fontFamily: "inherit",
-  lineHeight: "1.4",
-  display: "inline-flex",
-  alignItems: "center",
-  boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
-};
-
-const MORE_DROPDOWN_ITEM_STYLE = {
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  width: "100%",
-  background: "none",
-  border: "none",
-  padding: "8px 12px",
-  borderRadius: "6px",
-  fontSize: "12px",
-  fontWeight: "500",
-  color: "#334155",
-  cursor: "pointer",
-  textAlign: "left",
-  transition: "background-color 0.15s ease",
-  fontFamily: "inherit",
-};
-
-
 export default function ProjectJourneyCard({
   project = null,
   onAddFeature,
@@ -70,7 +33,6 @@ export default function ProjectJourneyCard({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
-
   const projectName = project?.Project_Name || project?.project_name || project?.Name || project?.name || "Project";
   const projectCode = project?.Project_Code || project?.project_code || project?.Code || project?.code || "";
   const projectStatus = getProjectStatus(project);
@@ -86,33 +48,38 @@ export default function ProjectJourneyCard({
 
   return (
     <div className={className} style={{ width: "100%", boxSizing: "border-box", fontFamily: "Inter, system-ui, sans-serif", ...cardStyle }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#172033", lineHeight: 1.3 }}>{projectName}</div>
-          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginTop: 5, fontSize: 9, color: "#64748B" }}>
-            {projectCode && <span style={{ background: "#F1F5F9", borderRadius: 3, padding: "2px 5px", letterSpacing: ".03em" }}>{projectCode}</span>}
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: projectStatus.color, background: projectStatus.bg, borderRadius: 10, padding: "2px 7px" }}><span style={{ width: 5, height: 5, borderRadius: "50%", background: projectStatus.color }} />{projectStatus.label}</span>
+      <div className="flex! justify-between! items-start! gap-[12px]!">
+        <div className="min-w-0!">
+          <div className="text-[14px]! font-bold! [color:#172033]! leading-[1.3]!">{projectName}</div>
+          <div className="flex! items-center! flex-wrap! gap-[8px]! mt-[5px]! text-[9px]! [color:#64748B]!">
+            {projectCode && <span className="[background:#F1F5F9]! rounded-[3px]! p-[2px_5px]! tracking-[.03em]!">{projectCode}</span>}
+            <span className="inline-flex! items-center! gap-[4px]! rounded-[10px]! p-[2px_7px]!" style={{
+  color: projectStatus.color,
+  background: projectStatus.bg
+}}><span className="w-[5px]! h-[5px]! rounded-[50%]!" style={{
+  background: projectStatus.color
+}} />{projectStatus.label}</span>
             {customer && <span>{typeof customer === "object" ? customer.name || customer.Customer_Name : customer}</span>}
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
-          {canAddFeature && <button type="button" onClick={onAddFeature} style={{ ...ACTION_BTN_STYLE, padding: "5px 9px", fontSize: 10 }}>Add Feature</button>}
-          {canAddMilestone && <button type="button" onClick={onAddMilestone} style={{ ...ACTION_BTN_STYLE, padding: "5px 9px", fontSize: 10 }}>Add Milestone</button>}
-          {canAssignTask && <button type="button" onClick={onAssignTask} style={{ ...ACTION_BTN_STYLE, padding: "5px 9px", fontSize: 10 }}>Assign Task</button>}
-          {onEditProject && <button type="button" onClick={onEditProject} style={{ ...ACTION_BTN_STYLE, padding: "5px 9px", fontSize: 10 }}>Edit project</button>}
-          {hasMenuActions && <div style={{ position: "relative" }}>
-            <button type="button" aria-label="More project actions" onClick={() => setMenuOpen(v => !v)} style={{ ...ACTION_BTN_STYLE, width: 26, height: 26, padding: 0, justifyContent: "center" }}><span className="material-symbols-outlined" style={{ fontSize: 15 }}>more_vert</span></button>
-            {menuOpen && <div style={{ position: "absolute", right: 0, top: 30, zIndex: 10, minWidth: 145, padding: 5, background: "#fff", border: "1px solid #E2E8F0", borderRadius: 6, boxShadow: "0 5px 16px #0F172A1A" }}>
-              {onExportProject && <button type="button" onClick={() => { setMenuOpen(false); onExportProject(); }} style={MORE_DROPDOWN_ITEM_STYLE}>Export project</button>}
-              {onPauseResume && <button type="button" onClick={() => { setMenuOpen(false); onPauseResume(isProjectPaused); }} style={MORE_DROPDOWN_ITEM_STYLE}>{isProjectPaused ? "Resume project" : "Pause project"}</button>}
-              {onDeleteProject && <button type="button" onClick={() => { setMenuOpen(false); onDeleteProject(); }} style={{ ...MORE_DROPDOWN_ITEM_STYLE, color: "#DC2626" }}>Delete project</button>}
+        <div className="flex! items-center! gap-[5px]! shrink-0!">
+          {canAddFeature && <button type="button" onClick={onAddFeature} className="[background-color:#ffffff]! [border:1px_solid_#E2E8F0]! rounded-[6px]! p-[5px_9px]! text-[10px]! font-semibold! [color:#2D3748]! cursor-pointer! [transition:all_0.15s_ease]! whitespace-nowrap! [font-family:inherit]! leading-[1.4]! inline-flex! items-center! [box-shadow:0_1px_2px_rgba(0,0,0,0.03)]!">Add Feature</button>}
+          {canAddMilestone && <button type="button" onClick={onAddMilestone} className="[background-color:#ffffff]! [border:1px_solid_#E2E8F0]! rounded-[6px]! p-[5px_9px]! text-[10px]! font-semibold! [color:#2D3748]! cursor-pointer! [transition:all_0.15s_ease]! whitespace-nowrap! [font-family:inherit]! leading-[1.4]! inline-flex! items-center! [box-shadow:0_1px_2px_rgba(0,0,0,0.03)]!">Add Milestone</button>}
+          {canAssignTask && <button type="button" onClick={onAssignTask} className="[background-color:#ffffff]! [border:1px_solid_#E2E8F0]! rounded-[6px]! p-[5px_9px]! text-[10px]! font-semibold! [color:#2D3748]! cursor-pointer! [transition:all_0.15s_ease]! whitespace-nowrap! [font-family:inherit]! leading-[1.4]! inline-flex! items-center! [box-shadow:0_1px_2px_rgba(0,0,0,0.03)]!">Assign Task</button>}
+          {onEditProject && <button type="button" onClick={onEditProject} className="[background-color:#ffffff]! [border:1px_solid_#E2E8F0]! rounded-[6px]! p-[5px_9px]! text-[10px]! font-semibold! [color:#2D3748]! cursor-pointer! [transition:all_0.15s_ease]! whitespace-nowrap! [font-family:inherit]! leading-[1.4]! inline-flex! items-center! [box-shadow:0_1px_2px_rgba(0,0,0,0.03)]!">Edit project</button>}
+          {hasMenuActions && <div className="relative!">
+            <button type="button" aria-label="More project actions" onClick={() => setMenuOpen(v => !v)} className="[background-color:#ffffff]! [border:1px_solid_#E2E8F0]! rounded-[6px]! p-0! text-[13px]! font-semibold! [color:#2D3748]! cursor-pointer! [transition:all_0.15s_ease]! whitespace-nowrap! [font-family:inherit]! leading-[1.4]! inline-flex! items-center! [box-shadow:0_1px_2px_rgba(0,0,0,0.03)]! w-[26px]! h-[26px]! justify-center!"><span className={"material-symbols-outlined" + " " + "text-[15px]!"} >more_vert</span></button>
+            {menuOpen && <div className="absolute! right-[0]! top-[30px]! z-[10]! min-w-[145px]! p-[5px]! [background:#fff]! [border:1px_solid_#E2E8F0]! rounded-[6px]! [box-shadow:0_5px_16px_#0F172A1A]!">
+              {onExportProject && <button type="button" onClick={() => { setMenuOpen(false); onExportProject(); }} className="flex! items-center! gap-[8px]! w-full! [background:none]! border-0! p-[8px_12px]! rounded-[6px]! text-[12px]! font-medium! [color:#334155]! cursor-pointer! text-left! [transition:background-color_0.15s_ease]! [font-family:inherit]!">Export project</button>}
+              {onPauseResume && <button type="button" onClick={() => { setMenuOpen(false); onPauseResume(isProjectPaused); }} className="flex! items-center! gap-[8px]! w-full! [background:none]! border-0! p-[8px_12px]! rounded-[6px]! text-[12px]! font-medium! [color:#334155]! cursor-pointer! text-left! [transition:background-color_0.15s_ease]! [font-family:inherit]!">{isProjectPaused ? "Resume project" : "Pause project"}</button>}
+              {onDeleteProject && <button type="button" onClick={() => { setMenuOpen(false); onDeleteProject(); }} className="flex! items-center! gap-[8px]! w-full! [background:none]! border-0! p-[8px_12px]! rounded-[6px]! text-[12px]! font-medium! [color:#DC2626]! cursor-pointer! text-left! [transition:background-color_0.15s_ease]! [font-family:inherit]!">Delete project</button>}
             </div>}
           </div>}
         </div>
       </div>
 
-      <div style={{ borderTop: "1px solid #E5E7EB", margin: "11px 0 12px" }} />
-      <div style={{ fontSize: 11, fontWeight: 700, color: "#202938", marginBottom: 19 }}>Project journey</div>
+      <div className="[border-top:1px_solid_#E5E7EB]! m-[11px_0_12px]!" />
+      <div className="text-[11px]! font-bold! [color:#202938]! mb-[19px]!">Project journey</div>
 
       <ProjectMilestoneTimeline project={project} />
     </div>

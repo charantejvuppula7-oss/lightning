@@ -1,4 +1,4 @@
-import { apiRequest } from '../../services/api/apiClient.js';
+import { apiRequest } from '../../shared/api/apiClient.js';
 
 export async function fetchCalendarEvents({
   start,
@@ -22,4 +22,3 @@ export async function fetchCalendarEvents({
   const url = query ? `/calendar/events/?${query}` : '/calendar/events/';
   return apiRequest(url);
 }
-

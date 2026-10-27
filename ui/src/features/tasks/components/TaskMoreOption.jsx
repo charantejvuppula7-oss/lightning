@@ -1,18 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-const styles = `
-  .task-more-option { display: inline-flex; flex: 0 0 auto; }
-  .task-more-option__trigger { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 8px; color: #64748b; background: transparent; cursor: pointer; transition: color .15s ease, background .15s ease; }
-  .task-more-option__trigger:hover, .task-more-option__trigger[aria-expanded="true"] { color: var(--color-primary, #2563eb); background: var(--color-primary-subtle, #eff6ff); }
-  .task-more-option__trigger:focus-visible, .task-more-option__item:focus-visible { outline: 2px solid var(--color-primary, #2563eb); outline-offset: 2px; }
-  .task-more-option__menu { position: fixed; z-index: 1200; width: 128px; padding: 3px; border: 1px solid #e2e8f0; border-radius: 9px; background: #fff; box-shadow: 0 8px 18px rgba(15, 23, 42, .14); }
-  .task-more-option__item { display: flex; width: 100%; min-height: 28px; align-items: center; gap: 8px; padding: 4px 8px; border: 0; border-radius: 6px; color: #292929; background: transparent; font: 500 12.5px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; text-align: left; cursor: pointer; transition: color .15s ease, background .15s ease; }
-  .task-more-option__item:hover { color: var(--color-primary, #2563eb); background: var(--color-primary-subtle, #eff6ff); }
-  .task-more-option__item + .task-more-option__item { margin-top: 2px; }
-  .task-more-option__icon { display: inline-flex; width: 16px; height: 16px; flex: 0 0 16px; align-items: center; justify-content: center; }
-`;
-
 export default function TaskMoreOption({ onEdit, onDelete, disabled = false, className = "" }) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState(null);
@@ -69,7 +57,7 @@ export default function TaskMoreOption({ onEdit, onDelete, disabled = false, cla
 
   return (
     <>
-      <style>{styles}</style>
+
       <div ref={rootRef} className={`task-more-option ${className}`.trim()} onClick={(event) => event.stopPropagation()}>
         <button ref={triggerRef} type="button" className="task-more-option__trigger" aria-label="More options" aria-haspopup="menu" aria-expanded={open} disabled={disabled} onClick={() => setOpen((value) => !value)}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="12" cy="19" r="1.5" /></svg>

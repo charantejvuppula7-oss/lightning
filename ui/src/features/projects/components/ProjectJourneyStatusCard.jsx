@@ -43,29 +43,18 @@ export default function ProjectJourneyStatusCard({
       }}
     >
       {/* Status Pill Badge */}
-      <div style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
+      <div className="flex! items-center! mb-[8px]!">
         <span
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "5px",
-            backgroundColor: data.badgeBg,
-            color: data.badgeColor,
-            border: `1px solid ${data.badgeBorder}`,
-            borderRadius: "999px",
-            padding: "2px 8px",
-            fontSize: "10px",
-            fontWeight: "600",
-            lineHeight: "1.2",
-          }}
+          className="inline-flex! items-center! gap-[5px]! rounded-[999px]! p-[2px_8px]! text-[10px]! font-semibold! leading-[1.2]!" style={{
+  backgroundColor: data.badgeBg,
+  color: data.badgeColor,
+  border: `1px solid ${data.badgeBorder}`
+}}
         >
           <span
-            style={{
-              width: "6px",
-              height: "6px",
-              borderRadius: "50%",
-              backgroundColor: data.dotColor,
-            }}
+            className="w-[6px]! h-[6px]! rounded-[50%]!" style={{
+  backgroundColor: data.dotColor
+}}
           />
           {data.badgeLabel}
         </span>
@@ -73,65 +62,38 @@ export default function ProjectJourneyStatusCard({
 
       {/* Title */}
       <div
-        style={{
-          fontSize: "12px",
-          fontWeight: "700",
-          color: "#0F172A",
-          lineHeight: "1.3",
-          marginBottom: "3px",
-        }}
+        className="text-[12px]! font-bold! [color:#0F172A]! leading-[1.3]! mb-[3px]!"
       >
         {data.title}
       </div>
 
       {/* Date / Subtitle */}
       <div
-        style={{
-          fontSize: "10px",
-          color: "#64748B",
-          fontWeight: "500",
-          marginBottom: "8px",
-        }}
+        className="text-[10px]! [color:#64748B]! font-medium! mb-[8px]!"
       >
         {data.date}
       </div>
 
       {/* What Happened heading */}
       <div
-        style={{
-          fontSize: "11px",
-          fontWeight: "700",
-          color: "#1E293B",
-          marginBottom: "3px",
-        }}
+        className="text-[11px]! font-bold! [color:#1E293B]! mb-[3px]!"
       >
         What Happened
       </div>
 
       {/* Description */}
       <div
-        style={{
-          fontSize: "10px",
-          color: "#475569",
-          lineHeight: "1.4",
-        }}
+        className="text-[10px]! [color:#475569]! leading-[1.4]!"
       >
         {data.whatHappened}
       </div>
 
       {/* Downward Pointer Triangle */}
       <div
-        style={{
-          position: "absolute",
-          top: "100%",
-          left: pct <= 10 ? "15%" : pct >= 90 ? "85%" : "50%",
-          transform: "translateX(-50%)",
-          width: 0,
-          height: 0,
-          borderLeft: "6px solid transparent",
-          borderRight: "6px solid transparent",
-          borderTop: `6px solid ${data.borderColor}`,
-        }}
+        className="absolute! top-[100%]! [transform:translateX(-50%)]! w-[0]! h-[0]! [border-left:6px_solid_transparent]! [border-right:6px_solid_transparent]!" style={{
+  left: pct <= 10 ? "15%" : pct >= 90 ? "85%" : "50%",
+  borderTop: `6px solid ${data.borderColor}`
+}}
       />
     </div>
   );

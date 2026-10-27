@@ -185,9 +185,11 @@ class ChatStreamView(APIView):
 
         def presence_fetch():
             """Fetch current active typing indicator states excluding the current user."""
-            states = (ChatTypingState.objects.filter(
-                room_id=room_id, expires_at__gt=timezone.now()).exclude(user_id=user_id)
-                .order_by('user_id').values('user_id', 'user__user_name'))
+            now = timezone.now()
+            online_since = now - timedelta(seconds=75)
+            states = list(ChatTypingState.objects.filter(room_id=room_id).filter(
+                Q(expires_at__gt=now) | Q(last_seen__gte=online_since)
+            ).order_by('user_id').values('user_id', 'user__user_name', 'expires_at', 'last_seen'))
             nonlocal reaction_revision, reaction_snapshot
             revision = type(room).objects.filter(pk=room_id).values_list('updated_at',flat=True).first()
             if reaction_revision != revision:
@@ -195,8 +197,9 @@ class ChatStreamView(APIView):
                 own = set(ProjectChatReaction.objects.filter(message__room_id=room_id,user_id=user_id).values_list('message_id',flat=True))
                 reaction_snapshot = [{**item,'reacted':item['message_id'] in own} for item in reactions]
                 reaction_revision = revision
-            online = list(ChatTypingState.objects.filter(room_id=room_id,last_seen__gte=timezone.now()-timedelta(seconds=75)).values_list('user_id',flat=True))
-            return {'users':[{'user_id':item['user_id'],'name':item['user__user_name']} for item in states],
+            online = [item['user_id'] for item in states if item['last_seen'] >= online_since]
+            return {'users':[{'user_id':item['user_id'],'name':item['user__user_name']} for item in states
+                             if item['user_id'] != user_id and item['expires_at'] > now],
                 'online_ids':online, 'reactions':reaction_snapshot}
 
 

@@ -1,8 +1,6 @@
 import { useState } from "react";
 
-import { apiFetch } from '../../services/api/apiClient.js';
-
-
+import { apiFetch } from '../../shared/api/apiClient.js';
 
 export default function DocumentActionModals({
   toast,
@@ -16,8 +14,6 @@ export default function DocumentActionModals({
   // ── Rename State ────────────────────────────────────────────────────────
   const [renameInput, setRenameInput] = useState(renameDoc?.name || "");
   const [renameLoading, setRenameLoading] = useState(false);
-
-
 
   // ── Rename Handler ──────────────────────────────────────────────────────
   const handleRenameSubmit = async (e) => {
@@ -114,25 +110,25 @@ export default function DocumentActionModals({
       {/* ══════════════════ RENAME MODAL ══════════════════ */}
       {renameDoc && (
         <div
-          style={styles.modalOverlay}
+          className="fixed! [inset:0]! [background-color:rgba(15,_23,_42,_0.45)]! [backdrop-filter:blur(4px)]! [-webkit-backdrop-filter:blur(4px)]! flex! items-center! justify-center! z-[1000]! p-[16px]! box-border!"
           onClick={onCloseRename}
         >
           <div
-            style={styles.renameCard}
+            className="[background-color:var(--color-white)]! rounded-[14px]! [box-shadow:0_20px_25px_-5px_rgba(0,_0,_0,_0.1),_0_8px_10px_-6px_rgba(0,_0,_0,_0.05)]! w-full! max-w-[440px]! p-[24px]! box-border! [animation:modalFadeIn_0.18s_ease-out_forwards]!"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div style={styles.modalHeader}>
+            <div className="flex! items-start! justify-between! mb-[16px]!">
               <div>
-                <h3 style={styles.modalTitle}>Rename Document</h3>
-                <p style={styles.modalSubtitle}>
+                <h3 className="text-[17px]! font-bold! [color:var(--color-slate-900)]! m-0!">Rename Document</h3>
+                <p className="text-[13px]! [color:var(--color-slate-500)]! m-[4px_0_0_0]!">
                   Enter a new title for this file
                 </p>
               </div>
               <button
                 type="button"
                 onClick={onCloseRename}
-                style={styles.closeBtn}
+                className="[background:none]! border-0! text-[22px]! leading-[1]! [color:var(--color-slate-400)]! cursor-pointer! p-[2px_6px]! rounded-[6px]! [transition:color_0.12s]!"
                 title="Close"
               >
                 ×
@@ -140,33 +136,33 @@ export default function DocumentActionModals({
             </div>
 
             {/* Form */}
-            <form onSubmit={handleRenameSubmit} style={styles.formContainer}>
-              <div style={styles.inputGroup}>
-                <label style={styles.inputLabel}>Document Name</label>
+            <form onSubmit={handleRenameSubmit} className="flex! flex-col! gap-[18px]!">
+              <div className="flex! flex-col! gap-[6px]!">
+                <label className="text-[12px]! font-semibold! [color:var(--color-slate-600)]! [text-transform:uppercase]! tracking-[0.4px]! mb-[4px]! block!">Document Name</label>
                 <input
                   type="text"
                   autoFocus
                   value={renameInput}
                   onChange={(e) => setRenameInput(e.target.value)}
                   placeholder="e.g. Project_Specifications.pdf"
-                  style={styles.textInput}
+                  className="w-full! h-[38px]! p-[0_12px]! [border:1px_solid_var(--color-slate-300)]! rounded-[8px]! text-[13.5px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! outline-none! box-border! [transition:border-color_0.15s_ease]!"
                 />
               </div>
 
               {/* Actions */}
-              <div style={styles.modalFooter}>
+              <div className="flex! items-center! justify-end! gap-[10px]! mt-[8px]!">
                 <button
                   type="button"
                   onClick={onCloseRename}
                   disabled={renameLoading}
-                  style={styles.cancelBtn}
+                  className="p-[8px_16px]! rounded-[8px]! [border:1px_solid_var(--color-slate-200)]! [background-color:var(--color-slate-50)]! [color:var(--color-slate-600)]! text-[13px]! font-semibold! cursor-pointer! [transition:background-color_0.12s]!"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={renameLoading}
-                  style={styles.primaryBtn}
+                  className="p-[8px_20px]! rounded-[8px]! border-0! [background-color:var(--color-primary)]! [color:var(--color-white)]! text-[13px]! font-semibold! cursor-pointer! [transition:background-color_0.12s]!"
                 >
                   {renameLoading ? "Renaming..." : "Save"}
                 </button>
@@ -179,27 +175,27 @@ export default function DocumentActionModals({
       {/* ══════════════════ DELETE CONFIRMATION MODAL ══════════════════ */}
       {deleteDoc && (
         <div
-          style={styles.modalOverlay}
+          className="fixed! [inset:0]! [background-color:rgba(15,_23,_42,_0.45)]! [backdrop-filter:blur(4px)]! [-webkit-backdrop-filter:blur(4px)]! flex! items-center! justify-center! z-[1000]! p-[16px]! box-border!"
           onClick={onCloseDelete}
         >
           <div
-            style={styles.deleteCard}
+            className="[background-color:var(--color-white)]! rounded-[14px]! [box-shadow:0_20px_25px_-5px_rgba(0,_0,_0,_0.1),_0_8px_10px_-6px_rgba(0,_0,_0,_0.05)]! w-full! max-w-[460px]! p-[24px]! box-border! [animation:modalFadeIn_0.18s_ease-out_forwards]!"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div style={styles.modalHeader}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <div style={styles.deleteIconBadge}>
+            <div className="flex! items-start! justify-between! mb-[16px]!">
+              <div className="flex! items-center! gap-[10px]!">
+                <div className="w-[42px]! h-[42px]! rounded-[10px]! [background-color:var(--color-danger-border)]! flex! items-center! justify-center! shrink-0!">
                   <span
-                    className="material-symbols-outlined"
-                    style={{ fontSize: "22px", color: "var(--color-danger)" }}
+                    className={"material-symbols-outlined" + " " + "text-[22px]! [color:var(--color-danger)]!"}
+
                   >
                     delete_forever
                   </span>
                 </div>
                 <div>
-                  <h3 style={styles.modalTitle}>Delete Document</h3>
-                  <p style={styles.modalSubtitle}>
+                  <h3 className="text-[17px]! font-bold! [color:var(--color-slate-900)]! m-0!">Delete Document</h3>
+                  <p className="text-[13px]! [color:var(--color-slate-500)]! m-[4px_0_0_0]!">
                     {isBulkDelete
                       ? "Permanent removal of multiple files"
                       : "This action cannot be undone"}
@@ -209,7 +205,7 @@ export default function DocumentActionModals({
               <button
                 type="button"
                 onClick={onCloseDelete}
-                style={styles.closeBtn}
+                className="[background:none]! border-0! text-[22px]! leading-[1]! [color:var(--color-slate-400)]! cursor-pointer! p-[2px_6px]! rounded-[6px]! [transition:color_0.12s]!"
                 title="Close"
               >
                 ×
@@ -217,21 +213,21 @@ export default function DocumentActionModals({
             </div>
 
             {/* Content */}
-            <div style={{ margin: "18px 0", fontSize: "14px", color: "var(--color-slate-700)", lineHeight: "1.5" }}>
+            <div className="m-[18px_0]! text-[14px]! [color:var(--color-slate-700)]! leading-[1.5]!">
               Are you sure you want to permanently delete{" "}
-              <strong style={{ color: "var(--color-slate-900)", wordBreak: "break-word" }}>
+              <strong className="[color:var(--color-slate-900)]! [word-break:break-word]!">
                 "{deleteName}"
               </strong>?
               Once deleted, this document cannot be recovered.
             </div>
 
             {/* Actions */}
-            <div style={styles.modalFooter}>
+            <div className="flex! items-center! justify-end! gap-[10px]! mt-[8px]!">
               <button
                 type="button"
                 onClick={onCloseDelete}
                 disabled={deleteLoading}
-                style={styles.cancelBtn}
+                className="p-[8px_16px]! rounded-[8px]! [border:1px_solid_var(--color-slate-200)]! [background-color:var(--color-slate-50)]! [color:var(--color-slate-600)]! text-[13px]! font-semibold! cursor-pointer! [transition:background-color_0.12s]!"
               >
                 Cancel
               </button>
@@ -239,7 +235,7 @@ export default function DocumentActionModals({
                 type="button"
                 onClick={handleDeleteSubmit}
                 disabled={deleteLoading}
-                style={styles.dangerBtn}
+                className="p-[8px_20px]! rounded-[8px]! border-0! [background-color:var(--color-danger-dark)]! [color:var(--color-white)]! text-[13px]! font-semibold! cursor-pointer! [transition:background-color_0.12s]!"
               >
                 {deleteLoading ? "Deleting..." : "Delete Permanently"}
               </button>
@@ -250,267 +246,3 @@ export default function DocumentActionModals({
     </>
   );
 }
-
-const styles = {
-  modalOverlay: {
-    position: "fixed",
-    inset: 0,
-    backgroundColor: "rgba(15, 23, 42, 0.45)",
-    backdropFilter: "blur(4px)",
-    WebkitBackdropFilter: "blur(4px)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1000,
-    padding: "16px",
-    boxSizing: "border-box",
-  },
-  renameCard: {
-    backgroundColor: "var(--color-white)",
-    borderRadius: "14px",
-    boxShadow:
-      "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)",
-    width: "100%",
-    maxWidth: "440px",
-    padding: "24px",
-    boxSizing: "border-box",
-    animation: "modalFadeIn 0.18s ease-out forwards",
-  },
-  deleteCard: {
-    backgroundColor: "var(--color-white)",
-    borderRadius: "14px",
-    boxShadow:
-      "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)",
-    width: "100%",
-    maxWidth: "460px",
-    padding: "24px",
-    boxSizing: "border-box",
-    animation: "modalFadeIn 0.18s ease-out forwards",
-  },
-  deleteIconBadge: {
-    width: "42px",
-    height: "42px",
-    borderRadius: "10px",
-    backgroundColor: "var(--color-danger-border)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  shareCard: {
-    backgroundColor: "var(--color-white)",
-    borderRadius: "16px",
-    boxShadow:
-      "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)",
-    width: "100%",
-    maxWidth: "500px",
-    padding: "24px 28px",
-    boxSizing: "border-box",
-    animation: "modalFadeIn 0.18s ease-out forwards",
-  },
-  modalHeader: {
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginBottom: "16px",
-  },
-  modalTitle: {
-    fontSize: "17px",
-    fontWeight: "700",
-    color: "var(--color-slate-900)",
-    margin: 0,
-  },
-  modalSubtitle: {
-    fontSize: "13px",
-    color: "var(--color-slate-500)",
-    margin: "4px 0 0 0",
-  },
-  closeBtn: {
-    background: "none",
-    border: "none",
-    fontSize: "22px",
-    lineHeight: 1,
-    color: "var(--color-slate-400)",
-    cursor: "pointer",
-    padding: "2px 6px",
-    borderRadius: "6px",
-    transition: "color 0.12s",
-  },
-  formContainer: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "18px",
-  },
-  inputGroup: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
-  },
-  inputLabel: {
-    fontSize: "12px",
-    fontWeight: "600",
-    color: "var(--color-slate-600)",
-    textTransform: "uppercase",
-    letterSpacing: "0.4px",
-    marginBottom: "4px",
-    display: "block",
-  },
-  textInput: {
-    width: "100%",
-    height: "38px",
-    padding: "0 12px",
-    border: "1px solid var(--color-slate-300)",
-    borderRadius: "8px",
-    fontSize: "13.5px",
-    color: "var(--color-slate-900)",
-    backgroundColor: "var(--color-white)",
-    outline: "none",
-    boxSizing: "border-box",
-    transition: "border-color 0.15s ease",
-  },
-  selectInput: {
-    height: "38px",
-    padding: "0 10px",
-    border: "1px solid var(--color-slate-300)",
-    borderRadius: "8px",
-    fontSize: "13px",
-    color: "var(--color-slate-700)",
-    backgroundColor: "var(--color-slate-50)",
-    outline: "none",
-    cursor: "pointer",
-  },
-  textareaInput: {
-    width: "100%",
-    padding: "10px 12px",
-    border: "1px solid var(--color-slate-300)",
-    borderRadius: "8px",
-    fontSize: "13px",
-    color: "var(--color-slate-900)",
-    backgroundColor: "var(--color-white)",
-    outline: "none",
-    fontFamily: "inherit",
-    boxSizing: "border-box",
-    resize: "none",
-  },
-  modalFooter: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: "10px",
-    marginTop: "8px",
-  },
-  cancelBtn: {
-    padding: "8px 16px",
-    borderRadius: "8px",
-    border: "1px solid var(--color-slate-200)",
-    backgroundColor: "var(--color-slate-50)",
-    color: "var(--color-slate-600)",
-    fontSize: "13px",
-    fontWeight: "600",
-    cursor: "pointer",
-    transition: "background-color 0.12s",
-  },
-  primaryBtn: {
-    padding: "8px 20px",
-    borderRadius: "8px",
-    border: "none",
-    backgroundColor: "var(--color-primary)",
-    color: "var(--color-white)",
-    fontSize: "13px",
-    fontWeight: "600",
-    cursor: "pointer",
-    transition: "background-color 0.12s",
-  },
-  dangerBtn: {
-    padding: "8px 20px",
-    borderRadius: "8px",
-    border: "none",
-    backgroundColor: "var(--color-danger-dark)",
-    color: "var(--color-white)",
-    fontSize: "13px",
-    fontWeight: "600",
-    cursor: "pointer",
-    transition: "background-color 0.12s",
-  },
-  fileInfoChip: {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    backgroundColor: "var(--color-slate-50)",
-    border: "1px solid var(--color-slate-200)",
-    borderRadius: "10px",
-    padding: "10px 14px",
-  },
-  fileBadge: {
-    backgroundColor: "var(--color-primary-subtle)",
-    color: "var(--color-primary)",
-    fontSize: "11px",
-    fontWeight: "700",
-    padding: "6px 8px",
-    borderRadius: "6px",
-    border: "1px solid var(--color-primary-border)",
-    letterSpacing: "0.5px",
-  },
-  fileChipName: {
-    fontSize: "13.5px",
-    fontWeight: "600",
-    color: "var(--color-slate-900)",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
-  fileChipMeta: {
-    fontSize: "12px",
-    color: "var(--color-slate-500)",
-    marginTop: "1px",
-  },
-  copyLinkRow: {
-    display: "flex",
-    gap: "8px",
-  },
-  copyLinkInput: {
-    flex: 1,
-    height: "38px",
-    padding: "0 12px",
-    backgroundColor: "var(--color-slate-50)",
-    border: "1px solid var(--color-slate-300)",
-    borderRadius: "8px",
-    fontSize: "12.5px",
-    color: "var(--color-slate-500)",
-    outline: "none",
-    boxSizing: "border-box",
-  },
-  copyLinkBtn: {
-    height: "38px",
-    padding: "0 14px",
-    borderRadius: "8px",
-    border: "none",
-    color: "var(--color-white)",
-    fontSize: "13px",
-    fontWeight: "600",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    gap: "6px",
-    flexShrink: 0,
-    transition: "background-color 0.15s ease",
-  },
-  dividerRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    margin: "18px 0",
-  },
-  dividerLine: {
-    flex: 1,
-    height: "1px",
-    backgroundColor: "var(--color-slate-200)",
-  },
-  dividerText: {
-    fontSize: "11.5px",
-    fontWeight: "500",
-    color: "var(--color-slate-400)",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
-  },
-};

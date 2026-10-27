@@ -1,0 +1,250 @@
+@utility dependencies-page {
+  @apply p-[24px_32px];
+  @apply [background:#f9fbff];
+  @apply min-h-[calc(100vh_-_50px)];
+  @apply [font-family:Inter,sans-serif];
+  &>header {
+    @apply mb-[20px];
+  }
+  & h1 {
+    @apply text-[26px];
+    @apply font-extrabold;
+    @apply [color:#0f172a];
+    @apply m-[0_0_6px];
+    @apply tracking-[-.3px];
+  }
+  &>header p {
+    @apply text-[13.5px];
+    @apply [color:#64748b];
+    @apply m-0;
+  }
+  @media (max-width:700px) {
+    @apply p-[24px_16px];
+  }
+}
+@utility dependency-tabs {
+  @apply flex;
+  @apply gap-[0];
+  @apply [border-bottom:1px_solid_#e2e8f0];
+  @apply mb-[24px];
+  & button {
+    @apply p-[10px_18px];
+    @apply text-[13.5px];
+    @apply font-medium;
+    @apply [color:#64748b];
+    @apply [background:transparent];
+    @apply border-0;
+    @apply [border-bottom:2px_solid_transparent];
+    @apply mb-[-1px];
+    @apply cursor-pointer;
+  }
+  & button.active {
+    @apply font-bold;
+    @apply [color:var(--color-primary)];
+    @apply [border-bottom-color:var(--color-primary)];
+  }
+  @media (max-width:700px) {
+    @apply overflow-auto;
+  }
+  @media (max-width:700px) {
+    & button {
+      @apply whitespace-nowrap;
+    }
+  }
+}
+@utility dependency-list {
+  @apply flex;
+  @apply flex-col;
+  @apply gap-[12px];
+}
+@utility dependencies-empty {
+  @apply [background:#fff];
+  @apply rounded-[10px];
+  @apply [border:1px_solid_#e2e8f0];
+  @apply p-[48px_24px];
+  @apply text-center;
+  @apply [box-shadow:0_1px_3px_#00000005];
+  &>.material-symbols-outlined {
+    @apply w-[48px];
+    @apply h-[48px];
+    @apply rounded-[50%];
+    @apply [background:#eff6ff];
+    @apply grid;
+    @apply [place-items:center];
+    @apply m-[0_auto_14px];
+    @apply [color:var(--color-primary)];
+    @apply text-[24px];
+  }
+  & h3 {
+    @apply text-[15px];
+    @apply font-bold;
+    @apply [color:#1e293b];
+    @apply m-[0_0_6px];
+  }
+  & p {
+    @apply text-[13px];
+    @apply [color:#64748b];
+    @apply m-[0_auto];
+    @apply max-w-[420px];
+  }
+}
+@utility dependency-change {
+  @apply p-[12px];
+  @apply rounded-[8px];
+  @apply [background:#fffbeb];
+  @apply [color:#92400e];
+  @apply text-[12px];
+}
+@utility dependency-card-wrap {
+  &.highlighted {
+    @apply [box-shadow:0_0_0_3px_#2563eb2e];
+  }
+  & .task-card-action-secondary {
+    @apply inline-flex;
+    @apply items-center;
+    @apply gap-[7px];
+  }
+  & .task-card-action-secondary .material-symbols-outlined {
+    @apply text-[16px];
+  }
+  @apply rounded-[10px];
+  @apply mb-[8px];
+  @apply [transition:box-shadow_.2s_ease]
+}
+@utility task-card {
+  &.task-card--dependency {
+    @apply m-0;
+    @apply rounded-[9px];
+  }
+  &.task-card--dependency .task-card-header {
+    @apply items-start;
+    @apply gap-[9px];
+    @apply p-[11px_14px_10px];
+  }
+  &.task-card--dependency .task-card-info {
+    @apply gap-[3px];
+  }
+  &.task-card--dependency .task-card-row1 {
+    @apply gap-[8px];
+  }
+  &.task-card--dependency .task-card-name {
+    @apply max-w-[min(420px,_42vw)];
+  }
+  &.task-card--dependency .task-card-sprint-row {
+    @apply mt-[0];
+  }
+  &.task-card--dependency .task-card-right {
+    @apply gap-[9px];
+  }
+  &.task-card--dependency .task-card-info-grid {
+    @apply grid-cols-[repeat(3,_minmax(0,_1fr))];
+  }
+  &.task-card--dependency .task-card-body--open {
+    @apply max-h-[1400px];
+  }
+  &.task-card--dependency .task-timer-btn--sm {
+    @apply min-h-[30px];
+    @apply p-[2px_9px_2px_3px];
+    @apply gap-[6px];
+  }
+  &.task-card--dependency .task-timer-btn--sm .task-timer-circle {
+    @apply w-[24px];
+    @apply h-[24px];
+  }
+  &.task-card--dependency .task-timer-btn--sm .task-timer-divider {
+    @apply h-[16px];
+  }
+  &.task-card--dependency .task-timer-btn--sm .task-timer-display {
+    @apply text-[12px];
+  }
+  @media (max-width: 760px) {
+    &.task-card--dependency .task-card-header {
+      @apply flex-wrap;
+    }
+  }
+  @media (max-width: 760px) {
+    &.task-card--dependency .task-card-right {
+      @apply w-full;
+      @apply justify-end;
+      @apply flex-wrap;
+    }
+  }
+  @media (max-width: 760px) {
+    &.task-card--dependency .task-card-name {
+      @apply max-w-[min(280px,_65vw)];
+    }
+  }
+  @media (max-width: 760px) {
+    &.task-card--dependency .task-card-info-grid {
+      @apply grid-cols-[repeat(2,_minmax(0,_1fr))];
+    }
+  }
+  @media (max-width: 420px) {
+    &.task-card--dependency .task-card-info-grid {
+      @apply grid-cols-[1fr];
+    }
+  }
+}
+@utility dependency-card-subtitle {
+  @apply inline-flex;
+  @apply items-center;
+  @apply gap-[3px];
+  @apply [color:#475569];
+  @apply text-[12px];
+  @apply font-normal;
+}
+@utility dependency-card-parent-link {
+  @apply border-0;
+  @apply p-0;
+  @apply [color:#475569];
+  @apply [background:transparent];
+  @apply [font:inherit];
+  @apply cursor-pointer;
+  &:hover {
+    @apply [color:var(--color-primary,_#2563eb)];
+    @apply underline;
+  }
+}
+@utility dependency-card-history {
+  @apply flex;
+  @apply flex-col;
+  @apply gap-[9px];
+  @apply pt-[10px];
+  @apply [border-top:1px_solid_#e2e8f0];
+  & h5 {
+    @apply m-0;
+    @apply [color:#64748b];
+    @apply text-[11px];
+    @apply tracking-[.06em];
+    @apply [text-transform:uppercase];
+  }
+}
+@utility dependency-card-history-item {
+  @apply flex;
+  @apply items-start;
+  @apply gap-[8px];
+  @apply [color:#334155];
+  @apply text-[12px];
+  & > span:last-child {
+    @apply flex;
+    @apply flex-col;
+    @apply gap-[2px];
+  }
+  & small {
+    @apply [color:#94a3b8];
+    @apply text-[10px];
+  }
+}
+@utility dependency-card-history-avatar {
+  @apply inline-flex;
+  @apply w-[22px];
+  @apply h-[22px];
+  @apply [flex:0_0_22px];
+  @apply items-center;
+  @apply justify-center;
+  @apply rounded-[50%];
+  @apply [color:white];
+  @apply [background:#64748b];
+  @apply text-[9px];
+  @apply font-bold;
+}

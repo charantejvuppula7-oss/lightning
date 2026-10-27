@@ -2,10 +2,10 @@ import { prepareRecordForm, serializeRecordForm } from '../recordForm.js'
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import { SearchBar } from "../../../components/common/SearchControls.jsx";
+import { SearchBar } from "../../../shared/components/SearchControls.jsx";
 import MonitoringHeader from '../components/MonitoringHeader.jsx'
-import { adminFetch as fetch } from "../api/adminApi.js";
-import AdminPageLayout from "../components/AdminPageLayout.jsx";
+import { adminFetch as fetch } from "../api/monitoringApi.js";
+import MonitoringLayout from "../components/MonitoringLayout.jsx";
 
 export default function DatabaseExplorerPage({ user }) {
   const [searchParams] = useSearchParams();
@@ -279,13 +279,12 @@ export default function DatabaseExplorerPage({ user }) {
   const currentTableMeta = tables.find((t) => t.table_key === activeTableKey) || {};
 
   return (
-    <AdminPageLayout user={user}>
+    <MonitoringLayout user={user}>
 
       {/* Admin Sidebar */}
 
-
       {/* Main Container */}
-      <div style={styles.mainContainer}>
+      <div className="flex-1! flex! flex-col! min-w-0! h-screen! overflow-y-auto!">
         {/* Top Header */}
         <MonitoringHeader user={user} title="Database UI Explorer" subtitle="Live schema introspection & direct model data viewer" icon="database" actions={<><button
               type="button"
@@ -293,63 +292,61 @@ export default function DatabaseExplorerPage({ user }) {
                 fetchTables();
                 fetchTableData();
               }}
-              style={styles.refreshBtn}
+              className="flex! items-center! gap-[6px]! p-[8px_14px]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-300)]! rounded-[8px]! text-[13px]! font-semibold! [color:var(--color-slate-600)]! cursor-pointer!"
             >
-              <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+              <span className={"material-symbols-outlined" + " " + "text-[18px]!"} >
                 refresh
               </span>
               Refresh
             </button></>} />
 
-        {feedback && <div role="status" style={{ padding: "8px 32px" }}>{feedback}</div>}
+        {feedback && <div role="status" className="p-[8px_32px]!">{feedback}</div>}
         {/* Workspace: 2-Column (Left: Tables Navigation, Right: Table Data Grid) */}
-        <div style={styles.workspaceBody}>
-          <div style={styles.twoColLayout}>
+        <div className="p-[24px_32px]! flex-1!">
+          <div className="grid! grid-cols-[280px_1fr]! gap-[24px]! items-start!">
             {/* Left Column: Tables List */}
-            <div style={styles.tablesListCol}>
-              <div style={styles.tableListCard}>
-                <div style={styles.tableListHeader}>
-                  <span style={{ fontWeight: "700", fontSize: "13px", color: "var(--color-slate-900)" }}>Database Tables</span>
-                  <span style={styles.tableCountPill}>{tables.length} models</span>
+            <div className="flex! flex-col!">
+              <div className="[background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-200)]! rounded-[12px]! overflow-hidden! [box-shadow:0_1px_3px_rgba(0,_0,_0,_0.04)]!">
+                <div className="flex! justify-between! items-center! p-[14px_16px]! [border-bottom:1px_solid_var(--color-slate-200)]! [background-color:var(--color-slate-50)]!">
+                  <span className="font-bold! text-[13px]! [color:var(--color-slate-900)]!">Database Tables</span>
+                  <span className="text-[11px]! font-semibold! [background-color:var(--color-slate-200)]! [color:var(--color-slate-600)]! p-[2px_8px]! rounded-[10px]!">{tables.length} models</span>
                 </div>
 
-                <div style={styles.tableListScroll}>
+                <div className="p-[12px]! max-h-[calc(100vh_-_180px)]! overflow-y-auto!">
                   {tablesLoading ? (
-                    <div style={{ padding: "24px", textAlign: "center" }}>
+                    <div className="p-[24px]! text-center!">
                       <span className="spinner" />
                     </div>
                   ) : (
                     Object.entries(categorizedTables).map(([category, catTables]) => (
-                      <div key={category} style={{ marginBottom: "16px" }}>
-                        <div style={styles.categoryTitle}>{category}</div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                      <div key={category} className="mb-[16px]!">
+                        <div className="text-[11px]! font-bold! [color:var(--color-slate-400)]! [text-transform:uppercase]! tracking-[0.06em]! p-[4px_8px]!">{category}</div>
+                        <div className="flex! flex-col! gap-[3px]!">
                           {catTables.map((tbl) => {
                             const isSelected = tbl.table_key === activeTableKey;
                             return (
                               <div
                                 key={tbl.table_key}
-                                className={`tbl-nav-item ${isSelected ? "active" : ""}`}
+                                className={`tbl-nav-item ${isSelected ? "active" : ""}` + " " + "flex! items-center! gap-[8px]! p-[8px_10px]! rounded-[6px]! text-[13px]!"}
                                 onClick={() => handleSelectTable(tbl.table_key)}
                                 style={{
-                                  ...styles.tableNavItem,
-                                  backgroundColor: isSelected ? "var(--color-primary-subtle)" : "transparent",
-                                  color: isSelected ? "var(--color-primary)" : "var(--color-slate-700)",
-                                  fontWeight: isSelected ? "600" : "500",
-                                }}
+  backgroundColor: isSelected ? "var(--color-primary-subtle)" : "transparent",
+  color: isSelected ? "var(--color-primary)" : "var(--color-slate-700)",
+  fontWeight: isSelected ? "600" : "500"
+}}
                               >
                                 <span
-                                  className="material-symbols-outlined"
+                                  className={"material-symbols-outlined" + " " + "text-[18px]!"}
                                   style={{
-                                    fontSize: "18px",
-                                    color: isSelected ? "var(--color-primary)" : "var(--color-slate-500)",
-                                  }}
+  color: isSelected ? "var(--color-primary)" : "var(--color-slate-500)"
+}}
                                 >
                                   {tbl.icon || "table_chart"}
                                 </span>
-                                <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                <span className="flex-1! min-w-0! overflow-hidden! text-ellipsis! whitespace-nowrap!">
                                   {tbl.display_name}
                                 </span>
-                                <span style={styles.rowCountBadge}>{tbl.row_count}</span>
+                                <span className="text-[11px]! font-semibold! [background-color:var(--color-slate-100)]! [color:var(--color-slate-500)]! p-[1px_6px]! rounded-[8px]!">{tbl.row_count}</span>
                               </div>
                             );
                           })}
@@ -362,12 +359,12 @@ export default function DatabaseExplorerPage({ user }) {
             </div>
 
             {/* Right Column: Active Table Viewer */}
-            <div style={styles.dataGridCol}>
+            <div className="flex! flex-col! gap-[16px]! min-w-0!">
               {/* Table Meta & Search Toolbar */}
-              <div style={styles.gridToolbar}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <h2 style={styles.activeTableTitle}>{tableData.display_name}</h2>
-                  <span style={styles.activeTableCount}>
+              <div className="flex! justify-between! items-center! gap-[16px]! flex-wrap!">
+                <div className="flex! items-center! gap-[10px]!">
+                  <h2 className="text-[18px]! font-bold! [color:var(--color-slate-900)]! m-0!">{tableData.display_name}</h2>
+                  <span className="text-[12px]! [color:var(--color-slate-500)]! [background-color:var(--color-slate-100)]! p-[2px_8px]! rounded-[10px]!">
                     {tableData.pagination.total_count} total records
                   </span>
                 </div>
@@ -379,128 +376,121 @@ export default function DatabaseExplorerPage({ user }) {
                     setSearchQuery(e.target.value);
                     setCurrentPage(1);
                   }}
-                  wrapperStyle={styles.searchWrapper}
-                  iconStyle={styles.searchIcon}
-                  inputStyle={styles.searchInput}
+                  wrapperClassName="[position:relative]! [width:320px]!"
+                  iconClassName="[position:absolute]! [left:10px]! [top:50%]! [transform:translateY(-50%)]! [color:var(--color-slate-400)]! [font-size:18px]!"
+                  inputClassName="[width:100%]! [height:36px]! [padding-left:34px]! [padding-right:10px]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-300)]! [border-radius:8px]! [font-size:13px]! [color:var(--color-slate-900)]! [outline:none]!"
                 />
               </div>
 
               {/* Data Table Card */}
-              <div style={styles.tableCard}>
-                <div style={styles.tableResponsiveWrapper}>
-                  <table style={styles.table}>
+              <div className="[background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-200)]! rounded-[12px]! overflow-hidden! [box-shadow:0_1px_3px_rgba(0,_0,_0,_0.04)]!">
+                <div className="overflow-x-auto! max-h-[calc(100vh_-_250px)]!">
+                  <table className="w-full! [border-collapse:collapse]! text-[12px]! text-left!">
                     <thead>
                       <tr>
-                        <th style={{ ...styles.th, width: "60px", textAlign: "center" }}>#</th>
+                        <th className="p-[10px_14px]! [background-color:var(--color-slate-50)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [border-bottom:1px_solid_var(--color-slate-200)]! whitespace-nowrap! sticky! top-[0]! z-[10]! w-[60px]! text-center!">#</th>
                         {tableData.columns.map((col) => (
                           <th
                             key={col.name}
                             onClick={() => handleSort(col.name)}
-                            style={{
-                              ...styles.th,
-                              cursor: "pointer",
-                            }}
+                            className="p-[10px_14px]! [background-color:var(--color-slate-50)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [border-bottom:1px_solid_var(--color-slate-200)]! whitespace-nowrap! sticky! top-[0]! z-[10]! cursor-pointer!"
                             title={`Sort by ${col.name} (${col.type})`}
                           >
-                            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            <div className="flex! items-center! gap-[4px]!">
                               <span>{col.name}</span>
-                              <span style={{ fontSize: "10px", color: "var(--color-slate-400)", fontWeight: "400" }}>
+                              <span className="text-[10px]! [color:var(--color-slate-400)]! font-normal!">
                                 ({col.type.replace("Field", "")})
                               </span>
                               {sortField === col.name && (
-                                <span className="material-symbols-outlined" style={{ fontSize: "14px", color: "var(--color-primary)" }}>
+                                <span className={"material-symbols-outlined" + " " + "text-[14px]! [color:var(--color-primary)]!"} >
                                   {sortDir === "asc" ? "arrow_upward" : "arrow_downward"}
                                 </span>
                               )}
                             </div>
                           </th>
                         ))}
-                        <th style={{ ...styles.th, width: "110px", textAlign: "center" }}>Actions</th>
+                        <th className="p-[10px_14px]! [background-color:var(--color-slate-50)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [border-bottom:1px_solid_var(--color-slate-200)]! whitespace-nowrap! sticky! top-[0]! z-[10]! w-[110px]! text-center!">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {dataLoading ? (
                         <tr>
-                          <td colSpan={tableData.columns.length + 2} style={{ ...styles.emptyCell, padding: "40px" }}>
-                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+                          <td colSpan={tableData.columns.length + 2} className="p-[40px]! text-center! [color:var(--color-slate-500)]!">
+                            <div className="flex! flex-col! items-center! gap-[10px]!">
                               <span className="spinner" />
-                              <span style={{ color: "var(--color-slate-500)" }}>Loading {tableData.display_name} records...</span>
+                              <span className="[color:var(--color-slate-500)]!">Loading {tableData.display_name} records...</span>
                             </div>
                           </td>
                         </tr>
                       ) : tableData.rows.length === 0 ? (
                         <tr>
-                          <td colSpan={tableData.columns.length + 2} style={styles.emptyCell}>
+                          <td colSpan={tableData.columns.length + 2} className="p-[32px]! text-center! [color:var(--color-slate-500)]!">
                             No records found in this table.
                           </td>
                         </tr>
                       ) : (
                         tableData.rows.map((row, idx) => (
-                          <tr key={row.id || idx} className="db-row" style={styles.tr}>
-                            <td style={{ ...styles.td, textAlign: "center", color: "var(--color-slate-400)", fontSize: "11px" }}>
+                          <tr key={row.id || idx} className={"db-row" + " " + "[border-bottom:1px_solid_var(--color-slate-100)]! [transition:background-color_0.12s_ease]!"} >
+                            <td className="p-[10px_14px]! [color:var(--color-slate-400)]! [vertical-align:middle]! whitespace-nowrap! max-w-[280px]! overflow-hidden! text-ellipsis! text-center! text-[11px]!">
                               {(tableData.pagination.page - 1) * tableData.pagination.page_size + idx + 1}
                             </td>
                             {tableData.columns.map((col) => {
                               const val = row[col.name];
                               let displayVal = val;
                               if (val === null || val === undefined) {
-                                displayVal = <span style={{ color: "var(--color-slate-300)" }}>NULL</span>;
+                                displayVal = <span className="[color:var(--color-slate-300)]!">NULL</span>;
                               } else if (typeof val === "boolean") {
                                 displayVal = (
                                   <span
-                                    style={{
-                                      fontSize: "11px",
-                                      padding: "1px 6px",
-                                      borderRadius: "4px",
-                                      backgroundColor: val ? "var(--color-success-bg)" : "var(--color-danger-border)",
-                                      color: val ? "var(--color-success-dark)" : "#b91c1c",
-                                      fontWeight: "600",
-                                    }}
+                                    className="text-[11px]! p-[1px_6px]! rounded-[4px]! font-semibold!" style={{
+  backgroundColor: val ? "var(--color-success-bg)" : "var(--color-danger-border)",
+  color: val ? "var(--color-success-dark)" : "#b91c1c"
+}}
                                   >
                                     {val ? "TRUE" : "FALSE"}
                                   </span>
                                 );
                               } else if (typeof val === "object") {
-                                displayVal = <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#7c3aed" }}>{JSON.stringify(val).slice(0, 30)}...</span>;
+                                displayVal = <span className="[font-family:monospace]! text-[11px]! [color:#7c3aed]!">{JSON.stringify(val).slice(0, 30)}...</span>;
                               } else if (String(val).length > 40) {
                                 displayVal = `${String(val).slice(0, 40)}…`;
                               }
 
                               return (
-                                <td key={col.name} style={styles.td} title={String(val)}>
+                                <td key={col.name} className="p-[10px_14px]! [color:var(--color-slate-800)]! [vertical-align:middle]! whitespace-nowrap! max-w-[280px]! overflow-hidden! text-ellipsis!" title={String(val)}>
                                   {displayVal}
                                 </td>
                               );
                             })}
-                            <td style={{ ...styles.td, textAlign: "center" }}>
-                              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                            <td className="p-[10px_14px]! [color:var(--color-slate-800)]! [vertical-align:middle]! whitespace-nowrap! max-w-[280px]! overflow-hidden! text-ellipsis! text-center!">
+                              <div className="flex! items-center! justify-center! gap-[6px]!">
                                 <button
                                   type="button"
                                   onClick={() => handleInspect(row)}
-                                  style={styles.inspectBtn}
+                                  className="[background:none]! border-0! [color:var(--color-slate-500)]! cursor-pointer! p-[4px]! rounded-[4px]! inline-flex! items-center! justify-center! [transition:color_0.15s_ease]!"
                                   title="Inspect Details"
                                 >
-                                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                                  <span className={"material-symbols-outlined" + " " + "text-[16px]!"} >
                                     visibility
                                   </span>
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleOpenEdit(row)}
-                                  style={styles.editBtn}
+                                  className="[background:none]! border-0! [color:var(--color-primary)]! cursor-pointer! p-[4px]! rounded-[4px]! inline-flex! items-center! justify-center! [transition:color_0.15s_ease]!"
                                   title="Edit Record"
                                 >
-                                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                                  <span className={"material-symbols-outlined" + " " + "text-[16px]!"} >
                                     edit
                                   </span>
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleOpenDelete(row)}
-                                  style={styles.deleteBtn}
+                                  className="[background:none]! border-0! [color:var(--color-danger)]! cursor-pointer! p-[4px]! rounded-[4px]! inline-flex! items-center! justify-center! [transition:color_0.15s_ease]!"
                                   title="Delete Record"
                                 >
-                                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                                  <span className={"material-symbols-outlined" + " " + "text-[16px]!"} >
                                     delete
                                   </span>
                                 </button>
@@ -515,16 +505,16 @@ export default function DatabaseExplorerPage({ user }) {
 
                 {/* Pagination Footer */}
                 {tableData.pagination.total_pages > 1 && (
-                  <div style={styles.paginationRow}>
-                    <span style={styles.paginationText}>
+                  <div className="flex! justify-between! items-center! p-[12px_18px]! [border-top:1px_solid_var(--color-slate-100)]!">
+                    <span className="text-[12px]! [color:var(--color-slate-500)]!">
                       Showing page {tableData.pagination.page} of {tableData.pagination.total_pages} ({tableData.pagination.total_count} total records)
                     </span>
-                    <div style={{ display: "flex", gap: "8px" }}>
+                    <div className="flex! gap-[8px]!">
                       <button
                         type="button"
                         disabled={tableData.pagination.page <= 1}
                         onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                        style={styles.pageBtn}
+                        className="p-[6px_12px]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-300)]! rounded-[6px]! text-[12px]! font-semibold! [color:var(--color-slate-700)]! cursor-pointer!"
                       >
                         Previous
                       </button>
@@ -532,7 +522,7 @@ export default function DatabaseExplorerPage({ user }) {
                         type="button"
                         disabled={tableData.pagination.page >= tableData.pagination.total_pages}
                         onClick={() => setCurrentPage((p) => p + 1)}
-                        style={styles.pageBtn}
+                        className="p-[6px_12px]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-300)]! rounded-[6px]! text-[12px]! font-semibold! [color:var(--color-slate-700)]! cursor-pointer!"
                       >
                         Next
                       </button>
@@ -547,20 +537,20 @@ export default function DatabaseExplorerPage({ user }) {
 
       {/* ─── Record Inspection Modal ─── */}
       {isModalOpen && selectedRecord && (
-        <div style={styles.modalOverlay} onClick={() => setIsModalOpen(false)}>
-          <div style={styles.modalCard} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalHeader}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span className="material-symbols-outlined" style={{ fontSize: "20px", color: "var(--color-primary)" }}>
+        <div className="fixed! [inset:0]! [background-color:rgba(15,_23,_42,_0.45)]! [backdrop-filter:blur(4px)]! flex! items-center! justify-center! z-[1000]!" onClick={() => setIsModalOpen(false)}>
+          <div className="w-[680px]! max-w-[92vw]! max-h-[85vh]! [background-color:var(--color-white)]! rounded-[14px]! [box-shadow:0_20px_25px_-5px_rgba(0,_0,_0,_0.1)]! flex! flex-col! overflow-hidden!" onClick={(e) => e.stopPropagation()}>
+            <div className="flex! justify-between! items-center! p-[18px_24px]! [border-bottom:1px_solid_var(--color-slate-200)]!">
+              <div className="flex! items-center! gap-[10px]!">
+                <span className={"material-symbols-outlined" + " " + "text-[20px]! [color:var(--color-primary)]!"} >
                   database
                 </span>
-                <h3 style={styles.modalTitle}>
+                <h3 className="text-[16px]! font-bold! [color:var(--color-slate-900)]! m-0!">
                   Record Details: {currentTableMeta.display_name || activeTableKey}
                 </h3>
               </div>
               <button
                 type="button"
-                style={styles.modalCloseBtn}
+                className="[background:none]! border-0! cursor-pointer! text-[16px]! [color:var(--color-slate-400)]!"
                 onClick={() => setIsModalOpen(false)}
               >
                 ✕
@@ -568,23 +558,17 @@ export default function DatabaseExplorerPage({ user }) {
             </div>
 
             {/* Modal Tabs */}
-            <div style={styles.modalTabRow}>
+            <div className="flex! p-[0_24px]! [border-bottom:1px_solid_var(--color-slate-200)]! [background-color:var(--color-slate-50)]!">
               <button
                 type="button"
-                style={{
-                  ...styles.modalTabBtn,
-                  ...(modalTab === "formatted" ? styles.modalTabBtnActive : {}),
-                }}
+                className={modalTab === "formatted" ? "[padding:10px_16px]! [background:none]! [border:none]! [border-bottom:2px_solid_transparent]! [font-size:13px]! [font-weight:600]! [color:var(--color-primary)]! [cursor:pointer]! [border-bottom-color:var(--color-primary)]!" : "[padding:10px_16px]! [background:none]! [border:none]! [border-bottom:2px_solid_transparent]! [font-size:13px]! [font-weight:600]! [color:var(--color-slate-500)]! [cursor:pointer]!"}
                 onClick={() => setModalTab("formatted")}
               >
                 Key-Value Fields
               </button>
               <button
                 type="button"
-                style={{
-                  ...styles.modalTabBtn,
-                  ...(modalTab === "json" ? styles.modalTabBtnActive : {}),
-                }}
+                className={modalTab === "json" ? "[padding:10px_16px]! [background:none]! [border:none]! [border-bottom:2px_solid_transparent]! [font-size:13px]! [font-weight:600]! [color:var(--color-primary)]! [cursor:pointer]! [border-bottom-color:var(--color-primary)]!" : "[padding:10px_16px]! [background:none]! [border:none]! [border-bottom:2px_solid_transparent]! [font-size:13px]! [font-weight:600]! [color:var(--color-slate-500)]! [cursor:pointer]!"}
                 onClick={() => setModalTab("json")}
               >
                 Raw JSON
@@ -592,17 +576,17 @@ export default function DatabaseExplorerPage({ user }) {
             </div>
 
             {/* Modal Body */}
-            <div style={styles.modalBody}>
+            <div className="p-[20px_24px]! overflow-y-auto! max-h-[calc(85vh_-_160px)]!">
               {modalTab === "formatted" ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div className="flex! flex-col! gap-[8px]!">
                   {Object.entries(selectedRecord).map(([key, val]) => (
-                    <div key={key} style={styles.recordFieldRow}>
-                      <div style={styles.recordFieldKey}>{key}</div>
-                      <div style={styles.recordFieldVal}>
+                    <div key={key} className="grid! grid-cols-[180px_1fr]! gap-[12px]! p-[8px_0]! [border-bottom:1px_solid_var(--color-slate-100)]! text-[13px]!">
+                      <div className="font-semibold! [color:var(--color-slate-600)]!">{key}</div>
+                      <div className="[color:var(--color-slate-900)]! [word-break:break-word]!">
                         {val === null || val === undefined ? (
-                          <span style={{ color: "var(--color-slate-400)" }}>NULL</span>
+                          <span className="[color:var(--color-slate-400)]!">NULL</span>
                         ) : typeof val === "object" ? (
-                          <pre style={{ margin: 0, fontSize: "11px", backgroundColor: "var(--color-slate-50)", padding: "6px", borderRadius: "4px" }}>
+                          <pre className="m-0! text-[11px]! [background-color:var(--color-slate-50)]! p-[6px]! rounded-[4px]!">
                             {JSON.stringify(val, null, 2)}
                           </pre>
                         ) : (
@@ -613,27 +597,27 @@ export default function DatabaseExplorerPage({ user }) {
                   ))}
                 </div>
               ) : (
-                <pre style={styles.jsonBlock}>
+                <pre className="m-0! p-[14px]! [background-color:var(--color-slate-900)]! [color:#38bdf8]! rounded-[8px]! text-[12px]! overflow-x-auto! [font-family:monospace]!">
                   {JSON.stringify(selectedRecord, null, 2)}
                 </pre>
               )}
             </div>
 
-            <div style={styles.modalFooter}>
+            <div className="flex! justify-between! items-center! p-[14px_24px]! [border-top:1px_solid_var(--color-slate-200)]! [background-color:var(--color-slate-50)]!">
               <button
                 type="button"
                 onClick={() => {
                   navigator.clipboard.writeText(JSON.stringify(selectedRecord, null, 2));
                   toast.info("Record JSON copied to clipboard!");
                 }}
-                style={styles.copyBtn}
+                className="flex! items-center! gap-[6px]! p-[8px_14px]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-300)]! rounded-[8px]! text-[13px]! font-semibold! [color:var(--color-slate-700)]! cursor-pointer!"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                <span className={"material-symbols-outlined" + " " + "text-[16px]!"} >
                   content_copy
                 </span>
                 Copy JSON
               </button>
-              <div style={{ display: "flex", gap: "8px" }}>
+              <div className="flex! gap-[8px]!">
                 <button
                   type="button"
                   onClick={() => {
@@ -641,9 +625,9 @@ export default function DatabaseExplorerPage({ user }) {
                     setIsModalOpen(false);
                     handleOpenEdit(rec);
                   }}
-                  style={styles.actionEditBtn}
+                  className="flex! items-center! gap-[6px]! p-[8px_14px]! [background-color:var(--color-primary-subtle)]! [border:1px_solid_var(--color-primary-border-mid)]! rounded-[8px]! text-[13px]! font-semibold! [color:var(--color-primary-hover)]! cursor-pointer!"
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                  <span className={"material-symbols-outlined" + " " + "text-[16px]!"} >
                     edit
                   </span>
                   Edit Record
@@ -655,9 +639,9 @@ export default function DatabaseExplorerPage({ user }) {
                     setIsModalOpen(false);
                     handleOpenDelete(rec);
                   }}
-                  style={styles.actionDeleteBtn}
+                  className="flex! items-center! gap-[6px]! p-[8px_14px]! [background-color:var(--color-danger-bg)]! [border:1px_solid_#fecaca]! rounded-[8px]! text-[13px]! font-semibold! [color:var(--color-danger-dark)]! cursor-pointer!"
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                  <span className={"material-symbols-outlined" + " " + "text-[16px]!"} >
                     delete
                   </span>
                   Delete Record
@@ -665,7 +649,7 @@ export default function DatabaseExplorerPage({ user }) {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  style={styles.closeBtn}
+                  className="p-[8px_16px]! [background-color:var(--color-primary)]! border-0! rounded-[8px]! text-[13px]! font-semibold! [color:var(--color-white)]! cursor-pointer!"
                 >
                   Close
                 </button>
@@ -677,87 +661,87 @@ export default function DatabaseExplorerPage({ user }) {
 
       {/* ─── Edit Record Modal ─── */}
       {isEditModalOpen && editingRecord && (
-        <div style={styles.modalOverlay} onClick={() => setIsEditModalOpen(false)}>
-          <div style={{ ...styles.modalCard, width: "720px" }} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalHeader}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span className="material-symbols-outlined" style={{ fontSize: "22px", color: "var(--color-primary)" }}>
+        <div className="fixed! [inset:0]! [background-color:rgba(15,_23,_42,_0.45)]! [backdrop-filter:blur(4px)]! flex! items-center! justify-center! z-[1000]!" onClick={() => setIsEditModalOpen(false)}>
+          <div className="w-[720px]! max-w-[92vw]! max-h-[85vh]! [background-color:var(--color-white)]! rounded-[14px]! [box-shadow:0_20px_25px_-5px_rgba(0,_0,_0,_0.1)]! flex! flex-col! overflow-hidden!" onClick={(e) => e.stopPropagation()}>
+            <div className="flex! justify-between! items-center! p-[18px_24px]! [border-bottom:1px_solid_var(--color-slate-200)]!">
+              <div className="flex! items-center! gap-[10px]!">
+                <span className={"material-symbols-outlined" + " " + "text-[22px]! [color:var(--color-primary)]!"} >
                   edit_note
                 </span>
                 <div>
-                  <h3 style={styles.modalTitle}>
+                  <h3 className="text-[16px]! font-bold! [color:var(--color-slate-900)]! m-0!">
                     Edit {currentTableMeta.display_name || activeTableKey} Record
                   </h3>
-                  <span style={{ fontSize: "11px", color: "var(--color-slate-500)" }}>
+                  <span className="text-[11px]! [color:var(--color-slate-500)]!">
                     ID: {editingRecord.id || editingRecord.Id}
                   </span>
                 </div>
               </div>
               <button
                 type="button"
-                style={styles.modalCloseBtn}
+                className="[background:none]! border-0! cursor-pointer! text-[16px]! [color:var(--color-slate-400)]!"
                 onClick={() => setIsEditModalOpen(false)}
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSaveEdit} style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-              <div style={styles.modalBody}>
+            <form onSubmit={handleSaveEdit} className="flex! flex-col! flex-1! overflow-hidden!">
+              <div className="p-[20px_24px]! overflow-y-auto! max-h-[calc(85vh_-_160px)]!">
                 {editError && (
-                  <div style={styles.errorAlertBox}>
-                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>error</span>
+                  <div className="flex! items-center! gap-[8px]! p-[10px_14px]! [background-color:var(--color-danger-bg)]! [color:#b91c1c]! rounded-[6px]! text-[12px]! mb-[16px]! [border:1px_solid_#fca5a5]!">
+                    <span className={"material-symbols-outlined" + " " + "text-[16px]!"} >error</span>
                     {editError}
                   </div>
                 )}
 
                 {activeTableKey === "users" ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                  <div className="flex! flex-col! gap-[18px]!">
                     {/* Account Credentials */}
                     <div>
-                      <div style={styles.editSectionTitle}>Account & Credentials</div>
-                      <div style={styles.editGrid}>
+                      <div className="text-[12px]! font-bold! [color:var(--color-slate-500)]! [text-transform:uppercase]! tracking-[0.5px]! mb-[10px]! pb-[4px]! [border-bottom:1px_solid_var(--color-slate-100)]!">Account & Credentials</div>
+                      <div className="grid! grid-cols-[1fr_1fr]! gap-[12px]!">
                         <div>
-                          <label style={styles.fieldLabel}>Username *</label>
+                          <label className="block! text-[12px]! font-semibold! [color:var(--color-slate-700)]! mb-[4px]!">Username *</label>
                           <input
                             type="text"
                             required
                             value={editFormData.user_name || ""}
                             onChange={(e) => handleEditChange("user_name", e.target.value)}
-                            style={styles.editInput}
+                            className="w-full! p-[8px_12px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! text-[13px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! outline-none! box-border!"
                             placeholder="username"
                           />
                         </div>
                         <div>
-                          <label style={styles.fieldLabel}>Email Address *</label>
+                          <label className="block! text-[12px]! font-semibold! [color:var(--color-slate-700)]! mb-[4px]!">Email Address *</label>
                           <input
                             type="email"
                             required
                             value={editFormData.email || ""}
                             onChange={(e) => handleEditChange("email", e.target.value)}
-                            style={styles.editInput}
+                            className="w-full! p-[8px_12px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! text-[13px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! outline-none! box-border!"
                             placeholder="user@example.com"
                           />
                         </div>
                         <div>
-                          <label style={styles.fieldLabel}>Account Status</label>
+                          <label className="block! text-[12px]! font-semibold! [color:var(--color-slate-700)]! mb-[4px]!">Account Status</label>
                           <select
                             value={editFormData.account_status || "active"}
                             onChange={(e) => handleEditChange("account_status", e.target.value)}
-                            style={styles.editSelect}
+                            className="w-full! p-[8px_12px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! text-[13px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! outline-none! box-border!"
                           >
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
                           </select>
                         </div>
                         <div>
-                          <label style={styles.fieldLabel}>Set New Password</label>
+                          <label className="block! text-[12px]! font-semibold! [color:var(--color-slate-700)]! mb-[4px]!">Set New Password</label>
                           <input
                             type="password"
                             placeholder="Leave blank to keep unchanged"
                             value={editFormData.password || ""}
                             onChange={(e) => handleEditChange("password", e.target.value)}
-                            style={styles.editInput}
+                            className="w-full! p-[8px_12px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! text-[13px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! outline-none! box-border!"
                           />
                         </div>
                       </div>
@@ -765,45 +749,45 @@ export default function DatabaseExplorerPage({ user }) {
 
                     {/* Profile Details */}
                     <div>
-                      <div style={styles.editSectionTitle}>Personal Information</div>
-                      <div style={styles.editGrid}>
+                      <div className="text-[12px]! font-bold! [color:var(--color-slate-500)]! [text-transform:uppercase]! tracking-[0.5px]! mb-[10px]! pb-[4px]! [border-bottom:1px_solid_var(--color-slate-100)]!">Personal Information</div>
+                      <div className="grid! grid-cols-[1fr_1fr]! gap-[12px]!">
                         <div>
-                          <label style={styles.fieldLabel}>First Name *</label>
+                          <label className="block! text-[12px]! font-semibold! [color:var(--color-slate-700)]! mb-[4px]!">First Name *</label>
                           <input
                             type="text"
                             required
                             value={editFormData.first_name || ""}
                             onChange={(e) => handleEditChange("first_name", e.target.value)}
-                            style={styles.editInput}
+                            className="w-full! p-[8px_12px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! text-[13px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! outline-none! box-border!"
                           />
                         </div>
                         <div>
-                          <label style={styles.fieldLabel}>Last Name *</label>
+                          <label className="block! text-[12px]! font-semibold! [color:var(--color-slate-700)]! mb-[4px]!">Last Name *</label>
                           <input
                             type="text"
                             required
                             value={editFormData.last_name || ""}
                             onChange={(e) => handleEditChange("last_name", e.target.value)}
-                            style={styles.editInput}
+                            className="w-full! p-[8px_12px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! text-[13px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! outline-none! box-border!"
                           />
                         </div>
                         <div>
-                          <label style={styles.fieldLabel}>Employee ID *</label>
+                          <label className="block! text-[12px]! font-semibold! [color:var(--color-slate-700)]! mb-[4px]!">Employee ID *</label>
                           <input
                             type="text"
                             required
                             value={editFormData.employee_id || ""}
                             onChange={(e) => handleEditChange("employee_id", e.target.value)}
-                            style={styles.editInput}
+                            className="w-full! p-[8px_12px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! text-[13px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! outline-none! box-border!"
                           />
                         </div>
                         <div>
-                          <label style={styles.fieldLabel}>Phone Number</label>
+                          <label className="block! text-[12px]! font-semibold! [color:var(--color-slate-700)]! mb-[4px]!">Phone Number</label>
                           <input
                             type="text"
                             value={editFormData.phone_number || ""}
                             onChange={(e) => handleEditChange("phone_number", e.target.value)}
-                            style={styles.editInput}
+                            className="w-full! p-[8px_12px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! text-[13px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! outline-none! box-border!"
                           />
                         </div>
                       </div>
@@ -811,14 +795,14 @@ export default function DatabaseExplorerPage({ user }) {
 
                     {/* Role & Org */}
                     <div>
-                      <div style={styles.editSectionTitle}>Organization & Role</div>
-                      <div style={styles.editGrid}>
+                      <div className="text-[12px]! font-bold! [color:var(--color-slate-500)]! [text-transform:uppercase]! tracking-[0.5px]! mb-[10px]! pb-[4px]! [border-bottom:1px_solid_var(--color-slate-100)]!">Organization & Role</div>
+                      <div className="grid! grid-cols-[1fr_1fr]! gap-[12px]!">
                         <div>
-                          <label style={styles.fieldLabel}>System Role</label>
+                          <label className="block! text-[12px]! font-semibold! [color:var(--color-slate-700)]! mb-[4px]!">System Role</label>
                           <select
                             value={editFormData.role || editFormData.role_link || "developer"}
                             onChange={(e) => handleEditChange("role", e.target.value)}
-                            style={styles.editSelect}
+                            className="w-full! p-[8px_12px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! text-[13px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! outline-none! box-border!"
                           >
                             <option value="developer">Developer</option>
                             <option value="pm">Project Manager</option>
@@ -826,20 +810,20 @@ export default function DatabaseExplorerPage({ user }) {
                           </select>
                         </div>
                         <div>
-                          <label style={styles.fieldLabel}>Designation</label>
+                          <label className="block! text-[12px]! font-semibold! [color:var(--color-slate-700)]! mb-[4px]!">Designation</label>
                           <input
                             type="text"
                             value={editFormData.designation || ""}
                             onChange={(e) => handleEditChange("designation", e.target.value)}
-                            style={styles.editInput}
+                            className="w-full! p-[8px_12px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! text-[13px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! outline-none! box-border!"
                           />
                         </div>
                         <div>
-                          <label style={styles.fieldLabel}>Department</label>
+                          <label className="block! text-[12px]! font-semibold! [color:var(--color-slate-700)]! mb-[4px]!">Department</label>
                           <select
                             value={editFormData.department || editFormData.department_link || ""}
                             onChange={(e) => handleEditChange("department", e.target.value)}
-                            style={styles.editSelect}
+                            className="w-full! p-[8px_12px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! text-[13px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! outline-none! box-border!"
                           >
                             <option value="">Select department</option>
                             <option value="Hardware">Hardware</option>
@@ -854,11 +838,11 @@ export default function DatabaseExplorerPage({ user }) {
                           </select>
                         </div>
                         <div>
-                          <label style={styles.fieldLabel}>Employment Type</label>
+                          <label className="block! text-[12px]! font-semibold! [color:var(--color-slate-700)]! mb-[4px]!">Employment Type</label>
                           <select
                             value={editFormData.employment_type || "full_time"}
                             onChange={(e) => handleEditChange("employment_type", e.target.value)}
-                            style={styles.editSelect}
+                            className="w-full! p-[8px_12px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! text-[13px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! outline-none! box-border!"
                           >
                             <option value="full_time">Full Time</option>
                             <option value="part_time">Part Time</option>
@@ -870,7 +854,7 @@ export default function DatabaseExplorerPage({ user }) {
                     </div>
                   </div>
                 ) : (
-                  <div style={styles.editGrid}>
+                  <div className="grid! grid-cols-[1fr_1fr]! gap-[12px]!">
                     {tableData.columns
                       .filter((c) => !c.primary_key && !["created_at", "updated_at"].includes(c.name))
                       .map((col) => {
@@ -878,24 +862,24 @@ export default function DatabaseExplorerPage({ user }) {
                         const isBool = col.type && col.type.includes("Boolean");
                         return (
                           <div key={col.name}>
-                            <label style={styles.fieldLabel}>{col.verbose_name || col.name}</label>
+                            <label className="block! text-[12px]! font-semibold! [color:var(--color-slate-700)]! mb-[4px]!">{col.verbose_name || col.name}</label>
                             {isBool ? (
                               <select
                                 value={String(val === true || val === "true")}
                                 onChange={(e) => handleEditChange(col.name, e.target.value === "true")}
-                                style={styles.editSelect}
+                                className="w-full! p-[8px_12px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! text-[13px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! outline-none! box-border!"
                               >
                                 <option value="true">True</option>
                                 <option value="false">False</option>
                               </select>
                             ) : col.type === "JSONField" ? (
-                              <textarea aria-label={col.verbose_name || col.name} rows={7} value={val ?? ''} onChange={e => handleEditChange(col.name, e.target.value)} style={{ ...styles.editInput, height: 'auto', fontFamily: 'monospace' }} />
+                              <textarea aria-label={col.verbose_name || col.name} rows={7} value={val ?? ''} onChange={e => handleEditChange(col.name, e.target.value)} className="w-full! p-[8px_12px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! text-[13px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! outline-none! box-border! h-auto! [font-family:monospace]!" />
                             ) : (
                               <input
                                 type={col.type === 'DateTimeField' ? 'datetime-local' : col.type === 'DateField' ? 'date' : 'text'}
                                 value={val === null || val === undefined ? "" : String(val)}
                                 onChange={(e) => handleEditChange(col.name, e.target.value)}
-                                style={styles.editInput}
+                                className="w-full! p-[8px_12px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! text-[13px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! outline-none! box-border!"
                               />
                             )}
                           </div>
@@ -905,10 +889,10 @@ export default function DatabaseExplorerPage({ user }) {
                 )}
               </div>
 
-              <div style={styles.modalFooter}>
+              <div className="flex! justify-between! items-center! p-[14px_24px]! [border-top:1px_solid_var(--color-slate-200)]! [background-color:var(--color-slate-50)]!">
                 <button
                   type="button"
-                  style={styles.cancelBtn}
+                  className="p-[8px_16px]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-300)]! rounded-[8px]! text-[13px]! font-semibold! [color:var(--color-slate-600)]! cursor-pointer!"
                   onClick={() => setIsEditModalOpen(false)}
                   disabled={isSaving}
                 >
@@ -916,7 +900,7 @@ export default function DatabaseExplorerPage({ user }) {
                 </button>
                 <button
                   type="submit"
-                  style={styles.saveBtn}
+                  className="p-[8px_18px]! [background-color:var(--color-primary)]! border-0! rounded-[8px]! text-[13px]! font-semibold! [color:var(--color-white)]! cursor-pointer!"
                   disabled={isSaving}
                 >
                   {isSaving ? "Saving..." : "Save Changes"}
@@ -929,65 +913,65 @@ export default function DatabaseExplorerPage({ user }) {
 
       {/* ─── Delete Confirmation Modal ─── */}
       {isDeleteModalOpen && deletingRecord && (
-        <div style={styles.modalOverlay} onClick={() => setIsDeleteModalOpen(false)}>
-          <div style={{ ...styles.modalCard, width: "480px" }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ ...styles.modalHeader, borderBottom: "1px solid var(--color-danger-border)", backgroundColor: "var(--color-danger-bg)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span className="material-symbols-outlined" style={{ fontSize: "24px", color: "var(--color-danger-dark)" }}>
+        <div className="fixed! [inset:0]! [background-color:rgba(15,_23,_42,_0.45)]! [backdrop-filter:blur(4px)]! flex! items-center! justify-center! z-[1000]!" onClick={() => setIsDeleteModalOpen(false)}>
+          <div className="w-[480px]! max-w-[92vw]! max-h-[85vh]! [background-color:var(--color-white)]! rounded-[14px]! [box-shadow:0_20px_25px_-5px_rgba(0,_0,_0,_0.1)]! flex! flex-col! overflow-hidden!" onClick={(e) => e.stopPropagation()}>
+            <div className="flex! justify-between! items-center! p-[18px_24px]! [border-bottom:1px_solid_var(--color-danger-border)]! [background-color:var(--color-danger-bg)]!">
+              <div className="flex! items-center! gap-[10px]!">
+                <span className={"material-symbols-outlined" + " " + "text-[24px]! [color:var(--color-danger-dark)]!"} >
                   warning
                 </span>
-                <h3 style={{ ...styles.modalTitle, color: "#991b1b" }}>
+                <h3 className="text-[16px]! font-bold! [color:#991b1b]! m-0!">
                   Delete {currentTableMeta.display_name || activeTableKey} Record
                 </h3>
               </div>
               <button
                 type="button"
-                style={styles.modalCloseBtn}
+                className="[background:none]! border-0! cursor-pointer! text-[16px]! [color:var(--color-slate-400)]!"
                 onClick={() => setIsDeleteModalOpen(false)}
               >
                 ✕
               </button>
             </div>
 
-            <div style={{ padding: "20px 24px" }}>
-              <p style={{ fontSize: "14px", color: "var(--color-slate-700)", lineHeight: "1.6", margin: "0 0 16px 0" }}>
+            <div className="p-[20px_24px]!">
+              <p className="text-[14px]! [color:var(--color-slate-700)]! leading-[1.6]! m-[0_0_16px_0]!">
                 Are you sure you want to permanently delete this record from <strong>{currentTableMeta.display_name || activeTableKey}</strong>?
               </p>
 
-              <div style={{ padding: "12px 16px", backgroundColor: "var(--color-slate-50)", border: "1px solid var(--color-slate-200)", borderRadius: "8px", fontSize: "13px", color: "var(--color-slate-900)", marginBottom: "16px" }}>
+              <div className="p-[12px_16px]! [background-color:var(--color-slate-50)]! [border:1px_solid_var(--color-slate-200)]! rounded-[8px]! text-[13px]! [color:var(--color-slate-900)]! mb-[16px]!">
                 {activeTableKey === "users" ? (
                   <>
-                    <div style={{ marginBottom: "4px" }}><strong>Username:</strong> {deletingRecord.user_name}</div>
-                    <div style={{ marginBottom: "4px" }}><strong>Name:</strong> {deletingRecord.first_name} {deletingRecord.last_name}</div>
-                    <div style={{ marginBottom: "4px" }}><strong>Email:</strong> {deletingRecord.email}</div>
+                    <div className="mb-[4px]!"><strong>Username:</strong> {deletingRecord.user_name}</div>
+                    <div className="mb-[4px]!"><strong>Name:</strong> {deletingRecord.first_name} {deletingRecord.last_name}</div>
+                    <div className="mb-[4px]!"><strong>Email:</strong> {deletingRecord.email}</div>
                     <div><strong>Role:</strong> {deletingRecord.role || deletingRecord.role_link || "developer"}</div>
                   </>
                 ) : (
                   <>
-                    <div style={{ marginBottom: "4px" }}><strong>Record ID:</strong> {deletingRecord.id}</div>
-                    {deletingRecord.name && <div style={{ marginBottom: "4px" }}><strong>Name:</strong> {deletingRecord.name}</div>}
-                    {deletingRecord.project_name && <div style={{ marginBottom: "4px" }}><strong>Project:</strong> {deletingRecord.project_name}</div>}
+                    <div className="mb-[4px]!"><strong>Record ID:</strong> {deletingRecord.id}</div>
+                    {deletingRecord.name && <div className="mb-[4px]!"><strong>Name:</strong> {deletingRecord.name}</div>}
+                    {deletingRecord.project_name && <div className="mb-[4px]!"><strong>Project:</strong> {deletingRecord.project_name}</div>}
                     {deletingRecord.Task_Name && <div><strong>Task:</strong> {deletingRecord.Task_Name}</div>}
                   </>
                 )}
               </div>
 
               {deleteError && (
-                <div style={styles.errorAlertBox}>
-                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>error</span>
+                <div className="flex! items-center! gap-[8px]! p-[10px_14px]! [background-color:var(--color-danger-bg)]! [color:#b91c1c]! rounded-[6px]! text-[12px]! mb-[16px]! [border:1px_solid_#fca5a5]!">
+                  <span className={"material-symbols-outlined" + " " + "text-[16px]!"} >error</span>
                   {deleteError}
                 </div>
               )}
 
-              <div style={{ fontSize: "12px", color: "var(--color-danger-dark)", fontWeight: "600" }}>
+              <div className="text-[12px]! [color:var(--color-danger-dark)]! font-semibold!">
                 ⚠️ Warning: This action will permanently remove this record from the database.
               </div>
             </div>
 
-            <div style={styles.modalFooter}>
+            <div className="flex! justify-between! items-center! p-[14px_24px]! [border-top:1px_solid_var(--color-slate-200)]! [background-color:var(--color-slate-50)]!">
               <button
                 type="button"
-                style={styles.cancelBtn}
+                className="p-[8px_16px]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-300)]! rounded-[8px]! text-[13px]! font-semibold! [color:var(--color-slate-600)]! cursor-pointer!"
                 onClick={() => setIsDeleteModalOpen(false)}
                 disabled={isDeleting}
               >
@@ -995,7 +979,7 @@ export default function DatabaseExplorerPage({ user }) {
               </button>
               <button
                 type="button"
-                style={styles.dangerDeleteBtn}
+                className="p-[8px_18px]! [background-color:var(--color-danger-dark)]! border-0! rounded-[8px]! text-[13px]! font-semibold! [color:var(--color-white)]! cursor-pointer!"
                 onClick={handleDeleteConfirm}
                 disabled={isDeleting}
               >
@@ -1005,485 +989,6 @@ export default function DatabaseExplorerPage({ user }) {
           </div>
         </div>
       )}
-    </AdminPageLayout>
+    </MonitoringLayout>
   );
-}
-
-const styles = {
-  "mainContainer": {
-    "flex": 1,
-    "display": "flex",
-    "flexDirection": "column",
-    "minWidth": 0,
-    "height": "100vh",
-    "overflowY": "auto"
-  },
-  "refreshBtn": {
-    "display": "flex",
-    "alignItems": "center",
-    "gap": "6px",
-    "padding": "8px 14px",
-    "backgroundColor": "var(--color-white)",
-    "border": "1px solid var(--color-slate-300)",
-    "borderRadius": "8px",
-    "fontSize": "13px",
-    "fontWeight": "600",
-    "color": "var(--color-slate-600)",
-    "cursor": "pointer"
-  },
-  "workspaceBody": {
-    "padding": "24px 32px",
-    "flex": 1
-  },
-  "twoColLayout": {
-    "display": "grid",
-    "gridTemplateColumns": "280px 1fr",
-    "gap": "24px",
-    "alignItems": "flex-start"
-  },
-  "tablesListCol": {
-    "display": "flex",
-    "flexDirection": "column"
-  },
-  "tableListCard": {
-    "backgroundColor": "var(--color-white)",
-    "border": "1px solid var(--color-slate-200)",
-    "borderRadius": "12px",
-    "overflow": "hidden",
-    "boxShadow": "0 1px 3px rgba(0, 0, 0, 0.04)"
-  },
-  "tableListHeader": {
-    "display": "flex",
-    "justifyContent": "space-between",
-    "alignItems": "center",
-    "padding": "14px 16px",
-    "borderBottom": "1px solid var(--color-slate-200)",
-    "backgroundColor": "var(--color-slate-50)"
-  },
-  "tableCountPill": {
-    "fontSize": "11px",
-    "fontWeight": "600",
-    "backgroundColor": "var(--color-slate-200)",
-    "color": "var(--color-slate-600)",
-    "padding": "2px 8px",
-    "borderRadius": "10px"
-  },
-  "tableListScroll": {
-    "padding": "12px",
-    "maxHeight": "calc(100vh - 180px)",
-    "overflowY": "auto"
-  },
-  "categoryTitle": {
-    "fontSize": "11px",
-    "fontWeight": "700",
-    "color": "var(--color-slate-400)",
-    "textTransform": "uppercase",
-    "letterSpacing": "0.06em",
-    "padding": "4px 8px"
-  },
-  "tableNavItem": {
-    "display": "flex",
-    "alignItems": "center",
-    "gap": "8px",
-    "padding": "8px 10px",
-    "borderRadius": "6px",
-    "fontSize": "13px"
-  },
-  "rowCountBadge": {
-    "fontSize": "11px",
-    "fontWeight": "600",
-    "backgroundColor": "var(--color-slate-100)",
-    "color": "var(--color-slate-500)",
-    "padding": "1px 6px",
-    "borderRadius": "8px"
-  },
-  "dataGridCol": {
-    "display": "flex",
-    "flexDirection": "column",
-    "gap": "16px",
-    "minWidth": 0
-  },
-  "gridToolbar": {
-    "display": "flex",
-    "justifyContent": "space-between",
-    "alignItems": "center",
-    "gap": "16px",
-    "flexWrap": "wrap"
-  },
-  "activeTableTitle": {
-    "fontSize": "18px",
-    "fontWeight": "700",
-    "color": "var(--color-slate-900)",
-    "margin": 0
-  },
-  "activeTableCount": {
-    "fontSize": "12px",
-    "color": "var(--color-slate-500)",
-    "backgroundColor": "var(--color-slate-100)",
-    "padding": "2px 8px",
-    "borderRadius": "10px"
-  },
-  "searchWrapper": {
-    "position": "relative",
-    "width": "320px"
-  },
-  "searchIcon": {
-    "position": "absolute",
-    "left": "10px",
-    "top": "50%",
-    "transform": "translateY(-50%)",
-    "color": "var(--color-slate-400)",
-    "fontSize": "18px"
-  },
-  "searchInput": {
-    "width": "100%",
-    "height": "36px",
-    "paddingLeft": "34px",
-    "paddingRight": "10px",
-    "backgroundColor": "var(--color-white)",
-    "border": "1px solid var(--color-slate-300)",
-    "borderRadius": "8px",
-    "fontSize": "13px",
-    "color": "var(--color-slate-900)",
-    "outline": "none"
-  },
-  "tableCard": {
-    "backgroundColor": "var(--color-white)",
-    "border": "1px solid var(--color-slate-200)",
-    "borderRadius": "12px",
-    "overflow": "hidden",
-    "boxShadow": "0 1px 3px rgba(0, 0, 0, 0.04)"
-  },
-  "tableResponsiveWrapper": {
-    "overflowX": "auto",
-    "maxHeight": "calc(100vh - 250px)"
-  },
-  "table": {
-    "width": "100%",
-    "borderCollapse": "collapse",
-    "fontSize": "12px",
-    "textAlign": "left"
-  },
-  "th": {
-    "padding": "10px 14px",
-    "backgroundColor": "var(--color-slate-50)",
-    "color": "var(--color-slate-600)",
-    "fontWeight": "600",
-    "fontSize": "11px",
-    "borderBottom": "1px solid var(--color-slate-200)",
-    "whiteSpace": "nowrap",
-    "position": "sticky",
-    "top": 0,
-    "zIndex": 10
-  },
-  "tr": {
-    "borderBottom": "1px solid var(--color-slate-100)",
-    "transition": "background-color 0.12s ease"
-  },
-  "td": {
-    "padding": "10px 14px",
-    "color": "var(--color-slate-800)",
-    "verticalAlign": "middle",
-    "whiteSpace": "nowrap",
-    "maxWidth": "280px",
-    "overflow": "hidden",
-    "textOverflow": "ellipsis"
-  },
-  "inspectBtn": {
-    "background": "none",
-    "border": "none",
-    "color": "var(--color-slate-500)",
-    "cursor": "pointer",
-    "padding": "4px",
-    "borderRadius": "4px",
-    "display": "inline-flex",
-    "alignItems": "center",
-    "justifyContent": "center",
-    "transition": "color 0.15s ease"
-  },
-  "editBtn": {
-    "background": "none",
-    "border": "none",
-    "color": "var(--color-primary)",
-    "cursor": "pointer",
-    "padding": "4px",
-    "borderRadius": "4px",
-    "display": "inline-flex",
-    "alignItems": "center",
-    "justifyContent": "center",
-    "transition": "color 0.15s ease"
-  },
-  "deleteBtn": {
-    "background": "none",
-    "border": "none",
-    "color": "var(--color-danger)",
-    "cursor": "pointer",
-    "padding": "4px",
-    "borderRadius": "4px",
-    "display": "inline-flex",
-    "alignItems": "center",
-    "justifyContent": "center",
-    "transition": "color 0.15s ease"
-  },
-  "emptyCell": {
-    "padding": "32px",
-    "textAlign": "center",
-    "color": "var(--color-slate-500)"
-  },
-  "paginationRow": {
-    "display": "flex",
-    "justifyContent": "space-between",
-    "alignItems": "center",
-    "padding": "12px 18px",
-    "borderTop": "1px solid var(--color-slate-100)"
-  },
-  "paginationText": {
-    "fontSize": "12px",
-    "color": "var(--color-slate-500)"
-  },
-  "pageBtn": {
-    "padding": "6px 12px",
-    "backgroundColor": "var(--color-white)",
-    "border": "1px solid var(--color-slate-300)",
-    "borderRadius": "6px",
-    "fontSize": "12px",
-    "fontWeight": "600",
-    "color": "var(--color-slate-700)",
-    "cursor": "pointer"
-  },
-  "modalOverlay": {
-    "position": "fixed",
-    "inset": 0,
-    "backgroundColor": "rgba(15, 23, 42, 0.45)",
-    "backdropFilter": "blur(4px)",
-    "display": "flex",
-    "alignItems": "center",
-    "justifyContent": "center",
-    "zIndex": 1000
-  },
-  "modalCard": {
-    "width": "680px",
-    "maxWidth": "92vw",
-    "maxHeight": "85vh",
-    "backgroundColor": "var(--color-white)",
-    "borderRadius": "14px",
-    "boxShadow": "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
-    "display": "flex",
-    "flexDirection": "column",
-    "overflow": "hidden"
-  },
-  "modalHeader": {
-    "display": "flex",
-    "justifyContent": "space-between",
-    "alignItems": "center",
-    "padding": "18px 24px",
-    "borderBottom": "1px solid var(--color-slate-200)"
-  },
-  "modalTitle": {
-    "fontSize": "16px",
-    "fontWeight": "700",
-    "color": "var(--color-slate-900)",
-    "margin": 0
-  },
-  "modalCloseBtn": {
-    "background": "none",
-    "border": "none",
-    "cursor": "pointer",
-    "fontSize": "16px",
-    "color": "var(--color-slate-400)"
-  },
-  "modalTabRow": {
-    "display": "flex",
-    "padding": "0 24px",
-    "borderBottom": "1px solid var(--color-slate-200)",
-    "backgroundColor": "var(--color-slate-50)"
-  },
-  "modalTabBtn": {
-    "padding": "10px 16px",
-    "background": "none",
-    "border": "none",
-    "borderBottom": "2px solid transparent",
-    "fontSize": "13px",
-    "fontWeight": "600",
-    "color": "var(--color-slate-500)",
-    "cursor": "pointer"
-  },
-  "modalTabBtnActive": {
-    "color": "var(--color-primary)",
-    "borderBottomColor": "var(--color-primary)"
-  },
-  "modalBody": {
-    "padding": "20px 24px",
-    "overflowY": "auto",
-    "maxHeight": "calc(85vh - 160px)"
-  },
-  "recordFieldRow": {
-    "display": "grid",
-    "gridTemplateColumns": "180px 1fr",
-    "gap": "12px",
-    "padding": "8px 0",
-    "borderBottom": "1px solid var(--color-slate-100)",
-    "fontSize": "13px"
-  },
-  "recordFieldKey": {
-    "fontWeight": "600",
-    "color": "var(--color-slate-600)"
-  },
-  "recordFieldVal": {
-    "color": "var(--color-slate-900)",
-    "wordBreak": "break-word"
-  },
-  "jsonBlock": {
-    "margin": 0,
-    "padding": "14px",
-    "backgroundColor": "var(--color-slate-900)",
-    "color": "#38bdf8",
-    "borderRadius": "8px",
-    "fontSize": "12px",
-    "overflowX": "auto",
-    "fontFamily": "monospace"
-  },
-  "modalFooter": {
-    "display": "flex",
-    "justifyContent": "space-between",
-    "alignItems": "center",
-    "padding": "14px 24px",
-    "borderTop": "1px solid var(--color-slate-200)",
-    "backgroundColor": "var(--color-slate-50)"
-  },
-  "copyBtn": {
-    "display": "flex",
-    "alignItems": "center",
-    "gap": "6px",
-    "padding": "8px 14px",
-    "backgroundColor": "var(--color-white)",
-    "border": "1px solid var(--color-slate-300)",
-    "borderRadius": "8px",
-    "fontSize": "13px",
-    "fontWeight": "600",
-    "color": "var(--color-slate-700)",
-    "cursor": "pointer"
-  },
-  "closeBtn": {
-    "padding": "8px 16px",
-    "backgroundColor": "var(--color-primary)",
-    "border": "none",
-    "borderRadius": "8px",
-    "fontSize": "13px",
-    "fontWeight": "600",
-    "color": "var(--color-white)",
-    "cursor": "pointer"
-  },
-  "actionEditBtn": {
-    "display": "flex",
-    "alignItems": "center",
-    "gap": "6px",
-    "padding": "8px 14px",
-    "backgroundColor": "var(--color-primary-subtle)",
-    "border": "1px solid var(--color-primary-border-mid)",
-    "borderRadius": "8px",
-    "fontSize": "13px",
-    "fontWeight": "600",
-    "color": "var(--color-primary-hover)",
-    "cursor": "pointer"
-  },
-  "actionDeleteBtn": {
-    "display": "flex",
-    "alignItems": "center",
-    "gap": "6px",
-    "padding": "8px 14px",
-    "backgroundColor": "var(--color-danger-bg)",
-    "border": "1px solid #fecaca",
-    "borderRadius": "8px",
-    "fontSize": "13px",
-    "fontWeight": "600",
-    "color": "var(--color-danger-dark)",
-    "cursor": "pointer"
-  },
-  "editSectionTitle": {
-    "fontSize": "12px",
-    "fontWeight": "700",
-    "color": "var(--color-slate-500)",
-    "textTransform": "uppercase",
-    "letterSpacing": "0.5px",
-    "marginBottom": "10px",
-    "paddingBottom": "4px",
-    "borderBottom": "1px solid var(--color-slate-100)"
-  },
-  "editGrid": {
-    "display": "grid",
-    "gridTemplateColumns": "1fr 1fr",
-    "gap": "12px"
-  },
-  "fieldLabel": {
-    "display": "block",
-    "fontSize": "12px",
-    "fontWeight": "600",
-    "color": "var(--color-slate-700)",
-    "marginBottom": "4px"
-  },
-  "editInput": {
-    "width": "100%",
-    "padding": "8px 12px",
-    "borderRadius": "6px",
-    "border": "1px solid var(--color-slate-300)",
-    "fontSize": "13px",
-    "color": "var(--color-slate-900)",
-    "backgroundColor": "var(--color-white)",
-    "outline": "none",
-    "boxSizing": "border-box"
-  },
-  "editSelect": {
-    "width": "100%",
-    "padding": "8px 12px",
-    "borderRadius": "6px",
-    "border": "1px solid var(--color-slate-300)",
-    "fontSize": "13px",
-    "color": "var(--color-slate-900)",
-    "backgroundColor": "var(--color-white)",
-    "outline": "none",
-    "boxSizing": "border-box"
-  },
-  "cancelBtn": {
-    "padding": "8px 16px",
-    "backgroundColor": "var(--color-white)",
-    "border": "1px solid var(--color-slate-300)",
-    "borderRadius": "8px",
-    "fontSize": "13px",
-    "fontWeight": "600",
-    "color": "var(--color-slate-600)",
-    "cursor": "pointer"
-  },
-  "saveBtn": {
-    "padding": "8px 18px",
-    "backgroundColor": "var(--color-primary)",
-    "border": "none",
-    "borderRadius": "8px",
-    "fontSize": "13px",
-    "fontWeight": "600",
-    "color": "var(--color-white)",
-    "cursor": "pointer"
-  },
-  "dangerDeleteBtn": {
-    "padding": "8px 18px",
-    "backgroundColor": "var(--color-danger-dark)",
-    "border": "none",
-    "borderRadius": "8px",
-    "fontSize": "13px",
-    "fontWeight": "600",
-    "color": "var(--color-white)",
-    "cursor": "pointer"
-  },
-  "errorAlertBox": {
-    "display": "flex",
-    "alignItems": "center",
-    "gap": "8px",
-    "padding": "10px 14px",
-    "backgroundColor": "var(--color-danger-bg)",
-    "color": "#b91c1c",
-    "borderRadius": "6px",
-    "fontSize": "12px",
-    "marginBottom": "16px",
-    "border": "1px solid #fca5a5"
-  }
 }

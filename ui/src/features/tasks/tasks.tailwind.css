@@ -1,0 +1,1322 @@
+/* Variants selected from task state and size props. */
+@source inline("mark-as-completed-btn--sm mark-as-completed-btn--md mark-as-completed-btn--lg mark-as-completed-btn--full mark-as-completed-btn--default mark-as-completed-btn--hover mark-as-completed-btn--completed mark-as-completed-btn--done mark-as-completed-btn--disabled review-button--send review-button--resend review-button--sent review-button--reopen review-button--reopen-secondary review-button--reopened status-btn--static status-btn--badge status-btn--sm status-btn--md status-btn--lg task-timer-btn--sm task-timer-btn--md task-timer-btn--lg");
+
+@utility cr-card {
+  @apply [font-family:'Inter',_-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_Roboto,_sans-serif];
+  @apply [border-left:2px_solid_#E8B14E];
+  @apply [background:#FFFFFF];
+  @apply p-[0_8px];
+  @apply box-border;
+  @apply flex;
+  @apply flex-col;
+  @apply w-full;
+  @apply mb-[8px];
+  &::-webkit-scrollbar {
+    @apply w-[5px];
+  }
+  &::-webkit-scrollbar-thumb {
+    @apply [background:#CBD5E1];
+    @apply rounded-[3px];
+  }
+}
+@utility cr-card--expanded {
+  @apply max-h-[200px];
+  @apply overflow-y-auto;
+  @apply [scrollbar-width:thin];
+  @apply [scrollbar-color:#CBD5E1_transparent];
+}
+@utility cr-card--collapsed {
+  @apply max-h-[none];
+  @apply overflow-hidden;
+}
+@utility cr-card-header-toggle {
+  @apply flex;
+  @apply items-center;
+  @apply justify-between;
+  @apply p-[6px_6px];
+  @apply [border-bottom:1px_solid_#E5E7EB];
+  @apply [background:#FFFFFF];
+  @apply cursor-pointer;
+  @apply select-none;
+  @apply sticky;
+  @apply top-[0];
+  @apply z-[1];
+  @apply outline-none;
+  @apply [transition:opacity_0.15s_ease];
+  &:hover {
+    @apply opacity-[0.9];
+  }
+}
+@utility cr-card-section-title {
+  @apply m-0;
+  @apply p-0;
+  @apply [color:#E8A308];
+  @apply text-[13.5px];
+  @apply font-bold;
+}
+@utility cr-card-chevron-btn {
+  @apply inline-flex;
+  @apply items-center;
+  @apply justify-center;
+  @apply [color:#111827];
+  @apply [transition:transform_0.22s_cubic-bezier(0.4,_0,_0.2,_1),_color_0.15s_ease];
+}
+@utility cr-card-chevron-btn--open {
+  @apply [transform:rotate(90deg)];
+}
+@utility cr-card-request {
+  @apply p-[7px_6px];
+  & + .cr-card-request {
+    @apply [border-top:1px_solid_#D1D5DB];
+  }
+}
+@utility cr-card-request-header {
+  @apply flex;
+  @apply items-center;
+  @apply justify-between;
+  @apply gap-[12px];
+  @apply mb-[6px];
+}
+@utility cr-card-request-title {
+  @apply text-[13px];
+  @apply font-medium;
+  @apply [color:#111827];
+  @apply m-0;
+}
+@utility cr-card-entry-date {
+  @apply text-[12px];
+  @apply [color:#6B7280];
+  @apply whitespace-nowrap;
+  @apply shrink-0;
+}
+@utility cr-card-list {
+  @apply m-0;
+  @apply p-0;
+  @apply flex;
+  @apply flex-col;
+  @apply gap-[2px];
+  & li {
+    @apply grid;
+    @apply grid-cols-[minmax(0,_1fr)_auto];
+    @apply gap-x-[12px];
+    @apply text-[12px];
+    @apply [color:#374151];
+    @apply leading-[1.45];
+    @apply [list-style:none];
+    @apply p-[2px_0];
+  }
+}
+@utility cr-card-change-text {
+  &::before {
+    @apply [content:"•"];
+    @apply [color:#6B7280];
+    @apply mr-[6px];
+  }
+}
+@utility cr-card-attachment {
+  @apply inline-flex;
+  @apply items-center;
+  @apply gap-[5px];
+  @apply text-[12px];
+  @apply [color:#2563EB];
+  @apply no-underline;
+  @apply cursor-pointer;
+  @apply border-0;
+  @apply p-0;
+  @apply [background:none];
+  @apply [font-family:inherit];
+  @apply [transition:opacity_0.15s_ease];
+  @apply mt-[2px];
+  &:hover {
+    @apply opacity-[0.8];
+    @apply underline;
+  }
+}
+@utility dep-popover-view-btn {
+  &:hover {
+    @apply [background-color:#3876E5]!;
+  }
+}
+@utility dep-popover-add-btn {
+  &:hover {
+    @apply [background-color:#F1F5F9]!;
+    @apply [border-color:#CBD5E1]!;
+  }
+}
+@utility mark-as-completed-btn {
+  @apply inline-flex;
+  @apply items-center;
+  @apply justify-center;
+  @apply [font-family:'Inter',_-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_Roboto,_sans-serif];
+  @apply font-semibold;
+  @apply rounded-[8px];
+  @apply border-0;
+  @apply outline-none;
+  @apply cursor-pointer;
+  @apply select-none;
+  @apply whitespace-nowrap;
+  @apply no-underline;
+  @apply [transition:background-color_0.18s_ease,_color_0.18s_ease,_box-shadow_0.18s_ease,_transform_0.12s_ease];
+  @apply leading-[1.25];
+  @apply box-border;
+  &:focus-visible {
+    @apply [box-shadow:0_0_0_3px_rgba(2,_130,_41,_0.28)];
+  }
+  &:active:not(:disabled) {
+    @apply [transform:scale(0.985)];
+  }
+  &:disabled {
+    @apply opacity-[0.6];
+    @apply cursor-not-allowed;
+    @apply pointer-events-none;
+    @apply [transform:none]!;
+  }
+}
+@utility mark-as-completed-btn--sm {
+  @apply p-[8px_16px];
+  @apply text-[13px];
+}
+@utility mark-as-completed-btn--md {
+  @apply p-[12px_24px];
+  @apply text-[15px];
+  @apply min-h-[48px];
+}
+@utility mark-as-completed-btn--lg {
+  @apply p-[14px_28px];
+  @apply text-[16px];
+  @apply min-h-[54px];
+}
+@utility mark-as-completed-btn--full {
+  @apply w-full;
+}
+@utility mark-as-completed-btn--default {
+  @apply [background-color:#028229];
+  @apply [color:#FFFFFF];
+  &:hover:not(:disabled) {
+    @apply [background-color:#679D74];
+    @apply [color:#FFFFFF];
+  }
+}
+@utility mark-as-completed-btn--hover {
+  @apply [background-color:#679D74];
+  @apply [color:#FFFFFF];
+  &:hover:not(:disabled) {
+    @apply [background-color:#588e65];
+    @apply [color:#FFFFFF];
+  }
+}
+@utility mark-as-completed-btn--completed {
+  @apply [background-color:#ABDBB0];
+  @apply [color:#5A5E66];
+  &:hover:not(:disabled) {
+    @apply [background-color:#9dcca2];
+    @apply [color:#42464e];
+  }
+}
+@utility mark-as-completed-btn--done {
+  @apply [background-color:#ABDBB0];
+  @apply [color:#5A5E66];
+  &:hover:not(:disabled) {
+    @apply [background-color:#9dcca2];
+    @apply [color:#42464e];
+  }
+}
+@utility mark-as-completed-btn--disabled {
+  @apply opacity-[0.6];
+  @apply cursor-not-allowed;
+  @apply pointer-events-none;
+  @apply [transform:none]!;
+}
+@utility priority-icon-wrapper {
+  @apply inline-flex;
+  @apply items-center;
+}
+@utility priority-tooltip {
+  @apply [background:#FFFFFF];
+  @apply [color:#1E293B];
+  @apply [border:1px_solid_#E2E8F0];
+  @apply p-[4px_8px];
+  @apply rounded-[4px];
+  @apply text-[11px];
+  @apply font-medium;
+  @apply whitespace-nowrap;
+  @apply pointer-events-none;
+  @apply z-[99999];
+  @apply [box-shadow:0_2px_8px_rgba(0,_0,_0,_0.1)];
+  &::after {
+    @apply [content:''];
+    @apply absolute;
+    @apply top-[100%];
+    @apply left-[50%];
+    @apply [transform:translateX(-50%)];
+    @apply [border:4px_solid_transparent];
+    @apply [border-top-color:#E2E8F0];
+  }
+}
+@utility priority-btn {
+  @apply inline-flex;
+  @apply items-center;
+  @apply [background:transparent];
+  @apply [border:1px_solid_transparent];
+  @apply rounded-[8px];
+  @apply cursor-pointer;
+  @apply select-none;
+  @apply outline-none;
+  @apply [font-family:'Inter',_-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_Roboto,_sans-serif];
+  @apply font-medium;
+  @apply leading-[1.25];
+  @apply whitespace-nowrap;
+  @apply overflow-hidden;
+  @apply box-border;
+  @apply [transition:background-color_0.2s_ease,_border-color_0.2s_ease,_box-shadow_0.18s_ease,_transform_0.12s_ease];
+  @apply relative;
+  &:active:not(:disabled) {
+    @apply [transform:scale(0.97)];
+  }
+  &:focus-visible {
+    @apply [box-shadow:0_0_0_2px_rgba(100,_116,_139,_0.25)];
+  }
+  &:disabled {
+    @apply opacity-[0.55];
+    @apply cursor-not-allowed;
+    @apply pointer-events-none;
+  }
+  & .priority-tooltip {
+    @apply absolute;
+    @apply bottom-[100%];
+    @apply left-[50%];
+    @apply [transform:translateX(-50%)];
+    @apply [background:#FFFFFF];
+    @apply [color:#1E293B];
+    @apply [border:1px_solid_#E2E8F0];
+    @apply p-[4px_8px];
+    @apply rounded-[4px];
+    @apply text-[11px];
+    @apply font-medium;
+    @apply whitespace-nowrap;
+    @apply mb-[6px];
+    @apply opacity-[0];
+    @apply [visibility:hidden];
+    @apply [transition:opacity_0.15s_ease,_visibility_0.15s_ease];
+    @apply pointer-events-none;
+    @apply z-[9999];
+    @apply [box-shadow:0_2px_8px_rgba(0,_0,_0,_0.1)];
+  }
+  & .priority-tooltip::after {
+    @apply [content:''];
+    @apply absolute;
+    @apply top-[100%];
+    @apply left-[50%];
+    @apply [transform:translateX(-50%)];
+    @apply [border:4px_solid_transparent];
+    @apply [border-top-color:#E2E8F0];
+  }
+  &:hover .priority-tooltip {
+    @apply opacity-[1];
+    @apply [visibility:visible];
+  }
+}
+@utility priority-btn--sm {
+  @apply p-[3px];
+  @apply min-h-[28px];
+  @apply min-w-[28px];
+  @apply text-[13px];
+  &.priority-btn--always-show {
+    @apply p-[3px_8px_3px_5px];
+  }
+}
+@utility priority-btn--md {
+  @apply p-[5px];
+  @apply min-h-[36px];
+  @apply min-w-[36px];
+  @apply text-[16px];
+  &.priority-btn--always-show {
+    @apply p-[5px_12px_5px_7px];
+  }
+}
+@utility priority-btn--lg {
+  @apply p-[7px];
+  @apply min-h-[44px];
+  @apply min-w-[44px];
+  @apply text-[18px];
+  &.priority-btn--always-show {
+    @apply p-[7px_16px_7px_9px];
+  }
+}
+@utility priority-btn-text {
+  @apply max-w-[0];
+  @apply opacity-[0];
+  @apply ml-[0];
+  @apply overflow-hidden;
+  @apply [color:#475569];
+  @apply tracking-[-0.01em];
+  @apply [transition:max-width_0.22s_cubic-bezier(0.4,_0,_0.2,_1),_opacity_0.18s_ease,_margin-left_0.18s_ease];
+}
+@utility priority-btn--always-show {
+  @apply [background-color:rgba(0,_0,_0,_0.04)];
+  & .priority-btn-text {
+    @apply max-w-[120px];
+    @apply opacity-[1];
+    @apply ml-[8px];
+  }
+}
+@utility review-button {
+  @apply inline-flex;
+  @apply items-center;
+  @apply justify-center;
+  @apply min-h-[48px];
+  @apply p-[10px_24px];
+  @apply border-0;
+  @apply rounded-[8px];
+  @apply [font:600_15px/1.25_Inter,_-apple-system,_BlinkMacSystemFont,_"Segoe_UI",_sans-serif];
+  @apply cursor-pointer;
+  @apply [transition:background-color_.18s_ease,_color_.18s_ease,_transform_.12s_ease];
+  &:active:not(:disabled) {
+    @apply [transform:scale(.985)];
+  }
+  &:focus-visible {
+    @apply [outline:3px_solid_rgba(124,_58,_237,_.35)];
+    @apply [outline-offset:2px];
+  }
+  &:disabled {
+    @apply cursor-not-allowed;
+  }
+}
+@utility review-button--send {
+  @apply [background:#1157ce];
+  @apply [color:#fff];
+  &:hover:not(:disabled) {
+    @apply [background:#4a84e7];
+  }
+}
+@utility review-button--resend {
+  @apply [background:#4a84e7];
+  @apply [color:#fff];
+  &:hover:not(:disabled) {
+    @apply [background:#1157ce];
+  }
+}
+@utility review-button--sent {
+  @apply [background:#d9d9d9];
+  @apply [color:#242424];
+}
+@utility review-button--reopen {
+  @apply [background:#4a84e7];
+  @apply [color:#fff];
+  &:hover:not(:disabled) {
+    @apply [background:#1157ce];
+    @apply [color:#fff];
+  }
+}
+@utility review-button--reopen-secondary {
+  @apply [background:#d9d9d9];
+  @apply [color:#242424];
+  &:hover:not(:disabled) {
+    @apply [background:#4a84e7];
+    @apply [color:#fff];
+  }
+}
+@utility review-button--reopened {
+  @apply [background:#1157ce];
+  @apply [color:#fff];
+}
+@utility status-btn {
+  @apply inline-flex;
+  @apply [flex:0_0_auto];
+  @apply items-center;
+  @apply gap-[12px];
+  @apply [background:transparent];
+  @apply border-0;
+  @apply outline-none;
+  @apply rounded-[8px];
+  @apply cursor-pointer;
+  @apply select-none;
+  @apply [font-family:'Inter',_-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_Roboto,_sans-serif];
+  @apply font-medium;
+  @apply leading-[1.25];
+  @apply text-left;
+  @apply [transition:background-color_0.16s_ease,_transform_0.12s_ease];
+  @apply p-[6px_10px];
+  @apply box-border;
+  &:not(.status-btn--static):hover:not(:disabled) {
+    @apply [background-color:rgba(0,_0,_0,_0.04)];
+  }
+  &:not(.status-btn--static):active:not(:disabled) {
+    @apply [transform:scale(0.985)];
+  }
+  &:focus-visible {
+    @apply [box-shadow:0_0_0_2px_rgba(55,_85,_135,_0.3)];
+  }
+  &:disabled {
+    @apply opacity-[0.55];
+    @apply cursor-not-allowed;
+    @apply pointer-events-none;
+  }
+}
+@utility status-btn--static {
+  @apply [cursor:default];
+  @apply p-[4px_6px];
+}
+@utility status-btn--badge {
+  @apply [background-color:#F1F5F9];
+  @apply rounded-[9999px];
+  @apply p-[6px_14px];
+  @apply [border:1px_solid_#E2E8F0];
+  &:hover:not(:disabled) {
+    @apply [background-color:#E2E8F0];
+  }
+}
+@utility status-btn--sm {
+  @apply gap-[8px];
+  @apply text-[14px];
+  @apply p-[4px_8px];
+}
+@utility status-btn--md {
+  @apply gap-[12px];
+  @apply text-[18px];
+  @apply p-[6px_10px];
+}
+@utility status-btn--lg {
+  @apply gap-[14px];
+  @apply text-[20px];
+  @apply p-[8px_14px];
+}
+@utility status-btn-label {
+  @apply [flex:0_0_auto];
+  @apply tracking-[-0.01em];
+  @apply [color:#1E293B];
+  @apply whitespace-nowrap;
+}
+@utility task-card {
+  @apply [font-family:'Inter',_-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_Roboto,_sans-serif];
+  @apply [background:#FFFFFF];
+  @apply [border:1px_solid_#E2E8F0];
+  @apply rounded-[10px];
+  @apply overflow-hidden;
+  @apply box-border;
+  @apply [transition:box-shadow_0.2s_ease,_border-color_0.2s_ease];
+  &:hover {
+    @apply [border-color:#CBD5E1];
+    @apply [box-shadow:0_2px_8px_rgba(0,_0,_0,_0.04)];
+  }
+}
+@utility task-card-header {
+  @apply flex;
+  @apply items-start;
+  @apply gap-[10px];
+  @apply p-[14px_16px_10px_16px];
+  @apply cursor-pointer;
+  @apply select-none;
+  @apply relative;
+}
+@utility task-card-chevron {
+  @apply inline-flex;
+  @apply items-center;
+  @apply justify-center;
+  @apply shrink-0;
+  @apply [color:#64748B];
+  @apply mt-[2px];
+  @apply [transition:transform_0.22s_cubic-bezier(0.4,_0,_0.2,_1),_color_0.15s_ease];
+}
+@utility task-card-chevron--open {
+  @apply [transform:rotate(90deg)];
+  @apply [color:#334155];
+}
+@utility task-card-info {
+  @apply flex-1;
+  @apply min-w-0;
+  @apply flex;
+  @apply flex-col;
+  @apply gap-[4px];
+}
+@utility task-card-row1 {
+  @apply flex;
+  @apply items-center;
+  @apply gap-[10px];
+  @apply flex-wrap;
+  @media (max-width: 540px) {
+    @apply flex-wrap;
+  }
+}
+@utility task-card-id {
+  @apply text-[13px];
+  @apply font-semibold;
+  @apply [color:#64748B];
+  @apply whitespace-nowrap;
+}
+@utility task-card-name {
+  @apply text-[15px];
+  @apply font-bold;
+  @apply [color:#0F172A];
+  @apply whitespace-nowrap;
+  @apply overflow-hidden;
+  @apply text-ellipsis;
+  @apply max-w-[240px];
+}
+@utility task-card-breadcrumb {
+  @apply flex;
+  @apply items-center;
+  @apply gap-[4px];
+  @apply text-[12px];
+  @apply [color:#64748B];
+  @apply flex-wrap;
+  & span {
+    @apply whitespace-nowrap;
+  }
+}
+@utility task-card-subtitle {
+  @apply text-[12px];
+  @apply [color:#475569];
+  @apply leading-[1.35];
+}
+@utility task-card-breadcrumb-sep {
+  @apply [color:#94A3B8];
+  @apply text-[11px];
+}
+@utility task-card-sprint-row {
+  @apply flex;
+  @apply items-center;
+  @apply gap-[8px];
+  @apply mt-[2px];
+}
+@utility task-card-sprint {
+  @apply text-[13px];
+  @apply font-semibold;
+  @apply [color:#2563EB];
+}
+@utility task-card-right {
+  @apply flex;
+  @apply items-center;
+  @apply gap-[12px];
+  @apply shrink-0;
+  @media (max-width: 540px) {
+    @apply flex-wrap;
+  }
+}
+@utility task-card-due {
+  @apply text-[13px];
+  @apply font-medium;
+  @apply [color:#475569];
+  @apply whitespace-nowrap;
+  & strong {
+    @apply [color:#0F172A];
+  }
+}
+@utility task-card-body {
+  @apply max-h-[0];
+  @apply overflow-hidden;
+  @apply [transition:max-height_0.3s_cubic-bezier(0.4,_0,_0.2,_1)];
+}
+@utility task-card-body--open {
+  @apply max-h-[800px];
+}
+@utility task-card-body-inner {
+  @apply p-[12px_24px_16px];
+  @apply flex;
+  @apply flex-col;
+  @apply gap-[12px];
+  @media (max-width: 540px) {
+    @apply p-[12px_16px_16px];
+  }
+}
+@utility task-card-divider {
+  @apply h-[1px];
+  @apply [background:#E2E8F0];
+  @apply m-[0_24px];
+  @media (max-width: 540px) {
+    @apply m-[0_16px];
+  }
+}
+@utility task-card-details-title {
+  @apply text-[14px];
+  @apply font-bold;
+  @apply [color:#0F172A];
+  @apply m-0;
+}
+@utility task-card-desc-label {
+  @apply text-[13px];
+  @apply font-semibold;
+  @apply [color:#334155];
+  @apply m-[0_0_2px];
+}
+@utility task-card-desc {
+  @apply text-[13px];
+  @apply [color:#475569];
+  @apply leading-[1.5];
+  @apply m-0;
+}
+@utility task-card-info-grid {
+  @apply grid;
+  @apply grid-cols-[repeat(5,_minmax(0,_1fr))];
+  @apply items-center;
+  @apply gap-[12px];
+  @apply [border:1px_solid_#D1D5DB];
+  @apply rounded-[8px];
+  @apply p-[10px_12px];
+  @apply [background:#F1F2F4];
+  @media (max-width: 760px) {
+    @apply grid-cols-[repeat(3,_minmax(0,_1fr))];
+  }
+  @media (max-width: 540px) {
+    @apply grid-cols-[repeat(2,_minmax(0,_1fr))];
+    @apply gap-[14px];
+  }
+  @media (max-width: 360px) {
+    @apply grid-cols-[1fr];
+  }
+}
+@utility task-card-info-col {
+  @apply flex;
+  @apply flex-col;
+  @apply justify-center;
+  @apply gap-[6px];
+  @apply min-w-0;
+}
+@utility task-card-info-label {
+  @apply text-[13px];
+  @apply font-medium;
+  @apply [color:#64748B];
+}
+@utility task-card-info-value {
+  @apply flex;
+  @apply items-center;
+  @apply gap-[6px];
+  @apply text-[13px];
+  @apply [color:#0F172A];
+  @apply font-medium;
+}
+@utility task-card-dependency-count {
+  @apply p-0;
+  @apply border-0;
+  @apply [background:transparent];
+  @apply [color:#2563EB];
+  @apply [font:inherit];
+  @apply underline;
+  @apply cursor-pointer;
+}
+@utility task-card-actions {
+  @apply flex;
+  @apply items-center;
+  @apply gap-[12px];
+  @apply flex-wrap;
+  @apply [border-top:1px_solid_#E2E8F0];
+  @apply pt-[12px];
+}
+@utility task-card-action-secondary {
+  @apply [background:transparent];
+  @apply [color:#334155];
+  @apply border-0;
+  @apply text-[13px];
+  @apply font-semibold;
+  @apply cursor-pointer;
+  @apply [font-family:inherit];
+  @apply inline-flex;
+  @apply items-center;
+  @apply gap-[6px];
+  @apply p-[10px_18px];
+  @apply rounded-[8px];
+  @apply [background:#F1F2F4];
+  @apply min-h-[44px];
+  @apply [transition:background-color_0.15s_ease];
+  &:hover {
+    @apply [background:#E5E7EB];
+  }
+}
+@utility edit-task-overlay {
+  @apply fixed;
+  @apply [inset:0];
+  @apply [background-color:rgba(15,_23,_42,_0.45)];
+  @apply [backdrop-filter:blur(2px)];
+  @apply flex;
+  @apply items-center;
+  @apply justify-center;
+  @apply z-[1000];
+  @apply p-[16px];
+  @apply box-border;
+}
+@utility edit-task-modal {
+  @apply [background:#FFFFFF];
+  @apply rounded-[12px];
+  @apply w-full;
+  @apply max-w-[640px];
+  @apply max-h-[92vh];
+  @apply flex;
+  @apply flex-col;
+  @apply [box-shadow:0_20px_25px_-5px_rgba(0,_0,_0,_0.1),_0_8px_10px_-6px_rgba(0,_0,_0,_0.05)];
+  @apply [font-family:'Inter',_-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_Roboto,_sans-serif];
+  @apply [color:#1E293B];
+  @apply overflow-hidden;
+}
+@utility edit-task-header {
+  @apply flex;
+  @apply items-start;
+  @apply justify-between;
+  @apply p-[20px_24px_14px_24px];
+}
+@utility edit-task-title {
+  @apply text-[18px];
+  @apply font-bold;
+  @apply [color:#0F172A];
+  @apply m-[0_0_4px_0];
+}
+@utility edit-task-subtitle {
+  @apply text-[13px];
+  @apply [color:#64748B];
+  @apply m-0;
+}
+@utility edit-task-close-btn {
+  @apply [background:transparent];
+  @apply border-0;
+  @apply cursor-pointer;
+  @apply [color:#64748B];
+  @apply p-[4px];
+  @apply inline-flex;
+  @apply items-center;
+  @apply justify-center;
+  @apply rounded-[6px];
+  @apply [transition:background-color_0.15s_ease,_color_0.15s_ease];
+  &:hover {
+    @apply [background-color:#F1F5F9];
+    @apply [color:#0F172A];
+  }
+}
+@utility edit-task-body {
+  @apply p-[0_24px_16px_24px];
+  @apply overflow-y-auto;
+  @apply flex;
+  @apply flex-col;
+  @apply gap-[14px];
+}
+@utility edit-task-section {
+  @apply [border:1px_solid_#E2E8F0];
+  @apply rounded-[8px];
+  @apply p-[16px];
+  @apply [background:#FFFFFF];
+  @apply flex;
+  @apply flex-col;
+  @apply gap-[14px];
+}
+@utility edit-task-section-header {
+  @apply mb-[-2px];
+}
+@utility edit-task-section-title {
+  @apply text-[15px];
+  @apply font-bold;
+  @apply [color:#0F172A];
+  @apply m-[0_0_2px_0];
+}
+@utility edit-task-section-subtitle {
+  @apply text-[12px];
+  @apply [color:#64748B];
+  @apply m-0;
+}
+@utility edit-task-grid-2 {
+  @apply grid;
+  @apply grid-cols-[1fr_1fr];
+  @apply gap-[14px];
+  @media (max-width: 640px) {
+    @apply grid-cols-[1fr];
+  }
+}
+@utility edit-task-grid-dates {
+  @apply grid;
+  @apply grid-cols-[1.2fr_1.2fr_1fr_0.8fr];
+  @apply gap-[12px];
+  @media (max-width: 640px) {
+    @apply grid-cols-[1fr];
+  }
+}
+@utility edit-task-field {
+  @apply flex;
+  @apply flex-col;
+  @apply gap-[6px];
+}
+@utility edit-task-label {
+  @apply text-[13px];
+  @apply font-semibold;
+  @apply [color:#334155];
+  @apply inline-flex;
+  @apply items-center;
+  @apply gap-[6px];
+}
+@utility edit-task-label-icon {
+  @apply inline-flex;
+  @apply items-center;
+  @apply [color:#475569];
+}
+@utility edit-task-required {
+  @apply [color:#DC2626];
+  @apply ml-[2px];
+}
+@utility edit-task-optional {
+  @apply [color:#64748B];
+  @apply font-normal;
+  @apply text-[12px];
+  @apply ml-[4px];
+}
+@utility edit-task-input {
+  @apply w-full;
+  @apply [border:1px_solid_#CBD5E1];
+  @apply rounded-[6px];
+  @apply p-[9px_12px];
+  @apply text-[13px];
+  @apply [color:#0F172A];
+  @apply [background:#FFFFFF];
+  @apply outline-none;
+  @apply box-border;
+  @apply [font-family:inherit];
+  @apply [transition:border-color_0.15s_ease,_box-shadow_0.15s_ease];
+  &:focus {
+    @apply [border-color:#2563EB];
+    @apply [box-shadow:0_0_0_3px_rgba(37,_99,_235,_0.12)];
+  }
+  &::placeholder {
+    @apply [color:#94A3B8];
+  }
+}
+@utility edit-task-select {
+  @apply w-full;
+  @apply [border:1px_solid_#CBD5E1];
+  @apply rounded-[6px];
+  @apply p-[9px_12px];
+  @apply text-[13px];
+  @apply [color:#0F172A];
+  @apply [background:#FFFFFF];
+  @apply outline-none;
+  @apply box-border;
+  @apply [font-family:inherit];
+  @apply [transition:border-color_0.15s_ease,_box-shadow_0.15s_ease];
+  &:focus {
+    @apply [border-color:#2563EB];
+    @apply [box-shadow:0_0_0_3px_rgba(37,_99,_235,_0.12)];
+  }
+  @apply [appearance:none];
+  @apply pr-[32px];
+  @apply cursor-pointer;
+}
+@utility edit-task-textarea {
+  @apply w-full;
+  @apply [border:1px_solid_#CBD5E1];
+  @apply rounded-[6px];
+  @apply p-[9px_12px];
+  @apply text-[13px];
+  @apply [color:#0F172A];
+  @apply [background:#FFFFFF];
+  @apply outline-none;
+  @apply box-border;
+  @apply [font-family:inherit];
+  @apply [transition:border-color_0.15s_ease,_box-shadow_0.15s_ease];
+  &:focus {
+    @apply [border-color:#2563EB];
+    @apply [box-shadow:0_0_0_3px_rgba(37,_99,_235,_0.12)];
+  }
+  &::placeholder {
+    @apply [color:#94A3B8];
+  }
+  @apply [resize:vertical];
+  @apply min-h-[48px];
+}
+@utility edit-task-select-wrap {
+  @apply relative;
+  @apply flex;
+  @apply items-center;
+}
+@utility edit-task-select-arrow {
+  @apply absolute;
+  @apply right-[10px];
+  @apply pointer-events-none;
+  @apply [color:#64748B];
+  @apply inline-flex;
+}
+@utility edit-task-footer {
+  @apply flex;
+  @apply justify-end;
+  @apply p-[14px_24px_20px_24px];
+  @apply [border-top:1px_solid_#F1F5F9];
+}
+@utility edit-task-save-btn {
+  @apply [background-color:#1558D6];
+  @apply [color:#FFFFFF];
+  @apply border-0;
+  @apply rounded-[6px];
+  @apply p-[10px_32px];
+  @apply text-[14px];
+  @apply font-semibold;
+  @apply cursor-pointer;
+  @apply [font-family:inherit];
+  @apply [transition:background-color_0.18s_ease,_transform_0.1s_ease];
+  &:hover:not(:disabled) {
+    @apply [background-color:#114bb8];
+  }
+  &:active:not(:disabled) {
+    @apply [transform:scale(0.985)];
+  }
+  &:disabled {
+    @apply opacity-[0.6];
+    @apply cursor-not-allowed;
+  }
+}
+@utility task-more-option {
+  @apply inline-flex;
+  @apply [flex:0_0_auto];
+}
+@utility task-more-option__trigger {
+  @apply inline-flex;
+  @apply w-[32px];
+  @apply h-[32px];
+  @apply items-center;
+  @apply justify-center;
+  @apply p-0;
+  @apply border-0;
+  @apply rounded-[8px];
+  @apply [color:#64748b];
+  @apply [background:transparent];
+  @apply cursor-pointer;
+  @apply [transition:color_.15s_ease,_background_.15s_ease];
+  &:hover {
+    @apply [color:var(--color-primary,_#2563eb)];
+    @apply [background:var(--color-primary-subtle,_#eff6ff)];
+  }
+  &[aria-expanded="true"] {
+    @apply [color:var(--color-primary,_#2563eb)];
+    @apply [background:var(--color-primary-subtle,_#eff6ff)];
+  }
+  &:focus-visible {
+    @apply [outline:2px_solid_var(--color-primary,_#2563eb)];
+    @apply [outline-offset:2px];
+  }
+}
+@utility task-more-option__item {
+  &:focus-visible {
+    @apply [outline:2px_solid_var(--color-primary,_#2563eb)];
+    @apply [outline-offset:2px];
+  }
+  @apply flex;
+  @apply w-full;
+  @apply min-h-[28px];
+  @apply items-center;
+  @apply gap-[8px];
+  @apply p-[4px_8px];
+  @apply border-0;
+  @apply rounded-[6px];
+  @apply [color:#292929];
+  @apply [background:transparent];
+  @apply [font:500_12.5px_Inter,_-apple-system,_BlinkMacSystemFont,_"Segoe_UI",_sans-serif];
+  @apply text-left;
+  @apply cursor-pointer;
+  @apply [transition:color_.15s_ease,_background_.15s_ease];
+  &:hover {
+    @apply [color:var(--color-primary,_#2563eb)];
+    @apply [background:var(--color-primary-subtle,_#eff6ff)];
+  }
+  & + .task-more-option__item {
+    @apply mt-[2px];
+  }
+}
+@utility task-more-option__menu {
+  @apply fixed;
+  @apply z-[1200];
+  @apply w-[128px];
+  @apply p-[3px];
+  @apply [border:1px_solid_#e2e8f0];
+  @apply rounded-[9px];
+  @apply [background:#fff];
+  @apply [box-shadow:0_8px_18px_rgba(15,_23,_42,_.14)];
+}
+@utility task-more-option__icon {
+  @apply inline-flex;
+  @apply w-[16px];
+  @apply h-[16px];
+  @apply [flex:0_0_16px];
+  @apply items-center;
+  @apply justify-center;
+}
+@utility task-timer-btn {
+  @apply inline-flex;
+  @apply items-center;
+  @apply rounded-[9999px];
+  @apply border-0;
+  @apply outline-none;
+  @apply cursor-pointer;
+  @apply select-none;
+  @apply whitespace-nowrap;
+  @apply no-underline;
+  @apply [transition:background-color_0.2s_ease,_transform_0.12s_ease,_box-shadow_0.2s_ease];
+  @apply box-border;
+  @apply [font-family:'Inter',_-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_Roboto,_sans-serif];
+  &:active:not(:disabled) {
+    @apply [transform:scale(0.985)];
+  }
+  &:focus-visible {
+    @apply [box-shadow:0_0_0_3px_rgba(0,_176,_216,_0.35)];
+  }
+  &:disabled {
+    @apply opacity-[0.6];
+    @apply cursor-not-allowed;
+    @apply pointer-events-none;
+    @apply [transform:none]!;
+  }
+  &:disabled[data-status="completed"] {
+    @apply opacity-[1];
+  }
+  &[data-status="completed"] {
+    @apply [box-shadow:none];
+    @apply [transition:none];
+  }
+  &[data-status="completed"]:focus-visible {
+    @apply [box-shadow:none];
+    @apply [transition:none];
+  }
+  &[data-status="completed"] .task-timer-circle {
+    @apply [box-shadow:none];
+    @apply [transition:none];
+  }
+  &[data-status="completed"] .task-timer-divider {
+    @apply [box-shadow:none];
+    @apply [transition:none];
+  }
+  &[data-status="completed"] .task-timer-display {
+    @apply [box-shadow:none];
+    @apply [transition:none];
+  }
+}
+@utility task-timer-btn--sm {
+  @apply p-[3px_14px_3px_4px];
+  @apply min-h-[38px];
+  @apply gap-[8px];
+  & .task-timer-circle {
+    @apply w-[30px];
+    @apply h-[30px];
+  }
+  & .task-timer-divider {
+    @apply h-[18px];
+  }
+  & .task-timer-display {
+    @apply text-[15px];
+  }
+}
+@utility task-timer-btn--md {
+  @apply p-[5px_20px_5px_6px];
+  @apply min-h-[48px];
+  @apply gap-[12px];
+  & .task-timer-circle {
+    @apply w-[38px];
+    @apply h-[38px];
+  }
+  & .task-timer-divider {
+    @apply h-[24px];
+  }
+  & .task-timer-display {
+    @apply text-[18px];
+  }
+}
+@utility task-timer-btn--lg {
+  @apply p-[6px_26px_6px_8px];
+  @apply min-h-[56px];
+  @apply gap-[14px];
+  & .task-timer-circle {
+    @apply w-[44px];
+    @apply h-[44px];
+  }
+  & .task-timer-divider {
+    @apply h-[28px];
+  }
+  & .task-timer-display {
+    @apply text-[21px];
+  }
+}
+@utility task-timer-circle {
+  @apply inline-flex;
+  @apply items-center;
+  @apply justify-center;
+  @apply rounded-[50%];
+  @apply shrink-0;
+  @apply [transition:background-color_0.2s_ease,_transform_0.15s_ease];
+}
+@utility task-timer-divider {
+  @apply w-[2px];
+  @apply rounded-[1px];
+  @apply shrink-0;
+  @apply [transition:background-color_0.2s_ease];
+}
+@utility task-timer-display {
+  @apply font-semibold;
+  @apply tracking-[-0.01em];
+  @apply [font-variant-numeric:tabular-nums];
+  @apply [transition:color_0.2s_ease];
+}
+@utility user-card-wrapper {
+  &:hover .user-hover-card {
+    @apply opacity-[1];
+    @apply [pointer-events:auto];
+    @apply [visibility:visible];
+    @apply [transform:translateX(-50%)_translateY(0)];
+  }
+  &:focus-within .user-hover-card {
+    @apply opacity-[1];
+    @apply [pointer-events:auto];
+    @apply [visibility:visible];
+    @apply [transform:translateX(-50%)_translateY(0)];
+  }
+  @apply relative;
+  @apply inline-flex;
+  @apply items-center;
+  @apply [font-family:'Inter',_-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_Roboto,_sans-serif];
+  &:hover .user-hover-card {
+    @apply opacity-[1];
+    @apply [pointer-events:auto];
+    @apply [visibility:visible];
+    @apply [transform:translateX(-50%)_translateY(0)];
+  }
+  &:focus-within .user-hover-card {
+    @apply opacity-[1];
+    @apply [pointer-events:auto];
+    @apply [visibility:visible];
+    @apply [transform:translateX(-50%)_translateY(0)];
+  }
+}
+@utility user-avatar-circle {
+  &:hover {
+    @apply [transform:scale(1.08)];
+    @apply [box-shadow:0_4px_12px_rgba(0,_0,_0,_0.12)];
+    @apply z-[20];
+  }
+  &:focus-visible {
+    @apply [box-shadow:0_0_0_3px_rgba(95,_137,_197,_0.4)];
+  }
+  @apply inline-flex;
+  @apply items-center;
+  @apply justify-center;
+  @apply rounded-[50%];
+  @apply [color:#000000];
+  @apply font-semibold;
+  @apply tracking-[-0.01em];
+  @apply select-none;
+  @apply cursor-pointer;
+  @apply shrink-0;
+  @apply [transition:transform_0.18s_cubic-bezier(0.4,_0,_0.2,_1),_box-shadow_0.18s_ease];
+  @apply border-0;
+  @apply outline-none;
+  @apply box-border;
+  @apply p-0;
+  &:hover {
+    @apply [transform:scale(1.08)];
+    @apply [box-shadow:0_4px_12px_rgba(0,_0,_0,_0.12)];
+    @apply z-[20];
+  }
+  &:focus-visible {
+    @apply [box-shadow:0_0_0_3px_rgba(95,_137,_197,_0.4)];
+  }
+}
+@utility user-avatar-circle--sm {
+  @apply w-[32px];
+  @apply h-[32px];
+  @apply text-[13px];
+}
+@utility user-avatar-circle--md {
+  @apply w-[44px];
+  @apply h-[44px];
+  @apply text-[17px];
+}
+@utility user-avatar-circle--lg {
+  @apply w-[56px];
+  @apply h-[56px];
+  @apply text-[21px];
+}
+@utility user-hover-card {
+  &::after {
+    @apply [content:""];
+    @apply absolute;
+    @apply top-[100%];
+    @apply left-[50%];
+    @apply [transform:translateX(-50%)];
+    @apply [border-width:5px];
+    @apply [border-style:solid];
+    @apply [border-color:#FFFFFF_transparent_transparent_transparent];
+    @apply [filter:drop-shadow(0_1px_1px_rgba(0,_0,_0,_0.08))];
+  }
+  @apply absolute;
+  @apply bottom-[calc(100%_+_8px)];
+  @apply left-[50%];
+  @apply [transform:translateX(-50%)_translateY(4px)];
+  @apply [background:#FFFFFF];
+  @apply [border:1px_solid_#E2E8F0];
+  @apply rounded-[10px];
+  @apply p-[10px_14px];
+  @apply [box-shadow:0_10px_25px_-5px_rgba(0,_0,_0,_0.12),_0_8px_10px_-6px_rgba(0,_0,_0,_0.05)];
+  @apply whitespace-nowrap;
+  @apply opacity-[0];
+  @apply pointer-events-none;
+  @apply [visibility:hidden];
+  @apply [transition:opacity_0.18s_ease,_transform_0.18s_cubic-bezier(0.4,_0,_0.2,_1),_visibility_0.18s];
+  @apply z-[100];
+  @apply flex;
+  @apply flex-col;
+  @apply items-center;
+  @apply text-center;
+  @apply gap-[3px];
+  &::after {
+    @apply [content:""];
+    @apply absolute;
+    @apply top-[100%];
+    @apply left-[50%];
+    @apply [transform:translateX(-50%)];
+    @apply [border-width:5px];
+    @apply [border-style:solid];
+    @apply [border-color:#FFFFFF_transparent_transparent_transparent];
+    @apply [filter:drop-shadow(0_1px_1px_rgba(0,_0,_0,_0.08))];
+  }
+}
+@utility user-hover-card-name {
+  @apply text-[13px];
+  @apply font-bold;
+  @apply [color:#0F172A];
+  @apply leading-[1.25];
+}
+@utility user-hover-card-role {
+  @apply text-[11px];
+  @apply font-medium;
+  @apply [color:#64748B];
+  @apply [background:#F1F5F9];
+  @apply p-[2px_7px];
+  @apply rounded-[4px];
+  @apply leading-[1.2];
+  @apply mt-[2px];
+}
+@utility user-card-pill {
+  &:hover {
+    @apply [background:#F1F5F9];
+    @apply [border-color:#CBD5E1];
+  }
+  @apply inline-flex;
+  @apply items-center;
+  @apply [background:#F8FAFC];
+  @apply [border:1px_solid_#E2E8F0];
+  @apply rounded-[9999px];
+  @apply p-[3px_12px_3px_3px];
+  @apply gap-[8px];
+  @apply cursor-pointer;
+  @apply [transition:all_0.2s_ease];
+  &:hover {
+    @apply [background:#F1F5F9];
+    @apply [border-color:#CBD5E1];
+  }
+}
+@utility user-card-pill-info {
+  @apply flex;
+  @apply flex-col;
+  @apply leading-[1.2];
+  @apply text-left;
+}
+@utility user-card-pill-name {
+  @apply text-[13px];
+  @apply font-semibold;
+  @apply [color:#0F172A];
+}
+@utility user-card-pill-role {
+  @apply text-[11px];
+  @apply [color:#64748B];
+}
+
+/* Avatar and priority sizes are selected from component props. */
+@source inline("priority-btn--sm priority-btn--md priority-btn--lg user-avatar-circle--md user-avatar-circle--lg");

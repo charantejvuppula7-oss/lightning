@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { apiRequest } from '../../services/api/apiClient.js'
+import { apiRequest } from '../../shared/api/apiClient.js'
 import { ProjectSelectionContext } from './projectSelectionContext.js'
 
 async function fetchProjects() {
@@ -48,4 +48,3 @@ export function ProjectSelectionProvider({ children }) {
 
   return <ProjectSelectionContext.Provider value={value}>{children}</ProjectSelectionContext.Provider>
 }
-

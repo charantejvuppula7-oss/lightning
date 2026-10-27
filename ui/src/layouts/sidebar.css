@@ -1,6 +1,0 @@
-.app-sidebar .material-symbols-outlined { font-size: 20px; line-height: 1; }
-.app-sidebar .sidebar-icon { width: 20px; height: 20px; flex: 0 0 20px; color: var(--color-slate-500); }
-.app-sidebar .active .sidebar-icon { color: var(--color-primary); }
-.app-sidebar .shared-sidebar-nav-btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
-
-.app-sidebar { --color-danger-bg: #fef2f2; --color-danger-dark: #dc2626; --color-danger-border: #fee2e2; --color-slate-800: #1e293b; }

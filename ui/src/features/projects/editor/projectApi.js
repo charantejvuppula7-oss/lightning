@@ -1,4 +1,4 @@
-import { apiRequest, apiUpload } from '../../../services/api/apiClient.js'
+import { apiRequest, apiUpload } from '../../../shared/api/apiClient.js'
 
 export const projectOptions = id => apiRequest(`/projects/setup-options/${id ? `?project=${id}` : ''}`)
 export const projectSetup = (id) => apiRequest(`/projects/${id}/setup/`)

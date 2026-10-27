@@ -1,6 +1,7 @@
 [Unit]
 Description=Lighting v2 API
-After=network.target postgresql.service
+After=network.target postgresql.service redis-server.service
+Wants=redis-server.service
 
 [Service]
 User=tachyon-pc-1

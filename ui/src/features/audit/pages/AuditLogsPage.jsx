@@ -1,14 +1,12 @@
 import Paginator from '../components/Paginator.jsx'
-import logStyles from '../components/logStyles.js'
-
 
 import useLogHistory from '../hooks/useLogHistory.js'
 import DetailRow from '../components/LogDetailRow.jsx'
 import { formatLogDate as fmtDate } from '../logFormat.js'
-import AdminPageLayout from "../components/AdminPageLayout.jsx";
-import DatePicker from "../../../components/common/DatePicker.jsx";
+import MonitoringLayout from "../components/MonitoringLayout.jsx";
+import DatePicker from "../../../shared/components/DatePicker.jsx";
 import Navbar from "../../../layouts/Navbar.jsx";
-import { FilterSelect, SearchBar } from "../../../components/common/SearchControls.jsx";
+import { FilterSelect, SearchBar } from "../../../shared/components/SearchControls.jsx";
 
 // ── Action badge colors map ──────────────────────────────────────────
 const ACTION_COLORS = {
@@ -47,41 +45,40 @@ export default function AuditLogsPage({ user }) {
   const { logs, pagination, filters, setFilters, loading, error, selectedLog, setSelectedLog, autoRefresh, setAutoRefresh, fetchLogs, handleFilterChange, handleSearch, clearFilters } = useLogHistory('audit-logs', { action: '', entity_type: '', search: '', date_from: '', date_to: '' })
   // ── render ─────────────────────────────────────────────────────────
   return (
-    <AdminPageLayout user={user}>
+    <MonitoringLayout user={user}>
 
       {/* Sidebar — Admin or PM depending on route */}
 
-
       {/* Main Container */}
-      <div style={s.mainContainer}>
+      <div className="flex-1! flex! flex-col! min-w-0! h-screen! overflow-y-auto!">
         {/* Top Navbar */}
         <Navbar user={user} />
 
         {/* Page Body */}
-        <div style={s.pageBody}>
+        <div className="p-[24px_32px]! flex-1!">
           {/* ── Title Row ─────────────────────────────────────────────── */}
-          <div style={s.titleRow}>
+          <div className="flex! items-center! justify-between! mb-[18px]!">
             <div>
-              <h1 style={s.pageTitle}>Audit Logs</h1>
-              <span style={s.pageSubtitle}>Security audit trail & activity history</span>
+              <h1 className="text-[18px]! font-bold! [color:var(--color-slate-900)]! m-0! tracking-[-0.2px]!">Audit Logs</h1>
+              <span className="text-[12px]! [color:var(--color-slate-500)]! mt-[3px]! block!">Security audit trail & activity history</span>
             </div>
-            <div style={s.titleActions}>
-              <label style={s.toggleLabel}>
+            <div className="flex! items-center! gap-[14px]!">
+              <label className="text-[13px]! [color:var(--color-slate-600)]! flex! items-center! cursor-pointer!">
                 <input
                   type="checkbox"
                   checked={autoRefresh}
                   onChange={() => setAutoRefresh(!autoRefresh)}
-                  style={{ marginRight: 6, accentColor: "var(--color-primary)", cursor: "pointer" }}
+                  className="mr-[6px]! [accent-color:var(--color-primary)]! cursor-pointer!"
                 />
                 Auto-refresh (10s)
               </label>
               <button
                 type="button"
                 onClick={() => fetchLogs(pagination.page)}
-                style={s.refreshBtn}
+                className="flex! items-center! gap-[6px]! p-[6px_14px]! h-[34px]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-300)]! rounded-[8px]! text-[13px]! font-medium! [color:var(--color-slate-700)]! cursor-pointer! [transition:all_0.15s_ease]!"
                 title="Refresh"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                <span className={"material-symbols-outlined" + " " + "text-[16px]!"} >
                   refresh
                 </span>
                 Refresh
@@ -90,7 +87,7 @@ export default function AuditLogsPage({ user }) {
           </div>
 
           {/* ── Filters ───────────────────────────────────────────────── */}
-          <form onSubmit={handleSearch} style={s.filterBar}>
+          <form onSubmit={handleSearch} className="flex! gap-[10px]! flex-wrap! mb-[20px]! items-center!">
             <SearchBar
               name="search"
               placeholder="Search description, user or entity…"
@@ -123,57 +120,57 @@ export default function AuditLogsPage({ user }) {
                 </option>
               ))}
             </FilterSelect>
-            <div style={{ width: "150px" }}>
+            <div className="w-[150px]!">
               <DatePicker
                 value={filters.date_from}
                 onChange={(val) => setFilters((prev) => ({ ...prev, date_from: val }))}
                 allowPastDates={true}
                 placeholder="From date"
-                style={{ height: "38px" }}
+                controlClassName="[height:38px]!"
               />
             </div>
-            <div style={{ width: "150px" }}>
+            <div className="w-[150px]!">
               <DatePicker
                 value={filters.date_to}
                 onChange={(val) => setFilters((prev) => ({ ...prev, date_to: val }))}
                 allowPastDates={true}
                 placeholder="To date"
-                style={{ height: "38px" }}
+                controlClassName="[height:38px]!"
               />
             </div>
-            <button type="submit" style={s.applyBtn}>
+            <button type="submit" className="h-[38px]! p-[0_22px]! [background-color:var(--color-primary)]! [color:var(--color-white)]! border-0! rounded-[8px]! font-semibold! text-[13px]! cursor-pointer! [box-shadow:0_1px_2px_rgba(37,_99,_235,_0.15)]! [transition:background-color_0.15s_ease]!">
               Apply
             </button>
-            <button type="button" onClick={clearFilters} style={s.clearBtn}>
+            <button type="button" onClick={clearFilters} className="h-[38px]! p-[0_18px]! [background-color:var(--color-white)]! [color:var(--color-slate-700)]! [border:1px_solid_var(--color-slate-300)]! rounded-[8px]! font-medium! text-[13px]! cursor-pointer! [transition:background-color_0.15s_ease]!">
               Clear
             </button>
           </form>
 
           {error && <div role="alert">{error}</div>}
           {/* ── Table ─────────────────────────────────────────────────── */}
-          <div style={s.tableCard}>
+          <div className="relative! [background-color:var(--color-white)]! rounded-[12px]! [border:1px_solid_var(--color-slate-200)]! overflow-hidden! [box-shadow:0_1px_3px_rgba(0,_0,_0,_0.04)]!">
             {loading && (
-              <div style={s.loadingOverlay}>
-                <div style={s.spinnerLg} />
+              <div className="absolute! [inset:0]! [background-color:rgba(255,255,255,0.7)]! flex! justify-center! items-center! z-[5]! rounded-[12px]!">
+                <div className="w-[36px]! h-[36px]! [border:3px_solid_var(--color-slate-200)]! [border-top-color:var(--color-primary)]! rounded-[50%]! [animation:spin_0.8s_linear_infinite]!" />
               </div>
             )}
-            <div style={{ overflowX: "auto" }}>
-              <table style={s.table}>
+            <div className="overflow-x-auto!">
+              <table className="w-full! [border-collapse:collapse]! text-[13px]! text-left!">
                 <thead>
                   <tr>
-                    <th style={s.th}>Timestamp</th>
-                    <th style={s.th}>User</th>
-                    <th style={s.th}>Action</th>
-                    <th style={s.th}>Entity Type</th>
-                    <th style={s.th}>Entity Name</th>
-                    <th style={{ ...s.th, width: "100%" }}>Description</th>
-                    <th style={s.th}>Actions</th>
+                    <th className="p-[12px_16px]! [background-color:var(--color-slate-50)]! [border-bottom:1px_solid_var(--color-slate-200)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [text-transform:uppercase]! tracking-[0.04em]! whitespace-nowrap!">Timestamp</th>
+                    <th className="p-[12px_16px]! [background-color:var(--color-slate-50)]! [border-bottom:1px_solid_var(--color-slate-200)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [text-transform:uppercase]! tracking-[0.04em]! whitespace-nowrap!">User</th>
+                    <th className="p-[12px_16px]! [background-color:var(--color-slate-50)]! [border-bottom:1px_solid_var(--color-slate-200)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [text-transform:uppercase]! tracking-[0.04em]! whitespace-nowrap!">Action</th>
+                    <th className="p-[12px_16px]! [background-color:var(--color-slate-50)]! [border-bottom:1px_solid_var(--color-slate-200)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [text-transform:uppercase]! tracking-[0.04em]! whitespace-nowrap!">Entity Type</th>
+                    <th className="p-[12px_16px]! [background-color:var(--color-slate-50)]! [border-bottom:1px_solid_var(--color-slate-200)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [text-transform:uppercase]! tracking-[0.04em]! whitespace-nowrap!">Entity Name</th>
+                    <th className="p-[12px_16px]! [background-color:var(--color-slate-50)]! [border-bottom:1px_solid_var(--color-slate-200)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [text-transform:uppercase]! tracking-[0.04em]! whitespace-nowrap! w-full!">Description</th>
+                    <th className="p-[12px_16px]! [background-color:var(--color-slate-50)]! [border-bottom:1px_solid_var(--color-slate-200)]! [color:var(--color-slate-600)]! font-semibold! text-[11px]! [text-transform:uppercase]! tracking-[0.04em]! whitespace-nowrap!">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {logs.length === 0 && !loading && (
                     <tr>
-                      <td colSpan={7} style={s.emptyCell}>
+                      <td colSpan={7} className="text-center! p-[40px]! [color:var(--color-slate-400)]! text-[14px]!">
                         No audit logs found.
                       </td>
                     </tr>
@@ -182,37 +179,35 @@ export default function AuditLogsPage({ user }) {
                     const ac = ACTION_COLORS[log.action] || { bg: "var(--color-slate-100)", text: "var(--color-slate-600)" };
                     const ec = ENTITY_COLORS[log.entity_type] || { bg: "var(--color-slate-100)", text: "var(--color-slate-600)" };
                     return (
-                      <tr key={log.id} className="audit-row" style={s.tr}>
-                        <td style={s.td}>{fmtDate(log.timestamp)}</td>
-                        <td style={{ ...s.td, fontWeight: 600 }}>{log.user}</td>
-                        <td style={s.td}>
+                      <tr key={log.id} className={"audit-row" + " " + "[border-bottom:1px_solid_var(--color-slate-100)]! [transition:background-color_0.12s_ease]!"} >
+                        <td className="p-[12px_16px]! whitespace-nowrap! [color:var(--color-slate-800)]! [vertical-align:middle]!">{fmtDate(log.timestamp)}</td>
+                        <td className="p-[12px_16px]! whitespace-nowrap! [color:var(--color-slate-800)]! [vertical-align:middle]! font-semibold!">{log.user}</td>
+                        <td className="p-[12px_16px]! whitespace-nowrap! [color:var(--color-slate-800)]! [vertical-align:middle]!">
                           <span
-                            style={{
-                              ...s.badge,
-                              backgroundColor: ac.bg,
-                              color: ac.text,
-                            }}
+                            className="inline-block! p-[4px_10px]! rounded-[12px]! font-semibold! text-[11px]! tracking-[0.03em]! [text-transform:capitalize]!" style={{
+  backgroundColor: ac.bg,
+  color: ac.text
+}}
                           >
                             {log.action.replace("_", " ")}
                           </span>
                         </td>
-                        <td style={s.td}>
+                        <td className="p-[12px_16px]! whitespace-nowrap! [color:var(--color-slate-800)]! [vertical-align:middle]!">
                           <span
-                            style={{
-                              ...s.badge,
-                              backgroundColor: ec.bg,
-                              color: ec.text,
-                            }}
+                            className="inline-block! p-[4px_10px]! rounded-[12px]! font-semibold! text-[11px]! tracking-[0.03em]! [text-transform:capitalize]!" style={{
+  backgroundColor: ec.bg,
+  color: ec.text
+}}
                           >
                             {log.entity_type.replace("_", " ")}
                           </span>
                         </td>
-                        <td style={{ ...s.td, ...s.entityCell, fontWeight: 500 }}>{log.entity_name || "—"}</td>
-                        <td style={{ ...s.td, ...s.descCell }}>{log.description}</td>
-                        <td style={s.td}>
+                        <td className="p-[12px_16px]! [white-space:normal]! [color:var(--color-slate-800)]! [vertical-align:middle]! max-w-[180px]! overflow-hidden! text-ellipsis! font-medium!">{log.entity_name || "—"}</td>
+                        <td className="p-[12px_16px]! [white-space:normal]! [color:var(--color-slate-800)]! [vertical-align:middle]! max-w-[320px]! overflow-hidden! text-ellipsis!">{log.description}</td>
+                        <td className="p-[12px_16px]! whitespace-nowrap! [color:var(--color-slate-800)]! [vertical-align:middle]!">
                           <button
                             onClick={() => setSelectedLog(log)}
-                            style={s.detailBtn}
+                            className="p-[5px_12px]! [background-color:transparent]! [color:var(--color-primary)]! [border:1px_solid_var(--color-primary)]! rounded-[6px]! text-[12px]! font-semibold! cursor-pointer! [transition:all_0.15s_ease]!"
                           >
                             Details
                           </button>
@@ -232,20 +227,20 @@ export default function AuditLogsPage({ user }) {
 
       {/* ── Detail modal ──────────────────────────────────────────── */}
       {selectedLog && (
-        <div style={s.overlay} onClick={() => setSelectedLog(null)}>
-          <div style={s.modal} onClick={(e) => e.stopPropagation()}>
-            <div style={s.modalHeader}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span className="material-symbols-outlined" style={{ fontSize: "20px", color: "var(--color-primary)" }}>
+        <div className="fixed! [inset:0]! [background-color:rgba(15,_23,_42,_0.45)]! [backdrop-filter:blur(4px)]! flex! justify-center! items-center! z-[1000]!" onClick={() => setSelectedLog(null)}>
+          <div className="[background-color:var(--color-white)]! rounded-[14px]! w-[90%]! max-w-[640px]! max-h-[85vh]! overflow-auto! [box-shadow:0_25px_50px_-12px_rgba(0,_0,_0,_0.25)]! [border:1px_solid_var(--color-slate-200)]!" onClick={(e) => e.stopPropagation()}>
+            <div className="flex! justify-between! items-center! p-[18px_24px]! [border-bottom:1px_solid_var(--color-slate-200)]!">
+              <div className="flex! items-center! gap-[10px]!">
+                <span className={"material-symbols-outlined" + " " + "text-[20px]! [color:var(--color-primary)]!"} >
                   history
                 </span>
-                <h2 style={s.modalTitle}>Audit Log Details</h2>
+                <h2 className="m-0! text-[17px]! font-bold! [color:var(--color-slate-900)]!">Audit Log Details</h2>
               </div>
-              <button onClick={() => setSelectedLog(null)} style={s.closeBtn}>
+              <button onClick={() => setSelectedLog(null)} className="[background:none]! border-0! text-[18px]! cursor-pointer! [color:var(--color-slate-400)]! leading-[1]!">
                 ✕
               </button>
             </div>
-            <div style={s.modalBody}>
+            <div className="p-[20px_24px]!">
               <DetailRow label="Timestamp" value={fmtDate(selectedLog.timestamp)} />
               <DetailRow label="User" value={selectedLog.user} />
               <DetailRow label="Action" value={selectedLog.action} />
@@ -255,43 +250,38 @@ export default function AuditLogsPage({ user }) {
               <DetailRow label="Description" value={selectedLog.description} />
               <DetailRow label="Request Path" value={selectedLog.request_path || "—"} />
               <DetailRow label="IP Address" value={selectedLog.ip_address || "—"} />
-              <div style={s.detailRow}>
-                <span style={s.detailLabel}>Context</span>
-                <span style={s.detailValue}>
-                  <pre style={s.jsonPre}>
+              <div className="flex! flex-col! p-[12px_0]! [border-bottom:1px_solid_var(--color-slate-100)]! gap-[4px]!">
+                <span className="text-[12px]! font-semibold! [color:var(--color-slate-500)]! [text-transform:uppercase]! tracking-[0.04em]!">Context</span>
+                <span className="text-[14px]! [color:var(--color-slate-900)]! leading-[1.5]!">
+                  <pre className="m-[8px_0_0]! p-[12px]! [background-color:var(--color-slate-50)]! [border:1px_solid_var(--color-slate-200)]! rounded-[8px]! [font-family:'Roboto_Mono',_monospace]! text-[12px]! overflow-x-auto! [color:var(--color-slate-700)]! text-left!">
                     {JSON.stringify(selectedLog.context, null, 2)}
                   </pre>
                 </span>
               </div>
               {(selectedLog.old_values || selectedLog.new_values) && (
                 <>
-                  <div style={s.detailRow}>
-                    <span style={s.detailLabel}>Old Values</span>
-                    <span style={s.detailValue}>
-                      <pre style={s.jsonPre}>
+                  <div className="flex! flex-col! p-[12px_0]! [border-bottom:1px_solid_var(--color-slate-100)]! gap-[4px]!">
+                    <span className="text-[12px]! font-semibold! [color:var(--color-slate-500)]! [text-transform:uppercase]! tracking-[0.04em]!">Old Values</span>
+                    <span className="text-[14px]! [color:var(--color-slate-900)]! leading-[1.5]!">
+                      <pre className="m-[8px_0_0]! p-[12px]! [background-color:var(--color-slate-50)]! [border:1px_solid_var(--color-slate-200)]! rounded-[8px]! [font-family:'Roboto_Mono',_monospace]! text-[12px]! overflow-x-auto! [color:var(--color-slate-700)]! text-left!">
                         {JSON.stringify(selectedLog.old_values, null, 2)}
                       </pre>
                     </span>
                   </div>
-                  <div style={s.detailRow}>
-                    <span style={s.detailLabel}>New Values</span>
-                    <span style={s.detailValue}>
-                      <pre style={s.jsonPre}>
+                  <div className="flex! flex-col! p-[12px_0]! [border-bottom:1px_solid_var(--color-slate-100)]! gap-[4px]!">
+                    <span className="text-[12px]! font-semibold! [color:var(--color-slate-500)]! [text-transform:uppercase]! tracking-[0.04em]!">New Values</span>
+                    <span className="text-[14px]! [color:var(--color-slate-900)]! leading-[1.5]!">
+                      <pre className="m-[8px_0_0]! p-[12px]! [background-color:var(--color-slate-50)]! [border:1px_solid_var(--color-slate-200)]! rounded-[8px]! [font-family:'Roboto_Mono',_monospace]! text-[12px]! overflow-x-auto! [color:var(--color-slate-700)]! text-left!">
                         {JSON.stringify(selectedLog.new_values, null, 2)}
                       </pre>
                     </span>
                   </div>
                 </>
               )}
-              <div style={s.detailRow}>
-                <span style={s.detailLabel}>User Agent</span>
+              <div className="flex! flex-col! p-[12px_0]! [border-bottom:1px_solid_var(--color-slate-100)]! gap-[4px]!">
+                <span className="text-[12px]! font-semibold! [color:var(--color-slate-500)]! [text-transform:uppercase]! tracking-[0.04em]!">User Agent</span>
                 <span
-                  style={{
-                    ...s.detailValue,
-                    wordBreak: "break-all",
-                    fontSize: 12,
-                    textAlign: "left",
-                  }}
+                  className="text-[12px]! [color:var(--color-slate-900)]! leading-[1.5]! [word-break:break-all]! text-left!"
                 >
                   {selectedLog.user_agent || "—"}
                 </span>
@@ -300,122 +290,8 @@ export default function AuditLogsPage({ user }) {
           </div>
         </div>
       )}
-    </AdminPageLayout>
+    </MonitoringLayout>
   );
 }
 
 // ── Small helper components ──────────────────────────────────────────
-
-const s = { ...logStyles, ...{
-  "titleRow": {
-    "display": "flex",
-    "alignItems": "center",
-    "justifyContent": "space-between",
-    "marginBottom": "18px"
-  },
-  "pageTitle": {
-    "fontSize": "18px",
-    "fontWeight": "700",
-    "color": "var(--color-slate-900)",
-    "margin": 0,
-    "letterSpacing": "-0.2px"
-  },
-  "pageSubtitle": {
-    "fontSize": "12px",
-    "color": "var(--color-slate-500)",
-    "marginTop": "3px",
-    "display": "block"
-  },
-  "titleActions": {
-    "display": "flex",
-    "alignItems": "center",
-    "gap": "14px"
-  },
-  "refreshBtn": {
-    "display": "flex",
-    "alignItems": "center",
-    "gap": "6px",
-    "padding": "6px 14px",
-    "height": "34px",
-    "backgroundColor": "var(--color-white)",
-    "border": "1px solid var(--color-slate-300)",
-    "borderRadius": "8px",
-    "fontSize": "13px",
-    "fontWeight": "500",
-    "color": "var(--color-slate-700)",
-    "cursor": "pointer",
-    "transition": "all 0.15s ease"
-  },
-  "pageBody": {
-    "padding": "24px 32px",
-    "flex": 1
-  },
-  "applyBtn": {
-    "height": "38px",
-    "padding": "0 22px",
-    "backgroundColor": "var(--color-primary)",
-    "color": "var(--color-white)",
-    "border": "none",
-    "borderRadius": "8px",
-    "fontWeight": "600",
-    "fontSize": "13px",
-    "cursor": "pointer",
-    "boxShadow": "0 1px 2px rgba(37, 99, 235, 0.15)",
-    "transition": "background-color 0.15s ease"
-  },
-  "clearBtn": {
-    "height": "38px",
-    "padding": "0 18px",
-    "backgroundColor": "var(--color-white)",
-    "color": "var(--color-slate-700)",
-    "border": "1px solid var(--color-slate-300)",
-    "borderRadius": "8px",
-    "fontWeight": "500",
-    "fontSize": "13px",
-    "cursor": "pointer",
-    "transition": "background-color 0.15s ease"
-  },
-  "descCell": {
-    "maxWidth": 320,
-    "overflow": "hidden",
-    "textOverflow": "ellipsis",
-    "whiteSpace": "normal"
-  },
-  "entityCell": {
-    "maxWidth": 180,
-    "overflow": "hidden",
-    "textOverflow": "ellipsis",
-    "whiteSpace": "normal"
-  },
-  "badge": {
-    "display": "inline-block",
-    "padding": "4px 10px",
-    "borderRadius": "12px",
-    "fontWeight": "600",
-    "fontSize": "11px",
-    "letterSpacing": "0.03em",
-    "textTransform": "capitalize"
-  },
-  "modal": {
-    "backgroundColor": "var(--color-white)",
-    "borderRadius": "14px",
-    "width": "90%",
-    "maxWidth": "640px",
-    "maxHeight": "85vh",
-    "overflow": "auto",
-    "boxShadow": "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-    "border": "1px solid var(--color-slate-200)"
-  },
-  "jsonPre": {
-    "margin": "8px 0 0",
-    "padding": "12px",
-    "backgroundColor": "var(--color-slate-50)",
-    "border": "1px solid var(--color-slate-200)",
-    "borderRadius": "8px",
-    "fontFamily": "'Roboto Mono', monospace",
-    "fontSize": "12px",
-    "overflowX": "auto",
-    "color": "var(--color-slate-700)",
-    "textAlign": "left"
-  }
-} }

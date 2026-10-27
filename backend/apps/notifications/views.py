@@ -62,8 +62,10 @@ class NotificationListView(APIView):
                              .values_list('pk', 'task__project__project_name'))
         project_names.update(ProjectChatMessage.objects.filter(pk__in=message_ids)
                              .values_list('pk', 'room__project__project_name'))
-        return paginator.get_paginated_response(NotificationSerializer(
+        response = paginator.get_paginated_response(NotificationSerializer(
             page, many=True, context={'project_names': project_names}).data)
+        response.data['unread_count'] = Notification.objects.filter(user=request.user, is_read=False).count()
+        return response
 
 
 class NotificationStreamView(APIView):

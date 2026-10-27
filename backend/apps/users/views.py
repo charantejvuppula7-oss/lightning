@@ -161,7 +161,7 @@ class ProjectUserWorkloadView(APIView):
         project = get_object_or_404(allowed_projects(request.user), pk=project_id)
         params = request.query_params.copy()
         params['project'] = str(project.pk)
-        users = filter_users(UserData.objects.all(), params)
+        users = filter_users(UserData.objects.select_related('department_link'), params)
         paginator = ResourcePagination()
         page = paginator.paginate_queryset(users, request, view=self)
         user_ids = [user.pk for user in page]

@@ -102,23 +102,17 @@ export function SprintBadge({
     >
       {displaySprint && <SprintIcon size={18} color={iconColor} />}
       {displaySprint && <span
-        style={{
-          fontSize: "14px",
-          fontWeight: "700",
-          color: sprintColor,
-          letterSpacing: "-0.01em",
-        }}
+        className="text-[14px]! font-bold! tracking-[-0.01em]!" style={{
+  color: sprintColor
+}}
       >
         {displaySprint}
       </span>}
       {displayPoints !== undefined && displayPoints !== null && displayPoints !== "" && (
         <span
-          style={{
-            fontSize: "14px",
-            fontWeight: "700",
-            color: pointsColor,
-            marginLeft: "2px",
-          }}
+          className="text-[14px]! font-bold! ml-[2px]!" style={{
+  color: pointsColor
+}}
         >
           {displayPoints}
         </span>

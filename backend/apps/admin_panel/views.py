@@ -1,5 +1,6 @@
 """Monitoring endpoints; database mutations remain administrator-only."""
 from django.db.models import Avg, Count, Q
+from django.db import connection
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -35,7 +36,7 @@ class ApiLogsView(AdminView):
             server_errors=Count('id', filter=Q(status_code__gte=500)))
         metrics['success_rate'] = round(metrics.pop('success_count') * 100 / (metrics['total_requests'] or 1), 1)
         metrics['avg_response_time'] = round(metrics['avg_response_time'] or 0, 2)
-        rows, pagination = paginate(qs, params)
+        rows, pagination = paginate(qs, params, total=metrics['total_requests'])
         return Response(dict(metrics=metrics, pagination=pagination, results=ApiLogSerializer(rows, many=True).data))
 
 class AuditLogsView(AdminView):
@@ -55,13 +56,21 @@ class AuditLogsView(AdminView):
 
 class DbTablesView(AdminView):
     def get(self, request):
+        # One statement keeps exact counts fresh without one round trip per table.
+        counts_sql = ' UNION ALL '.join(
+            f'SELECT %s AS table_key, COUNT(*) AS row_count FROM {connection.ops.quote_name(info["model"]._meta.db_table)}'
+            for info in DB_TABLE_REGISTRY.values()
+        )
+        with connection.cursor() as cursor:
+            cursor.execute(counts_sql, list(DB_TABLE_REGISTRY))
+            counts = dict(cursor.fetchall())
         result = []
         for key, info in DB_TABLE_REGISTRY.items():
             model = info['model']
             columns = columns_for(model)
             names = {column['name'] for column in columns}
             result.append(dict(table_key=key, display_name=info['display_name'], category=info['category'],
-                icon=info['icon'], row_count=model.objects.count(), columns=columns,
+                icon=info['icon'], row_count=counts[key], columns=columns,
                 default_fields=[name for name in info['default_fields'] if name in names]))
         return Response(result)
 

@@ -122,6 +122,11 @@ def request_password_reset(identifier):
             raise ValidationError({'identifier': 'No active account was found for this User ID or email.'})
         recent = PasswordResetOTP.objects.filter(
             user=user, created_at__gte=timezone.now() - timedelta(minutes=10))
+        latest = recent.order_by('-created_at').first()
+        if latest:
+            wait = (latest.created_at + timedelta(seconds=60) - timezone.now()).total_seconds()
+            if wait > 0:
+                raise Throttled(wait=wait)
         if recent.count() >= 3:
             wait = (recent.order_by('created_at').first().created_at + timedelta(minutes=10) - timezone.now()).total_seconds()
             raise Throttled(wait=max(1, wait))

@@ -44,7 +44,6 @@ const USER_MENU_ITEMS = [
   { id: "workload", label: "Workload", path: "/user/workload", icon: "monitoring", permission: "TeamWorLoad" },
 ];
 
-
 export function hasSidebarPermission(permissions, module, action = 'View') {
   if (module === 'Approvals') return ['Tasks','Dependencies'].some(name => hasSidebarPermission(permissions,name,action))
   const normalize = value => value.trim().toLowerCase().replace(/[\s_&]/g, '').replace('teamworload', 'teamworkload')

@@ -1,10 +1,27 @@
-import { apiRequest, clearCsrf } from '../../../services/api/apiClient.js'
+import { apiRequest, clearCsrf } from '../../../shared/api/apiClient.js'
+import { resetNotificationCache } from '../../notifications/notificationService.js'
 
-export const login = (identifier, password) => apiRequest('/auth/login/', { method: 'POST', body: { identifier, password } })
-export const getSession = () => apiRequest('/auth/session/')
+let sessionRequest
+export async function login(identifier, password) {
+  const data = await apiRequest('/auth/login/', { method: 'POST', body: { identifier, password } })
+  resetNotificationCache()
+  sessionRequest = null
+  window.dispatchEvent(new Event('session:changed'))
+  return data
+}
+export function getSession() {
+  if (!sessionRequest) {
+    const request = apiRequest('/auth/session/').finally(() => { if (sessionRequest === request) sessionRequest = null })
+    sessionRequest = request
+  }
+  return sessionRequest
+}
 export async function logout() {
   await apiRequest('/auth/logout/', { method: 'POST' })
   clearCsrf()
+  resetNotificationCache()
+  sessionRequest = null
+  window.dispatchEvent(new Event('session:changed'))
 }
 export async function requestReset(identifier) {
   const data = await apiRequest('/auth/password-reset/request/', { method: 'POST', body: { identifier } })

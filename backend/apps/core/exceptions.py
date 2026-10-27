@@ -7,6 +7,7 @@ error responses, particularly for throttled (rate-limited) requests.
 """
 
 import logging
+from math import ceil
 
 from rest_framework.views import exception_handler
 from rest_framework.exceptions import Throttled
@@ -54,7 +55,7 @@ def custom_exception_handler(exc, context):
                                       actor_id=str(actor.pk) if actor and actor.is_authenticated else None)
 
     if isinstance(exc, Throttled):
-        wait_seconds = int(exc.wait) if exc.wait else 0
+        wait_seconds = max(1, ceil(exc.wait or 1))
 
         if wait_seconds >= 60:
             wait_display = f"{wait_seconds // 60} minute(s)"
@@ -68,6 +69,7 @@ def custom_exception_handler(exc, context):
                 "retry_after_display": wait_display,
             },
             status=status.HTTP_429_TOO_MANY_REQUESTS,
+            headers={'Retry-After': str(wait_seconds)},
         )
 
     if response is None:

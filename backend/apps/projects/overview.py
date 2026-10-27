@@ -1,6 +1,6 @@
-from collections import Counter
+from collections import Counter, defaultdict
 
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import serializers
@@ -8,35 +8,46 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.models import Task, TaskDependency, UserData
+from api.models import Project, Task, TaskDependency, UserData
 from apps.approvals.views import approval_data
-from apps.projects.views import PROJECT_QUERYSET
 from apps.roles.permissions import allowed_projects, require_permission, scope_queryset, has_permission
 from apps.users.workload import weekly_availability
 
 
 def project_overview(user):
-    projects = PROJECT_QUERYSET.filter(pk__in=allowed_projects(user)).prefetch_related('milestones_set', 'sprints').order_by('-created_at')
+    people = UserData.objects.select_related('role_link')
+    projects = Project.objects.filter(pk__in=allowed_projects(user)).select_related(
+        'created_by__role_link', 'customer_link', 'priority_link', 'project_type_link'
+    ).prefetch_related(Prefetch('team_members', queryset=people),
+                      Prefetch('project_managers', queryset=people), 'milestones_set', 'sprints').order_by('-created_at')
     tasks = scope_queryset(user, 'task', Task.objects.all()).values('id', 'project_id', 'status', 'sprint_id', 'assigned_to_id', 'feature__Milestone_id')
     tasks = list(tasks) if has_permission(user, 'Tasks', 'View') else []
     dependencies = list(TaskDependency.objects.filter(task__project__in=projects).exclude(status='completed')
         .values('task__project_id', 'dependency_type')) if has_permission(user, 'Dependencies', 'View') else []
+    tasks_by_project = defaultdict(list)
+    for task in tasks:
+        tasks_by_project[task['project_id']].append(task)
+    dependency_counts = Counter(item['task__project_id'] for item in dependencies)
+    blocker_counts = Counter(item['task__project_id'] for item in dependencies if item['dependency_type'] == 'mandatory')
+    today = timezone.localdate()
     rows = []
     for project in projects:
-        project_tasks = [task for task in tasks if task['project_id'] == project.pk]
+        project_tasks = tasks_by_project[project.pk]
         counts = Counter(task['status'] for task in project_tasks)
+        assignee_counts = Counter(task['assigned_to_id'] for task in project_tasks)
+        sprint_counts = Counter(task['sprint_id'] for task in project_tasks)
+        sprint_completed = Counter(task['sprint_id'] for task in project_tasks if task['status'] == 'completed')
         total = len(project_tasks)
         progress = round(100 * counts['completed'] / total) if total else 0
-        status = ('Completed' if total and progress == 100 else 'Upcoming' if project.start_date and project.start_date > timezone.localdate()
-                  else 'Delayed' if project.end_date and project.end_date < timezone.localdate() else 'Ongoing')
+        status = ('Completed' if total and progress == 100 else 'Upcoming' if project.start_date and project.start_date > today
+                  else 'Delayed' if project.end_date and project.end_date < today else 'Ongoing')
         managers = list(project.project_managers.all())
         if not managers:
             managers = [project.created_by]
         people = {person.pk: person for person in list(project.team_members.all()) + managers}
         members = [{'id': person.pk, 'name': f'{person.first_name} {person.last_name}'.strip() or person.user_name,
-                    'role': person.designation or person.role, 'task_count': sum(task['assigned_to_id'] == person.pk for task in project_tasks)}
+                    'role': person.designation or person.role, 'task_count': assignee_counts[person.pk]}
                    for person in people.values()]
-        project_dependencies = [item for item in dependencies if item['task__project_id'] == project.pk]
         milestone_counts = Counter(task['feature__Milestone_id'] for task in project_tasks)
         milestone_completed = Counter(task['feature__Milestone_id'] for task in project_tasks if task['status'] == 'completed')
         milestones = [{'id': item.pk, 'name': item.name, 'start_date':item.start_date, 'due_date': item.due_date, 'description': item.description,
@@ -47,13 +58,13 @@ def project_overview(user):
             'description': project.description, 'customer': project.customer, 'priority': project.priority,
             'start_date': project.start_date, 'end_date': project.end_date, 'status': status,
             'progress': progress, 'task_counts': dict(counts), 'task_count': total,
-            'dependency_count': len(project_dependencies),
-            'blocker_count': sum(item['dependency_type'] == 'mandatory' for item in project_dependencies),
+            'dependency_count': dependency_counts[project.pk],
+            'blocker_count': blocker_counts[project.pk],
             'managers': [{'id': person.pk, 'name': f'{person.first_name} {person.last_name}'.strip()} for person in managers],
             'members': members, 'milestones': milestones,
             'sprints': [{'id': sprint.pk, 'name': sprint.Sprint_Name, 'number': sprint.Sprint_No,
-                'task_count': sum(task['sprint_id'] == sprint.pk for task in project_tasks),
-                'completed': sum(task['sprint_id'] == sprint.pk and task['status'] == 'completed' for task in project_tasks)}
+                'task_count': sprint_counts[sprint.pk],
+                'completed': sprint_completed[sprint.pk]}
                 for sprint in project.sprints.all()]})
     return rows
 

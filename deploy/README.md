@@ -40,6 +40,52 @@ Django 6 requires Python 3.12 or later. The frontend requires Node 20.19+ or
 PostgreSQL should already be running. Ensure ports 5173 and 8084 are not occupied
 by another service; stop any previous Vite instance on 5173 before deploying.
 
+Redis must also be running locally on the approved `127.0.0.1:6379` endpoint:
+
+```bash
+sudo apt install -y redis-server redis-tools
+sudo systemctl enable --now redis-server
+redis-cli -h 127.0.0.1 -p 6379 ping
+```
+
+The expected reply is `PONG`. Reuse the existing Redis installation when present;
+do not change its configuration or flush it. Do not expose 6379 through the router
+or firewall. Production Django uses its native RedisCache backend with the fixed
+`lighting_v2` key prefix. `REDIS_URL` in `backend/.env` can specify authentication
+if required; its default is `redis://127.0.0.1:6379/0`. Redis logical database 0
+may be shared with Company because keys are prefixed; a logical database is not
+an authorization boundary.
+
+Redis is used only by existing cache consumers:
+
+- Login sessions use Django's existing `cached_db` engine: writes remain in
+  PostgreSQL, and Redis accelerates session retrieval. Cache loss does not erase
+  stored sessions; Django can reload them from PostgreSQL.
+- DRF's existing API/password-reset throttles share counters through Redis.
+- The existing application-version endpoint caches its result for 60 seconds.
+
+Project/task data and permission results are not cached. Chat keeps its current
+stream implementation. No Celery, pub/sub layer or additional Redis service is
+introduced. Redis is an operational dependency for throttling and version reads;
+unavailability may cause API failures. Fix the service rather than silently
+disabling rate limits. Deployment tests a uniquely named cache key and deletes
+only that key; it never calls FLUSHDB, FLUSHALL or Django cache.clear().
+
+For an existing installation, pull the updated source and rerun
+`bash scripts/deploy.sh`. The local Redis URL is the default, so the existing
+`backend/.env` does not need to change. After deployment verify:
+
+```bash
+cd /home/tachyon-pc-1/Documents/company/lighting_v2.0
+DJANGO_SETTINGS_MODULE=config.settings.production backend/venv/bin/python backend/manage.py shell -c 'from django.core.cache import caches; c=caches["default"]; print(type(c).__name__, c.key_prefix)'
+REDIS_TEST_URL=redis://127.0.0.1:6379/0 backend/venv/bin/python backend/manage.py test apps.core.tests.LiveRedisTests --settings=config.settings
+```
+
+The first command should print `RedisCache lighting_v2`. The isolated live test
+uses a uniquely named, 30-second test key and removes it afterwards. It does not
+change PostgreSQL data or clear Company cache keys. For authenticated Redis,
+supply the configured URL privately rather than copying a password into shared logs.
+
 ```bash
 sudo ss -ltnp | grep -E ':(5173|8084)\b' || true
 ```

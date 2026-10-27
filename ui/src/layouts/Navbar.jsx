@@ -1,32 +1,21 @@
-import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import GlobalSearch from '../components/common/GlobalSearch.jsx'
-import ProjectSelector from '../components/common/ProjectSelector.jsx'
-import { navigateToSearchResult } from '../components/common/searchNavigation.js'
+import GlobalSearch from '../shared/components/GlobalSearch.jsx'
+import ProjectSelector from '../features/projects/components/ProjectSelector.jsx'
+import { navigateToSearchResult } from '../shared/utils/searchNavigation.js'
 import { NotificationBell } from '../features/notifications/NotificationBell.jsx'
-import { getSession } from '../features/auth/api/authApi.js'
-import { roleSlug } from '../utils/roles.js'
+import { roleSlug } from '../shared/utils/roles.js'
 
-const getPMInitials = user => `${(user.first_name || user.First_Name || '').trim()[0] || ''}${(user.last_name || user.Last_Name || '').trim()[0] || ''}`.toUpperCase()
+const getInitials = user => `${(user.first_name || user.First_Name || '').trim()[0] || ''}${(user.last_name || user.Last_Name || '').trim()[0] || ''}`.toUpperCase()
 
-export default function Navbar({ role: roleProp, showProjectSelector, projects = [], projectOptions = [], selectedProjectId, selectedProjectName, selectedProject, activeProjectObj, onProjectSelect, title, subtitle, badge, icon, leftContent, showSearch = true, searchQuery, searchValue, onSearchChange, setSearchQuery, onSearchResult, localSearchData = {}, searchPlaceholder = 'Search tasks, docs, people....', searchStyle, showNotificationBell = true, onOpenNotifications, onOpenInbox, showAvatar = true, currentPM: propPM, currentUser: propUser, user: propGenericUser, avatarColor, avatarStyle, rightStyle, avatarInitials: propInitials, onAvatarClick, actions, rightContent, children, beforeAvatar, style, className }) {
+export default function Navbar({ role: roleProp, showProjectSelector, onProjectSelect, title, subtitle, badge, icon, leftContent, showSearch = true, searchQuery, onSearchChange, onSearchResult, localSearchData = {}, searchPlaceholder = 'Search tasks, docs, people....', showNotificationBell = true, onOpenNotifications, onOpenInbox, showAvatar = true, user: currentUser, avatarColor, avatarClassName = '', rightGap = 12, avatarInitials: propInitials, onAvatarClick, actions, rightContent, children, beforeAvatar, className = '' }) {
  const navigate = useNavigate()
  const location = useLocation()
- const role = roleSlug(roleProp || propGenericUser?.role || propUser?.role || propPM?.role)
+ const role = roleSlug(roleProp || currentUser?.role)
  const effectiveRole = location.pathname.startsWith('/admin/') ? 'admin' : role === 'admin' || role === 'pm' ? role : 'user'
- const incoming = propPM || propUser || propGenericUser
- const [sessionUser, setSessionUser] = useState(null)
- useEffect(() => {
-   if (incoming) return
-   let active = true
-   getSession().then(data => { if (active) setSessionUser(data.user) }).catch(() => {})
-   return () => { active = false }
- }, [incoming])
- const currentUser = incoming || sessionUser
   // Derive initials
   const userInitials =
     propInitials ||
-    (currentUser ? getPMInitials(currentUser) : "") ||
+    (currentUser ? getInitials(currentUser) : "") ||
     (effectiveRole === "admin" ? "AD" : effectiveRole === "user" ? "U" : "PM");
 
   // Derive avatar display name for tooltip
@@ -49,8 +38,6 @@ export default function Navbar({ role: roleProp, showProjectSelector, projects =
       : !title && !leftContent;
 
   // ── Search Callback ─────────────────────────────────────────────────────
-  const currentSearchVal = searchValue !== undefined ? searchValue : searchQuery;
-  const currentSearchChange = onSearchChange || (setSearchQuery ? (e) => setSearchQuery(e.target.value) : undefined);
 
   const handleSearchResult = (item) => {
     if (onSearchResult) {
@@ -105,71 +92,39 @@ export default function Navbar({ role: roleProp, showProjectSelector, projects =
 
   return (
     <header
-      className={`app-navbar ${effectiveRole}-navbar ${className || ""}`}
-      style={{
-        height: "50px",
-        minHeight: "50px",
-        maxHeight: "50px",
-        backgroundColor: "var(--color-white)",
-        borderBottom: "1px solid var(--color-slate-200)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "0 24px",
-        boxSizing: "border-box",
-        position: "sticky",
-        top: 0,
-        zIndex: 40,
-        width: "100%",
-        flexShrink: 0,
-        fontFamily: "'Inter', sans-serif",
-        ...style,
-      }}
+      className={`app-navbar ${effectiveRole}-navbar h-[50px] min-h-[50px] max-h-[50px] bg-white border-b border-(--color-slate-200) flex items-center justify-between px-[24px] sticky top-0 z-40 w-full shrink-0 [font-family:Inter,sans-serif] ${className}`}
     >
       {/* ── LEFT SECTION ──────────────────────────────────────────────── */}
-      <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
+      <div className="flex! items-center! gap-[12px]! min-w-0!">
         {leftContent ? (
           leftContent
         ) : title ? (
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div className="flex! items-center! gap-[10px]!">
             {icon && (
               <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "20px", color: "var(--color-primary)" }}
+                className={"material-symbols-outlined" + " " + "text-[20px]! [color:var(--color-primary)]!"}
+
               >
                 {icon}
               </span>
             )}
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div className="flex! items-center! gap-[8px]!">
                 <h1
-                  style={{
-                    fontSize: "16px",
-                    fontWeight: "700",
-                    color: "var(--color-slate-900)",
-                    margin: 0,
-                    lineHeight: "1.2",
-                  }}
+                  className="text-[16px]! font-bold! [color:var(--color-slate-900)]! m-0! leading-[1.2]!"
                 >
                   {title}
                 </h1>
                 {badge && (
                   <span
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: "600",
-                      backgroundColor: "var(--color-primary-subtle)",
-                      color: "var(--color-primary)",
-                      padding: "2px 8px",
-                      borderRadius: "6px",
-                    }}
+                    className="text-[11px]! font-semibold! [background-color:var(--color-primary-subtle)]! [color:var(--color-primary)]! p-[2px_8px]! rounded-[6px]!"
                   >
                     {badge}
                   </span>
                 )}
               </div>
               {subtitle && (
-                <span style={{ fontSize: "11px", color: "var(--color-slate-500)", display: "block" }}>
+                <span className="text-[11px]! [color:var(--color-slate-500)]! block!">
                   {subtitle}
                 </span>
               )}
@@ -177,20 +132,14 @@ export default function Navbar({ role: roleProp, showProjectSelector, projects =
           </div>
         ) : shouldShowProjectSelector ? (
           <ProjectSelector
-            projects={projects}
-            projectOptions={projectOptions}
-            selectedProjectId={selectedProjectId}
-            selectedProjectName={selectedProjectName}
-            selectedProject={selectedProject || activeProjectObj?.Project_Name || activeProjectObj?.name}
             onProjectSelect={onProjectSelect}
-            role={effectiveRole}
             user={currentUser}
           />
         ) : null}
       </div>
 
       {/* ── RIGHT SECTION ─────────────────────────────────────────────── */}
-      <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0, ...rightStyle }}>
+      <div className="flex items-center shrink-0" style={{ gap: rightGap }}>
         {/* Custom Actions (e.g. Refresh, Add Task, or extra buttons) */}
         {actions}
         {children}
@@ -198,13 +147,13 @@ export default function Navbar({ role: roleProp, showProjectSelector, projects =
 
         {/* Global Search */}
         {showSearch && (
-          location.pathname.endsWith('/chat') && currentSearchChange ? <div style={{display:'flex',alignItems:'center',gap:8,width:220,height:34,border:'1px solid var(--color-slate-300)',borderRadius:8,padding:'0 12px',background:'white'}}><span className="material-symbols-outlined" style={{fontSize:18,color:'var(--color-slate-400)'}}>search</span><input aria-label="Search messages" placeholder={searchPlaceholder} value={currentSearchVal || ''} onChange={currentSearchChange} style={{border:0,outline:0,background:'none',width:'100%',font:'13px Inter,sans-serif'}} /></div> : <GlobalSearch
-            value={currentSearchVal}
-            onChange={currentSearchChange}
+          location.pathname.endsWith('/chat') && onSearchChange ? <div className="flex! items-center! gap-[8px]! w-[220px]! h-[34px]! [border:1px_solid_var(--color-slate-300)]! rounded-[8px]! p-[0_12px]! [background:white]!"><span className={"material-symbols-outlined" + " " + "text-[18px]! [color:var(--color-slate-400)]!"} >search</span><input aria-label="Search messages" placeholder={searchPlaceholder} value={searchQuery || ''} onChange={onSearchChange} className="border-0! [outline:0]! [background:none]! w-full! [font:13px_Inter,sans-serif]!" /></div> : <GlobalSearch
+            value={searchQuery}
+            onChange={onSearchChange}
             placeholder={searchPlaceholder}
             localData={localSearchData}
             dropdownAlignment="right"
-            style={{ width: "260px", ...searchStyle }}
+            className="w-[260px]!"
             onSelectResult={handleSearchResult}
           />
         )}
@@ -223,31 +172,8 @@ export default function Navbar({ role: roleProp, showProjectSelector, projects =
             onKeyDown={event => { if (event.key === "Enter" || event.key === " ") handleAvatarClick() }}
             onClick={handleAvatarClick}
             title={avatarTooltip}
-            style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "50%",
-              backgroundColor: resolvedAvatarBg,
-              color: "var(--color-white)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "12px",
-              fontWeight: "700",
-              cursor: "pointer",
-              userSelect: "none",
-              flexShrink: 0,
-              boxShadow:
-                effectiveRole === "user"
-                  ? "0 2px 4px rgba(30, 58, 138, 0.25)"
-                  : effectiveRole === "pm"
-                  ? "0 2px 4px rgba(249, 115, 22, 0.25)"
-                  : "0 2px 4px rgba(37, 99, 235, 0.25)",
-              transition: "transform 0.15s ease",
-              ...avatarStyle,
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.06)")}
-            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            style={{ backgroundColor: resolvedAvatarBg }}
+            className={`flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-[50%] text-white text-[12px] font-bold cursor-pointer select-none transition-transform duration-150 hover:scale-[1.06] ${effectiveRole === 'user' ? 'shadow-[0_2px_4px_rgba(30,58,138,0.25)]' : effectiveRole === 'pm' ? 'shadow-[0_2px_4px_rgba(249,115,22,0.25)]' : 'shadow-[0_2px_4px_rgba(37,99,235,0.25)]'} ${avatarClassName}`}
           >
             {userInitials}
           </div>

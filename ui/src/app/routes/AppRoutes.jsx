@@ -1,40 +1,41 @@
 import { lazy, Suspense, useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
-import { LoginPage, ForgotPasswordPage } from '../../features/auth/index.js'
-import ProtectedRoute from './protectedroute.jsx'
-import TasksPage from '../../features/tasks/TasksPage.jsx'
-import UsersPage from '../../features/users/UsersPage.jsx'
-import DocumentsPage from '../../features/documents/DocumentsPage.jsx'
-import WorkloadPage from '../../features/workload/WorkloadPage.jsx'
-import ApprovalsPage from '../../features/approvals/ApprovalsPage.jsx'
-import CalendarPage from '../../features/calendar/CalendarPage.jsx'
-import ProjectsPage from '../../features/projects/ProjectsPage.jsx'
-import ProjectEditorLayout from '../../features/projects/editor/ProjectEditorLayout.jsx'
-import PmProjects from '../../features/projects/pm_projects.jsx'
-import ProjectManagerDashboard from '../../modules/project-manager/dashboard.jsx'
-import UserDashboard from '../../modules/user/user_dashboard.jsx'
-import { SidebarLayout } from '../../layouts/Sidebar.jsx'
-import { MyProfile } from '../../features/profile/index.js'
-import NotificationsPage from '../../features/notifications/NotificationsPage.jsx'
-import { ApiLogsPage, AuditLogsPage, DatabaseExplorerPage } from '../../features/audit/index.js'
+import LoginPage from '../../features/auth/pages/LoginPage.jsx'
+import ProtectedRoute from './RouteGuard.jsx'
+import AppLayout from '../../layouts/AppLayout.jsx'
+
+const TasksPage = lazy(() => import('../../features/tasks/TasksPage.jsx'))
+const UsersPage = lazy(() => import('../../features/users/UsersPage.jsx'))
+const DocumentsPage = lazy(() => import('../../features/documents/DocumentsPage.jsx'))
+const WorkloadPage = lazy(() => import('../../features/workload/WorkloadPage.jsx'))
+const ApprovalsPage = lazy(() => import('../../features/approvals/ApprovalsPage.jsx'))
+const CalendarPage = lazy(() => import('../../features/calendar/CalendarPage.jsx'))
+const ProjectsPage = lazy(() => import('../../features/projects/ProjectsPage.jsx'))
+const ProjectEditorLayout = lazy(() => import('../../features/projects/editor/ProjectEditorLayout.jsx'))
+const ProjectOverviewPage = lazy(() => import('../../features/projects/ProjectOverviewPage.jsx'))
+const OverviewDashboard = lazy(() => import('../../features/dashboard/OverviewDashboard.jsx'))
+const WorkspaceDashboard = lazy(() => import('../../features/dashboard/WorkspaceDashboard.jsx'))
+const NotificationsPage = lazy(() => import('../../features/notifications/NotificationsPage.jsx'))
+const ForgotPasswordPage = lazy(() => import('../../features/auth/pages/ForgotPasswordPage.jsx'))
+const MyProfile = lazy(() => import('../../features/profile/MyProfile.jsx'))
+const ApiLogsPage = lazy(() => import('../../features/audit/pages/ApiLogsPage.jsx'))
+const AuditLogsPage = lazy(() => import('../../features/audit/pages/AuditLogsPage.jsx'))
+const DatabaseExplorerPage = lazy(() => import('../../features/audit/pages/DatabaseExplorerPage.jsx'))
 
 function Dashboard({ user, variant }) {
-  if (variant === 'user' || user?.role === 'Regular User' || user?.role === 'User') {
-    return <UserDashboard user={user} />
+  if (variant === 'workspace' || user?.role === 'Regular User' || user?.role === 'User') {
+    return <WorkspaceDashboard user={user} />
   }
-  if (user?.role === 'Project Manager') {
-    return <ProjectManagerDashboard user={user} />
-  }
-  return <ProjectManagerDashboard user={user} />
+  return <OverviewDashboard user={user} />
 }
 
 function DashboardRoute({ allowedRoles, variant }) {
   return (
     <ProtectedRoute allowedRoles={allowedRoles}>
       {(user) => (
-        <SidebarLayout user={user}>
+        <AppLayout user={user}>
           <Dashboard user={user} variant={variant} />
-        </SidebarLayout>
+        </AppLayout>
       )}
     </ProtectedRoute>
   )
@@ -52,14 +53,14 @@ function NotificationsRoute({ allowedRoles }) {
   const [searchQuery, setSearchQuery] = useState('')
   return (
     <ProtectedRoute allowedRoles={allowedRoles}>
-      {(user) => <SidebarLayout user={user} searchQuery={searchQuery} onSearchChange={(event) => setSearchQuery(event.target.value)}><NotificationsPage searchQuery={searchQuery} /></SidebarLayout>}
+      {(user) => <AppLayout user={user} searchQuery={searchQuery} onSearchChange={(event) => setSearchQuery(event.target.value)}><NotificationsPage searchQuery={searchQuery} /></AppLayout>}
     </ProtectedRoute>
   )
 }
 
 function ProjectsRoute() {
   return <ProtectedRoute requiredPermission={{ module: 'Projects', action: 'View' }}>
-    {(user) => <SidebarLayout user={user}><ProjectsPage user={user} /></SidebarLayout>}
+    {(user) => <AppLayout user={user}><ProjectsPage user={user} /></AppLayout>}
   </ProtectedRoute>
 }
 
@@ -77,7 +78,7 @@ function ProjectEditRoute() {
 
 function PermissionPageRoute({ module, children, searchQuery, onSearchChange }) {
   return <ProtectedRoute requiredPermission={{ module, action: 'View' }}>
-    {(user) => <SidebarLayout user={user} searchQuery={searchQuery} onSearchChange={onSearchChange}>{typeof children === 'function' ? children(user) : children}</SidebarLayout>}
+    {(user) => <AppLayout user={user} searchQuery={searchQuery} onSearchChange={onSearchChange}>{typeof children === 'function' ? children(user) : children}</AppLayout>}
   </ProtectedRoute>
 }
 
@@ -99,7 +100,7 @@ const sidebarRoutes = [
     { path: `/${role}/roles-permissions`, module: 'Roles & permissions', page: user => <RolesPermissionsPage user={user} /> },
     { path: `/${role}/approvals`, module: ['Tasks','Dependencies'], page: user => <ApprovalsPage user={user} /> },
   ]),
-  { path: '/admin/all-projects', module: 'Projects', page: user => <PmProjects user={user} /> },
+  { path: '/admin/all-projects', module: 'Projects', page: user => <ProjectOverviewPage user={user} /> },
   { path: '/user/projects', module: 'Projects', page: user => <ProjectsPage user={user} /> },
   ...['pm', 'user'].map(role => ({ path: `/${role}/calendar`, module: 'Milestones', page: () => <CalendarPage /> })),
 ]
@@ -107,11 +108,12 @@ const searchablePages = { Chat:ChatPage, Dependencies:DependenciesPage, 'Roles &
 function SearchableFeatureRoute({ module }) {
   const [query,setQuery] = useState('')
   const Page = searchablePages[module]
-  return <PermissionPageRoute module={module} searchQuery={query} onSearchChange={event => setQuery(event.target.value)}>{user => <Suspense fallback={<p role="status" style={{padding:24}}>Loading...</p>}><Page user={user} searchQuery={query} /></Suspense>}</PermissionPageRoute>
+  return <PermissionPageRoute module={module} searchQuery={query} onSearchChange={event => setQuery(event.target.value)}>{user => <Suspense fallback={<p role="status" className="p-[24px]!">Loading...</p>}><Page user={user} searchQuery={query} /></Suspense>}</PermissionPageRoute>
 }
 
 export default function AppRoutes() {
   return (
+    <Suspense fallback={<p role="status" className="p-6">Loading...</p>}>
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
@@ -121,7 +123,7 @@ export default function AppRoutes() {
       <Route path="/reset-password" element={<ForgotPasswordPage mode="reset" />} />
       <Route path="/admin/dashboard" element={<DashboardRoute allowedRoles={['Administrator']} />} />
       <Route path="/pm/dashboard" element={<DashboardRoute allowedRoles={['Project Manager']} />} />
-      <Route path="/user/dashboard" element={<DashboardRoute variant="user" />} />
+      <Route path="/user/dashboard" element={<DashboardRoute variant="workspace" />} />
       <Route path="/profile" element={<ProfileRoute />} />
       <Route path="/user/profile" element={<ProfileRoute />} />
       <Route path="/pm/profile" element={<ProfileRoute allowedRoles={['Project Manager']} />} />
@@ -133,7 +135,7 @@ export default function AppRoutes() {
       <Route path="/tasks" element={<PermissionPageRoute module="Tasks">{(user) => <TasksPage user={user} />}</PermissionPageRoute>} />
       <Route path="/projects" element={<ProjectsRoute />} />
       <Route path="/pm/projects" element={<ProtectedRoute allowedRoles={['Project Manager']}>
-        {(user) => <SidebarLayout user={user}><PmProjects user={user} /></SidebarLayout>}
+        {(user) => <AppLayout user={user}><ProjectOverviewPage user={user} /></AppLayout>}
       </ProtectedRoute>} />
       <Route path="/projects/new" element={<ProjectCreateRoute />} />
       <Route path="/projects/:projectId/edit" element={<ProjectEditRoute />} />
@@ -161,5 +163,6 @@ export default function AppRoutes() {
       <Route path="/admin/database" element={<ProtectedRoute allowedRoles={['Administrator']}>{user => <DatabaseExplorerPage user={user} />}</ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+    </Suspense>
   )
 }

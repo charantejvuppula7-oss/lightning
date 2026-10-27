@@ -2,28 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { notificationService } from './notificationService.js';
 
-/* styling */
-const tailwindStyling = {
-  "notification": [
-    "[width:32px]",
-    "[height:32px]",
-    "[border:0]",
-    "[background:transparent]",
-    "[color:var(--color-slate-500)]",
-    "[cursor:pointer]",
-    "[display:grid]",
-    "[place-items:center]",
-    "[&_.material-symbols-outlined]:[font-size:20px]"
-  ]
-}
-const styling = value => {
-  const classes = typeof value === 'string' ? value : ''
-  const utilities = classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])
-  return [...new Set([...classes.split(/\s+/), ...utilities])].filter(Boolean).join(' ')
-}
-
-
-
 export function NotificationPopup() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -92,7 +70,8 @@ export function NotificationPopup() {
       if (isAuthPage) return;
 
       try {
-        const notifList = await notificationService.getRecentNotifications();
+        const page = await notificationService.getSnapshot();
+        const notifList = page.results;
         const unreadList = notifList.filter((n) => !n.is_read);
         const unreadCount = unreadList.length;
 
@@ -181,13 +160,12 @@ export function NotificationPopup() {
     return () => clearTimeout(initial);
   }, [location.pathname, isAuthPage, checkNotifications, dismissPopup]);
 
-  // Background polling every 15 seconds for real-time messages & nudges
+  // Share the existing 15-second refresh with the bell.
   useEffect(() => {
     if (isAuthPage) return;
-    const interval = setInterval(() => {
-      checkNotifications(false);
-    }, 15000);
-    return () => clearInterval(interval);
+    return notificationService.subscribe(() => {
+      if (hasCheckedLoginPopup.current) checkNotifications(false);
+    });
   }, [isAuthPage, checkNotifications]);
 
   // Listen to manual dispatch if triggered from UI
@@ -226,102 +204,39 @@ export function NotificationPopup() {
       return (
         <div>
           <div>{match[1].trim()} :</div>
-          <div style={{ marginTop: "2px" }}>“{match[2].trim()}”</div>
+          <div className="mt-[2px]!">“{match[2].trim()}”</div>
         </div>
       );
     }
-    return <div style={{ whiteSpace: "pre-line" }}>{msg}</div>;
+    return <div className="[white-space:pre-line]!">{msg}</div>;
   };
 
   return (
     <div
-      style={{
-        position: "fixed",
-        top: "24px",
-        right: "24px",
-        zIndex: 999999,
-        pointerEvents: isVisible ? "auto" : "none",
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-      }}
+      className="fixed! top-[24px]! right-[24px]! z-[999999]! [font-family:-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_Roboto,_Helvetica,_Arial,_sans-serif]!" style={{
+  pointerEvents: isVisible ? "auto" : "none"
+}}
     >
-      <style>{`
-        @keyframes notifPopIn {
-          from {
-            opacity: 0;
-            transform: translateY(-16px) scale(0.97);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-        @keyframes notifPopOut {
-          from {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-          to {
-            opacity: 0;
-            transform: translateY(-12px) scale(0.97);
-          }
-        }
-      `}</style>
 
       <div
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        style={{
-          width: "390px",
-          maxWidth: "calc(100vw - 32px)",
-          backgroundColor: "var(--color-white)",
-          borderRadius: "16px",
-          border: "1px solid var(--color-slate-200)",
-          boxShadow:
-            "0 10px 25px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.04)",
-          padding: "18px 20px 16px 20px",
-          animation: isVisible
-            ? "notifPopIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards"
-            : "notifPopOut 0.22s ease-in forwards",
-          boxSizing: "border-box",
-        }}
+        className={`w-[390px]! max-w-[calc(100vw_-_32px)]! [background-color:var(--color-white)]! rounded-[16px]! [border:1px_solid_var(--color-slate-200)]! [box-shadow:0_10px_25px_-3px_rgba(15,_23,_42,_0.08),_0_4px_6px_-2px_rgba(15,_23,_42,_0.04)]! p-[18px_20px_16px_20px]! box-border! ${isVisible ? 'animate-notification-in' : 'animate-notification-out'}`}
       >
         {/* Header row: "Notification" + "[1 New]" + "✕" */}
         <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
+          className="flex! items-center! justify-between!"
         >
           <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-            }}
+            className="flex! items-center! gap-[10px]!"
           >
             <span
-              style={{
-                fontSize: "18px",
-                fontWeight: "700",
-                color: "var(--color-slate-900)",
-                letterSpacing: "-0.01em",
-              }}
+              className="text-[18px]! font-bold! [color:var(--color-slate-900)]! tracking-[-0.01em]!"
             >
               Notification
             </span>
             <span
-              style={{
-                backgroundColor: "#BAE6FD",
-                color: "var(--color-slate-900)",
-                fontSize: "13px",
-                fontWeight: "500",
-                padding: "2.5px 12px",
-                borderRadius: "9999px",
-                lineHeight: "1.35",
-                display: "inline-block",
-              }}
+              className="[background-color:#BAE6FD]! [color:var(--color-slate-900)]! text-[13px]! font-medium! p-[2.5px_12px]! rounded-[9999px]! leading-[1.35]! inline-block!"
             >
               {popupData.badge || (popupData.count ? `${popupData.count} New` : "1 New")}
             </span>
@@ -334,23 +249,9 @@ export function NotificationPopup() {
               e.stopPropagation();
               dismissPopup();
             }}
-            style={{
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              color: "var(--color-slate-900)",
-              fontSize: "18px",
-              lineHeight: 1,
-              padding: "4px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: "4px",
-              transition: "opacity 0.15s ease",
-            }}
+            className={"[background:transparent]! border-0! cursor-pointer! [color:var(--color-slate-900)]! text-[18px]! leading-[1]! p-[4px]! flex! items-center! justify-center! rounded-[4px]! [transition:opacity_0.15s_ease]!" + ' ' + "hover:opacity-[0.6]!"}
             title="Close"
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.6")}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+
           >
             ✕
           </button>
@@ -358,14 +259,7 @@ export function NotificationPopup() {
 
         {/* Subtitle: "You have 1 new notification" */}
         <div
-          style={{
-            fontSize: "16px",
-            fontWeight: "700",
-            color: "var(--color-slate-900)",
-            marginTop: "14px",
-            marginBottom: "6px",
-            lineHeight: "1.3",
-          }}
+          className="text-[16px]! font-bold! [color:var(--color-slate-900)]! mt-[14px]! mb-[6px]! leading-[1.3]!"
         >
           {popupData.title ||
             `You have ${popupData.count || 1} new notification${
@@ -375,56 +269,27 @@ export function NotificationPopup() {
 
         {/* Notification Message Details */}
         <div
-          style={{
-            fontSize: "14px",
-            color: "var(--color-slate-900)",
-            lineHeight: "1.45",
-            wordBreak: "break-word",
-          }}
+          className="text-[14px]! [color:var(--color-slate-900)]! leading-[1.45]! [word-break:break-word]!"
         >
           {renderMessageContent(popupData.message)}
         </div>
 
         {/* Divider Line */}
         <div
-          style={{
-            height: "1px",
-            backgroundColor: "var(--color-slate-200)",
-            margin: "16px 0 12px 0",
-          }}
+          className="h-[1px]! [background-color:var(--color-slate-200)]! m-[16px_0_12px_0]!"
         />
 
         {/* Full-width Action Button: "Open notification inbox →" */}
         <button
           type="button"
           onClick={handleOpenInbox}
-          style={{
-            width: "100%",
-            padding: "11px 16px",
-            backgroundColor: "var(--color-slate-100)",
-            color: "var(--color-slate-900)",
-            borderRadius: "10px",
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
-            fontSize: "15px",
-            fontWeight: "600",
-            transition: "background-color 0.15s ease, transform 0.1s ease",
-            boxSizing: "border-box",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--color-slate-200)")}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--color-slate-100)")}
+          className={"w-full! p-[11px_16px]! [background-color:var(--color-slate-100)]! [color:var(--color-slate-900)]! rounded-[10px]! border-0! cursor-pointer! flex! items-center! justify-center! gap-[8px]! text-[15px]! font-semibold! [transition:background-color_0.15s_ease,_transform_0.1s_ease]! box-border!" + ' ' + "hover:[background-color:var(--color-slate-200)]!"}
+
         >
           <span>Open notification inbox</span>
-          <span style={{ fontSize: "16px", fontWeight: "400" }}>→</span>
+          <span className="text-[16px]! font-normal!">→</span>
         </button>
       </div>
     </div>
   );
 }
-
-
-

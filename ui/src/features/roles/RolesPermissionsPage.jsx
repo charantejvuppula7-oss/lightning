@@ -1,10 +1,9 @@
 import { useState } from 'react'
-import useApiData from '../../app/hooks/useApiData.js'
-import { apiList, apiRequest, errorMessage } from '../../services/api/apiClient.js'
+import useApiData from '../../shared/hooks/useApiData.js'
+import { apiList, apiRequest, errorMessage } from '../../shared/api/apiClient.js'
 import { hasSidebarPermission } from '../../layouts/sidebarNavigation.js'
-import { roleSlug } from '../../utils/roles.js'
-import { useFeedback } from '../../components/common/Feedback.jsx'
-import './roles.css'
+import { roleSlug } from '../../shared/utils/roles.js'
+import { useFeedback } from '../../shared/components/Feedback.jsx'
 
 const modules = ['Dashboard','Tasks','Features','Milestones','Reports','Projects','Documents','Dependencies','Audit Logs','User Management','Roles & permissions','Department Managment','TeamWorLoad','ProjectJourney','ProjectPerformanceGraph','recentActvities']
 const labels = { 'Roles & permissions':'Roles & Permissions', 'Department Managment':'Department Management', TeamWorLoad:'Team Workload', ProjectJourney:'Project Journey', ProjectPerformanceGraph:'Project Performance Graph', recentActvities:'Recent Activities' }

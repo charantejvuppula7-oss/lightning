@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.throttling import ScopedRateThrottle
+from apps.core.throttling import EndpointRateThrottle, LoginIdentifierThrottle
 from rest_framework.views import APIView
 
 from apps.users.serializers import UserSerializer
@@ -48,6 +48,7 @@ class LoginView(APIView):
     """
     permission_classes = [AllowAny]
     authentication_classes = []
+    throttle_classes = [EndpointRateThrottle, LoginIdentifierThrottle]
 
     def get_authenticate_header(self, request):
         """Declare Session authentication scheme for 401 response headers."""
@@ -113,7 +114,6 @@ class PasswordResetRequestView(APIView):
     """
     permission_classes = [AllowAny]
     authentication_classes = []
-    throttle_classes = [ScopedRateThrottle]
     throttle_scope = 'password_reset_request'
 
     def post(self, request):
@@ -132,6 +132,7 @@ class PasswordResetRequestView(APIView):
         return Response({
             'account_exists': True,
             'code_sent': True,
+            'resend_after': 60,
             'message': 'A verification code has been sent to the account email.',
         })
 
@@ -142,7 +143,6 @@ class PasswordResetVerifyView(APIView):
     """
     permission_classes = [AllowAny]
     authentication_classes = []
-    throttle_classes = [ScopedRateThrottle]
     throttle_scope = 'password_reset_verify'
 
     def post(self, request):
@@ -172,7 +172,6 @@ class PasswordResetConfirmView(APIView):
     """
     permission_classes = [AllowAny]
     authentication_classes = []
-    throttle_classes = [ScopedRateThrottle]
     throttle_scope = 'password_reset_confirm'
 
     def post(self, request):

@@ -1,40 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { notificationService } from './notificationService.js';
 
-/* styling */
-const tailwindStyling = {
-  "notification": [
-    "[width:32px]",
-    "[height:32px]",
-    "[border:0]",
-    "[background:transparent]",
-    "[color:var(--color-slate-500)]",
-    "[cursor:pointer]",
-    "[display:grid]",
-    "[place-items:center]",
-    "[&_.material-symbols-outlined]:[font-size:20px]"
-  ],
-  "priority": [
-    "[display:inline-flex]",
-    "[min-width:73px]",
-    "[height:36px]",
-    "[align-items:center]",
-    "[justify-content:center]",
-    "[border-radius:9px]",
-    "[font-size:11px]",
-    "[&.low]:[background:#c9d77f]",
-    "[&.high]:[background:#ef777b]",
-    "[&.medium]:[background:#bdc8f7]"
-  ]
-}
-const styling = value => {
-  const classes = typeof value === 'string' ? value : ''
-  const utilities = classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])
-  return [...new Set([...classes.split(/\s+/), ...utilities])].filter(Boolean).join(' ')
-}
-
-
-
 function getTimeAgo(timestamp) {
   if (!timestamp) return "Just now";
   const diff = Math.floor((Date.now() - new Date(timestamp).getTime()) / 1000);
@@ -181,46 +147,19 @@ export default function NotificationView({ searchQuery = "" }) {
 
   return (
     <div
-      className={styling("notification-view-container")}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        padding: "18px 20px",
-        gap: "8px",
-        background: "var(--color-white)",
-        borderRadius: "12px",
-        border: "1px solid var(--color-slate-200)",
-        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.03)",
-        maxWidth: "100%",
-        width: "100%",
-        boxSizing: "border-box",
-        fontFamily: "'Inter', sans-serif",
-      }}
+      className={"notification-view-container" + " " + "flex! flex-col! items-start! p-[18px_20px]! gap-[8px]! [background:var(--color-white)]! rounded-[12px]! [border:1px_solid_var(--color-slate-200)]! [box-shadow:0_1px_3px_rgba(0,_0,_0,_0.02),_0_1px_2px_rgba(0,_0,_0,_0.03)]! max-w-[100%]! w-full! box-border! [font-family:'Inter',_sans-serif]!"}
+
     >
       {/* ── Header Section ── */}
-      <div style={{ width: "100%", marginBottom: "4px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      <div className="w-full! mb-[4px]! flex! justify-between! items-start!">
         <div>
           <h1
-            style={{
-              fontSize: "20px",
-              fontWeight: "700",
-              color: "var(--color-slate-900)",
-              margin: "0 0 4px 0",
-              lineHeight: "28px",
-              letterSpacing: "-0.01em",
-            }}
+            className="text-[20px]! font-bold! [color:var(--color-slate-900)]! m-[0_0_4px_0]! leading-[28px]! tracking-[-0.01em]!"
           >
             Notifications
           </h1>
           <p
-            style={{
-              fontSize: "13px",
-              color: "var(--color-slate-500)",
-              margin: 0,
-              fontWeight: "400",
-              lineHeight: "18px",
-            }}
+            className="text-[13px]! [color:var(--color-slate-500)]! m-0! font-normal! leading-[18px]!"
           >
             {unreadCount > 0
               ? `${unreadCount} unread notification${unreadCount !== 1 ? "s" : ""}`
@@ -231,20 +170,8 @@ export default function NotificationView({ searchQuery = "" }) {
           <button
             type="button"
             onClick={handleMarkAllRead}
-            style={{
-              background: "none",
-              border: "none",
-              color: "var(--color-primary)",
-              fontSize: "13px",
-              fontWeight: "600",
-              cursor: "pointer",
-              padding: "4px 2px",
-              fontFamily: "inherit",
-              whiteSpace: "nowrap",
-              marginTop: "4px",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.textDecoration = "underline"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.textDecoration = "none"; }}
+            className={"[background:none]! border-0! [color:var(--color-primary)]! text-[13px]! font-semibold! cursor-pointer! p-[4px_2px]! [font-family:inherit]! whitespace-nowrap! mt-[4px]!" + ' ' + "hover:underline!"}
+
           >
             Mark all read
           </button>
@@ -253,50 +180,24 @@ export default function NotificationView({ searchQuery = "" }) {
 
       {/* ── Tabs Navigation Bar ── */}
       <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "28px",
-          width: "100%",
-          borderBottom: "1px solid var(--color-slate-200)",
-          boxSizing: "border-box",
-          paddingBottom: "0px",
-          marginTop: "6px",
-          marginBottom: "6px",
-        }}
+        className="flex! items-center! gap-[28px]! w-full! [border-bottom:1px_solid_var(--color-slate-200)]! box-border! pb-[0px]! mt-[6px]! mb-[6px]!"
       >
         {/* Tab 1: All */}
         <button
           type="button"
           onClick={() => setActiveTab("all")}
-          style={{
-            background: "none",
-            border: "none",
-            outline: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "8px 2px 10px 2px",
-            fontSize: "13.5px",
-            fontWeight: activeTab === "all" ? "600" : "500",
-            color: activeTab === "all" ? "var(--color-primary)" : "var(--color-slate-600)",
-            borderBottom: activeTab === "all" ? "2.5px solid var(--color-primary)" : "2.5px solid transparent",
-            marginBottom: "-1px",
-            transition: "all 0.15s ease",
-          }}
+          className="[background:none]! border-0! outline-none! cursor-pointer! flex! items-center! gap-[8px]! p-[8px_2px_10px_2px]! text-[13.5px]! mb-[-1px]! [transition:all_0.15s_ease]!" style={{
+  fontWeight: activeTab === "all" ? "600" : "500",
+  color: activeTab === "all" ? "var(--color-primary)" : "var(--color-slate-600)",
+  borderBottom: activeTab === "all" ? "2.5px solid var(--color-primary)" : "2.5px solid transparent"
+}}
         >
           <span>All</span>
           <span
-            style={{
-              backgroundColor: activeTab === "all" ? "var(--color-primary-subtle)" : "var(--color-slate-100)",
-              color: activeTab === "all" ? "var(--color-primary)" : "var(--color-slate-500)",
-              borderRadius: "12px",
-              padding: "2px 7px",
-              fontSize: "11px",
-              fontWeight: "600",
-              lineHeight: "14px",
-            }}
+            className="rounded-[12px]! p-[2px_7px]! text-[11px]! font-semibold! leading-[14px]!" style={{
+  backgroundColor: activeTab === "all" ? "var(--color-primary-subtle)" : "var(--color-slate-100)",
+  color: activeTab === "all" ? "var(--color-primary)" : "var(--color-slate-500)"
+}}
           >
             {allCount}
           </span>
@@ -306,34 +207,18 @@ export default function NotificationView({ searchQuery = "" }) {
         <button
           type="button"
           onClick={() => setActiveTab("assigned")}
-          style={{
-            background: "none",
-            border: "none",
-            outline: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "8px 2px 10px 2px",
-            fontSize: "13.5px",
-            fontWeight: activeTab === "assigned" ? "600" : "500",
-            color: activeTab === "assigned" ? "var(--color-primary)" : "var(--color-slate-600)",
-            borderBottom: activeTab === "assigned" ? "2.5px solid var(--color-primary)" : "2.5px solid transparent",
-            marginBottom: "-1px",
-            transition: "all 0.15s ease",
-          }}
+          className="[background:none]! border-0! outline-none! cursor-pointer! flex! items-center! gap-[8px]! p-[8px_2px_10px_2px]! text-[13.5px]! mb-[-1px]! [transition:all_0.15s_ease]!" style={{
+  fontWeight: activeTab === "assigned" ? "600" : "500",
+  color: activeTab === "assigned" ? "var(--color-primary)" : "var(--color-slate-600)",
+  borderBottom: activeTab === "assigned" ? "2.5px solid var(--color-primary)" : "2.5px solid transparent"
+}}
         >
           <span>Assigned to me</span>
           <span
-            style={{
-              backgroundColor: activeTab === "assigned" ? "var(--color-primary-subtle)" : "var(--color-slate-100)",
-              color: activeTab === "assigned" ? "var(--color-primary)" : "var(--color-slate-500)",
-              borderRadius: "12px",
-              padding: "2px 7px",
-              fontSize: "11px",
-              fontWeight: "600",
-              lineHeight: "14px",
-            }}
+            className="rounded-[12px]! p-[2px_7px]! text-[11px]! font-semibold! leading-[14px]!" style={{
+  backgroundColor: activeTab === "assigned" ? "var(--color-primary-subtle)" : "var(--color-slate-100)",
+  color: activeTab === "assigned" ? "var(--color-primary)" : "var(--color-slate-500)"
+}}
           >
             {assignedCount}
           </span>
@@ -343,34 +228,18 @@ export default function NotificationView({ searchQuery = "" }) {
         <button
           type="button"
           onClick={() => setActiveTab("mentions")}
-          style={{
-            background: "none",
-            border: "none",
-            outline: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "8px 2px 10px 2px",
-            fontSize: "13.5px",
-            fontWeight: activeTab === "mentions" ? "600" : "500",
-            color: activeTab === "mentions" ? "var(--color-primary)" : "var(--color-slate-600)",
-            borderBottom: activeTab === "mentions" ? "2.5px solid var(--color-primary)" : "2.5px solid transparent",
-            marginBottom: "-1px",
-            transition: "all 0.15s ease",
-          }}
+          className="[background:none]! border-0! outline-none! cursor-pointer! flex! items-center! gap-[8px]! p-[8px_2px_10px_2px]! text-[13.5px]! mb-[-1px]! [transition:all_0.15s_ease]!" style={{
+  fontWeight: activeTab === "mentions" ? "600" : "500",
+  color: activeTab === "mentions" ? "var(--color-primary)" : "var(--color-slate-600)",
+  borderBottom: activeTab === "mentions" ? "2.5px solid var(--color-primary)" : "2.5px solid transparent"
+}}
         >
           <span>Mentions</span>
           <span
-            style={{
-              backgroundColor: activeTab === "mentions" ? "var(--color-primary-subtle)" : "var(--color-slate-100)",
-              color: activeTab === "mentions" ? "var(--color-primary)" : "var(--color-slate-500)",
-              borderRadius: "12px",
-              padding: "2px 7px",
-              fontSize: "11px",
-              fontWeight: "600",
-              lineHeight: "14px",
-            }}
+            className="rounded-[12px]! p-[2px_7px]! text-[11px]! font-semibold! leading-[14px]!" style={{
+  backgroundColor: activeTab === "mentions" ? "var(--color-primary-subtle)" : "var(--color-slate-100)",
+  color: activeTab === "mentions" ? "var(--color-primary)" : "var(--color-slate-500)"
+}}
           >
             {mentionsCount}
           </span>
@@ -378,116 +247,66 @@ export default function NotificationView({ searchQuery = "" }) {
       </div>
 
       {/* ── Notification Groups by Section ── */}
-      <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "10px" }}>
+      <div className="w-full! flex! flex-col! gap-[10px]!">
         {loading ? (
           <div
-            style={{
-              padding: "36px 16px",
-              textAlign: "center",
-              color: "var(--color-slate-500)",
-              fontSize: "14px",
-            }}
+            className="p-[36px_16px]! text-center! [color:var(--color-slate-500)]! text-[14px]!"
           >
             Loading notifications...
           </div>
         ) : Object.keys(groupedSections).length === 0 ? (
           <div
-            style={{
-              padding: "36px 16px",
-              textAlign: "center",
-              color: "var(--color-slate-400)",
-              fontSize: "14px",
-            }}
+            className="p-[36px_16px]! text-center! [color:var(--color-slate-400)]! text-[14px]!"
           >
             {loadError ? 'Unable to load notifications. Please try again.' : 'No notifications found in this view.'}
           </div>
         ) : (
           Object.entries(groupedSections).map(([sectionName, items]) => (
-            <div key={sectionName} style={{ width: "100%" }}>
+            <div key={sectionName} className="w-full!">
               {/* Section Header Row */}
               <div
-                style={{
-                  width: "100%",
-                  backgroundColor: "var(--color-slate-50)",
-                  padding: "7px 12px",
-                  borderRadius: "4px",
-                  boxSizing: "border-box",
-                  marginBottom: "6px",
-                  marginTop: sectionName === "YESTERDAY" ? "8px" : "2px",
-                }}
+                className="w-full! [background-color:var(--color-slate-50)]! p-[7px_12px]! rounded-[4px]! box-border! mb-[6px]!" style={{
+  marginTop: sectionName === "YESTERDAY" ? "8px" : "2px"
+}}
               >
                 <span
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: "700",
-                    letterSpacing: "0.06em",
-                    color: "var(--color-slate-500)",
-                    textTransform: "uppercase",
-                  }}
+                  className="text-[11px]! font-bold! tracking-[0.06em]! [color:var(--color-slate-500)]! [text-transform:uppercase]!"
                 >
                   {sectionName}
                 </span>
               </div>
 
               {/* Section Item Rows */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <div className="flex! flex-col! gap-[4px]!">
                 {items.map((item) => {
                   const isBgBlue = item.isHighlighted;
                   return (
                     <div
                       key={item.id}
                       onClick={() => toggleItemHighlight(item.id)}
-                      style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: "12px",
-                        padding: "11px 14px",
-                        borderRadius: "4px",
-                        backgroundColor: isBgBlue ? "#edf5ff" : "var(--color-white)",
-                        transition: "background-color 0.15s ease",
-                        cursor: "pointer",
-                        boxSizing: "border-box",
-                        width: "100%",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isBgBlue) {
-                          e.currentTarget.style.backgroundColor = "var(--color-slate-50)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isBgBlue) {
-                          e.currentTarget.style.backgroundColor = "var(--color-white)";
-                        }
-                      }}
+                      className={"flex! items-start! gap-[12px]! p-[11px_14px]! rounded-[4px]! [transition:background-color_0.15s_ease]! cursor-pointer! box-border! w-full!" + ' ' + (!isBgBlue ? "hover:[background-color:var(--color-slate-50)]!" : '')} style={{
+  backgroundColor: isBgBlue ? "#edf5ff" : "var(--color-white)"
+}}
+
                     >
                       {/* Left Dot Indicator */}
                       <div
-                        style={{
-                          width: "6px",
-                          height: "6px",
-                          borderRadius: "50%",
-                          backgroundColor: item.isBlocking ? "var(--color-danger)" : "var(--color-primary)",
-                          marginTop: "6px",
-                          flexShrink: 0,
-                        }}
+                        className="w-[6px]! h-[6px]! rounded-[50%]! mt-[6px]! shrink-0!" style={{
+  backgroundColor: item.isBlocking ? "var(--color-danger)" : "var(--color-primary)"
+}}
                       />
 
                       {/* Content Section */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="flex-1! min-w-0!">
                         {/* Text Line */}
                         <div
-                          style={{
-                            fontSize: "13.5px",
-                            color: "var(--color-slate-800)",
-                            lineHeight: "1.45",
-                            fontWeight: "400",
-                          }}
+                          className="text-[13.5px]! [color:var(--color-slate-800)]! leading-[1.45]! font-normal!"
                         >
-                          <strong style={{ fontWeight: "700", color: "var(--color-slate-900)" }}>
+                          <strong className="font-bold! [color:var(--color-slate-900)]!">
                             {item.sender}
                           </strong>{" "}
                           {item.action}{" "}
-                          <strong style={{ fontWeight: "700", color: "var(--color-slate-900)" }}>
+                          <strong className="font-bold! [color:var(--color-slate-900)]!">
                             {item.target}
                           </strong>{" "}
                           {item.suffix}
@@ -495,14 +314,7 @@ export default function NotificationView({ searchQuery = "" }) {
 
                         {/* Metadata row (Project & Timestamp) */}
                         <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "14px",
-                            marginTop: "3px",
-                            fontSize: "12px",
-                            color: "var(--color-slate-400)",
-                          }}
+                          className="flex! items-center! gap-[14px]! mt-[3px]! text-[12px]! [color:var(--color-slate-400)]!"
                         >
                           <span>{item.project}</span>
                           <span>{item.timeAgo}</span>
@@ -519,5 +331,3 @@ export default function NotificationView({ searchQuery = "" }) {
     </div>
   );
 }
-
-

@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
 
-
 /**
  * TaskReview Dialog Modal ("Send for review")
  *
@@ -145,20 +144,20 @@ export default function TaskReview({
   };
 
   return (
-    <div style={styles.overlay} onClick={handleClose}>
-      <div style={styles.card} onClick={(e) => e.stopPropagation()}>
+    <div className="fixed! [inset:0]! [background-color:rgba(15,_23,_42,_0.45)]! [backdrop-filter:blur(2px)]! [-webkit-backdrop-filter:blur(2px)]! flex! items-center! justify-center! z-[9999]! p-[16px]! box-border!" onClick={handleClose}>
+      <div className="[background-color:#FFFFFF]! rounded-[12px]! [box-shadow:0_20px_25px_-5px_rgba(0,_0,_0,_0.1),_0_8px_10px_-6px_rgba(0,_0,_0,_0.05)]! w-full! max-w-[420px]! p-[20px_22px_20px]! box-border! [font-family:-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_Roboto,_'Inter',_sans-serif]!" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div style={styles.header}>
+        <div className="flex! items-start! justify-between!">
           <div>
-            <h3 style={styles.title}>Send for review</h3>
-            <p style={styles.subtitle}>
+            <h3 className="text-[17px]! font-bold! [color:#111827]! m-0! leading-[1.25]!">Send for review</h3>
+            <p className="text-[13px]! [color:#6B7280]! m-[4px_0_0_0]! leading-[1.4]!">
               Add context, files, or links for others to review.
             </p>
           </div>
           <button
             type="button"
             onClick={handleClose}
-            style={styles.closeButton}
+            className="[background:none]! border-0! text-[22px]! leading-[1]! [color:#6B7280]! cursor-pointer! p-[2px_6px]! rounded-[6px]! flex! items-center! justify-center! [transition:color_0.15s,_background-color_0.15s]!"
             title="Close"
           >
             ×
@@ -166,12 +165,12 @@ export default function TaskReview({
         </div>
 
         {/* Divider */}
-        <div style={styles.divider} />
+        <div className="h-[1px]! [background-color:#E5E7EB]! m-[14px_0_16px]!" />
 
         {/* Description Field */}
-        <div style={{ marginBottom: "14px" }}>
-          <label style={styles.label}>
-            Description <span style={styles.requiredAsterisk}>*</span>
+        <div className="mb-[14px]!">
+          <label className="text-[13.5px]! font-semibold! [color:#111827]! block! mb-[6px]!">
+            Description <span className="[color:#EF4444]! font-semibold! ml-[2px]!">*</span>
           </label>
           <input
             type="text"
@@ -180,17 +179,17 @@ export default function TaskReview({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="What’s this about?"
-            style={styles.input}
+            className="w-full! h-[42px]! p-[0_12px]! [border:1px_solid_#D1D5DB]! rounded-[8px]! text-[13.5px]! [color:#111827]! [background-color:#FFFFFF]! outline-none! box-border! [transition:border-color_0.15s,_box-shadow_0.15s]!"
           />
-          <div style={styles.charCount}>
+          <div className="text-right! text-[12px]! [color:#6B7280]! mt-[5px]!">
             {description.length}/200
           </div>
         </div>
 
         {/* Attachment Field */}
-        <div style={{ marginBottom: "20px" }}>
-          <label style={styles.label}>
-            Attachment <span style={styles.requiredAsterisk}>*</span>
+        <div className="mb-[20px]!">
+          <label className="text-[13.5px]! font-semibold! [color:#111827]! block! mb-[6px]!">
+            Attachment <span className="[color:#EF4444]! font-semibold! ml-[2px]!">*</span>
           </label>
 
           {/* Dashed Dropzone */}
@@ -202,11 +201,10 @@ export default function TaskReview({
             }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
-            style={{
-              ...styles.dropzone,
-              backgroundColor: isDragging ? "#F0F7FF" : "#FFFFFF",
-              borderColor: isDragging ? "#2563EB" : "#D1D5DB",
-            }}
+            className="[border:1.5px_dashed_#D1D5DB]! rounded-[8px]! p-[20px_14px_18px]! text-center! cursor-pointer! [transition:border-color_0.15s,_background-color_0.15s]! box-border! select-none!" style={{
+  backgroundColor: isDragging ? "#F0F7FF" : "#FFFFFF",
+  borderColor: isDragging ? "#2563EB" : "#D1D5DB"
+}}
           >
             {/* Paperclip Icon */}
             <svg
@@ -218,17 +216,13 @@ export default function TaskReview({
               strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
-              style={{
-                transform: "rotate(45deg)",
-                margin: "0 auto 8px auto",
-                display: "block",
-              }}
+              className="[transform:rotate(45deg)]! m-[0_auto_8px_auto]! block!"
             >
               <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
             </svg>
 
-            <div style={styles.uploadPrimaryText}>Click to upload</div>
-            <div style={styles.uploadSubText}>
+            <div className="text-[14.5px]! font-semibold! [color:#111827]! mb-[3px]!">Click to upload</div>
+            <div className="text-[12px]! [color:#6B7280]!">
               Any file type, up to 25 MB each
             </div>
 
@@ -236,16 +230,16 @@ export default function TaskReview({
               type="file"
               ref={fileInputRef}
               multiple
-              style={{ display: "none" }}
+              className="hidden!"
               onChange={handleFileSelect}
             />
           </div>
 
           {/* Attached Files List */}
           {attachedFiles.length > 0 && (
-            <div style={styles.chipsContainer}>
+            <div className="flex! flex-col! gap-[6px]! mt-[8px]!">
               {attachedFiles.map((file, idx) => (
-                <div key={idx} style={styles.fileChip}>
+                <div key={idx} className="flex! items-center! gap-[6px]! [background-color:#F3F4F6]! [border:1px_solid_#E5E7EB]! rounded-[6px]! p-[4px_8px]! text-[12px]! [color:#374151]!">
                   <svg
                     width="14"
                     height="14"
@@ -255,21 +249,21 @@ export default function TaskReview({
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    style={{ flexShrink: 0 }}
+                    className="shrink-0!"
                   >
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                     <polyline points="14 2 14 8 20 8" />
                   </svg>
-                  <span style={styles.chipText} title={file.name}>
+                  <span className="flex-1! overflow-hidden! text-ellipsis! whitespace-nowrap! font-medium!" title={file.name}>
                     {file.name}
                   </span>
-                  <span style={styles.chipFileSize}>
+                  <span className="text-[11px]! [color:#6B7280]! shrink-0!">
                     ({formatFileSize(file.size)})
                   </span>
                   <button
                     type="button"
                     onClick={() => handleRemoveFile(idx)}
-                    style={styles.chipRemoveBtn}
+                    className="[background:none]! border-0! [color:#9CA3AF]! cursor-pointer! text-[15px]! leading-[1]! p-[0_2px]! ml-[2px]! rounded-[3px]!"
                     title="Remove file"
                   >
                     ×
@@ -280,7 +274,7 @@ export default function TaskReview({
           )}
 
           {/* Link Input Field */}
-          <div style={styles.linkContainer}>
+          <div className="flex! items-center! [border:1px_solid_#D1D5DB]! rounded-[8px]! [background-color:#FFFFFF]! p-[0_10px]! h-[40px]! mt-[10px]! box-border!">
             <svg
               width="17"
               height="17"
@@ -290,7 +284,7 @@ export default function TaskReview({
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              style={{ flexShrink: 0, marginLeft: "4px" }}
+              className="shrink-0! ml-[4px]!"
             >
               <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
@@ -306,15 +300,15 @@ export default function TaskReview({
                   handleAddLink();
                 }
               }}
-              style={styles.linkInput}
+              className="border-0! outline-none! w-full! h-full! text-[13px]! [color:#111827]! ml-[8px]! [background-color:transparent]!"
             />
           </div>
 
           {/* Attached Links List */}
           {attachedLinks.length > 0 && (
-            <div style={styles.chipsContainer}>
+            <div className="flex! flex-col! gap-[6px]! mt-[8px]!">
               {attachedLinks.map((link, idx) => (
-                <div key={idx} style={styles.fileChip}>
+                <div key={idx} className="flex! items-center! gap-[6px]! [background-color:#F3F4F6]! [border:1px_solid_#E5E7EB]! rounded-[6px]! p-[4px_8px]! text-[12px]! [color:#374151]!">
                   <svg
                     width="14"
                     height="14"
@@ -324,7 +318,7 @@ export default function TaskReview({
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    style={{ flexShrink: 0 }}
+                    className="shrink-0!"
                   >
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
@@ -333,7 +327,7 @@ export default function TaskReview({
                     href={link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={styles.linkChipAnchor}
+                    className="flex-1! overflow-hidden! text-ellipsis! whitespace-nowrap! [color:#1558D6]! no-underline! font-medium!"
                     title={link}
                   >
                     {link}
@@ -341,7 +335,7 @@ export default function TaskReview({
                   <button
                     type="button"
                     onClick={() => handleRemoveLink(idx)}
-                    style={styles.chipRemoveBtn}
+                    className="[background:none]! border-0! [color:#9CA3AF]! cursor-pointer! text-[15px]! leading-[1]! p-[0_2px]! ml-[2px]! rounded-[3px]!"
                     title="Remove link"
                   >
                     ×
@@ -353,12 +347,12 @@ export default function TaskReview({
         </div>
 
         {/* Action Buttons */}
-        <div style={styles.actionsRow}>
+        <div className="flex! items-center! justify-end! gap-[10px]! mt-[8px]!">
           <button
             type="button"
             onClick={handleClose}
             disabled={isSubmitting}
-            style={styles.cancelBtn}
+            className="[background-color:#FFFFFF]! [color:#111827]! [border:1px_solid_#D1D5DB]! rounded-[8px]! p-[8px_18px]! text-[13.5px]! font-medium! cursor-pointer! [transition:background-color_0.15s,_border-color_0.15s]!"
           >
             Cancel
           </button>
@@ -366,7 +360,7 @@ export default function TaskReview({
             type="button"
             onClick={handleSend}
             disabled={isSubmitting}
-            style={styles.sendBtn}
+            className="[background-color:#1558D6]! [color:#FFFFFF]! border-0! rounded-[8px]! p-[8px_24px]! text-[13.5px]! font-semibold! cursor-pointer! [box-shadow:0_1px_2px_rgba(21,_88,_214,_0.25)]! [transition:background-color_0.15s,_opacity_0.15s]!"
           >
             {isSubmitting ? "Sending..." : "Send"}
           </button>
@@ -375,219 +369,3 @@ export default function TaskReview({
     </div>
   );
 }
-
-const styles = {
-  overlay: {
-    position: "fixed",
-    inset: 0,
-    backgroundColor: "rgba(15, 23, 42, 0.45)",
-    backdropFilter: "blur(2px)",
-    WebkitBackdropFilter: "blur(2px)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 9999,
-    padding: "16px",
-    boxSizing: "border-box",
-  },
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: "12px",
-    boxShadow:
-      "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)",
-    width: "100%",
-    maxWidth: "420px",
-    padding: "20px 22px 20px",
-    boxSizing: "border-box",
-    fontFamily:
-      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif",
-  },
-  header: {
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-  },
-  title: {
-    fontSize: "17px",
-    fontWeight: "700",
-    color: "#111827",
-    margin: 0,
-    lineHeight: "1.25",
-  },
-  subtitle: {
-    fontSize: "13px",
-    color: "#6B7280",
-    margin: "4px 0 0 0",
-    lineHeight: "1.4",
-  },
-  closeButton: {
-    background: "none",
-    border: "none",
-    fontSize: "22px",
-    lineHeight: "1",
-    color: "#6B7280",
-    cursor: "pointer",
-    padding: "2px 6px",
-    borderRadius: "6px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    transition: "color 0.15s, background-color 0.15s",
-  },
-  divider: {
-    height: "1px",
-    backgroundColor: "#E5E7EB",
-    margin: "14px 0 16px",
-  },
-  label: {
-    fontSize: "13.5px",
-    fontWeight: "600",
-    color: "#111827",
-    display: "block",
-    marginBottom: "6px",
-  },
-  requiredAsterisk: {
-    color: "#EF4444",
-    fontWeight: "600",
-    marginLeft: "2px",
-  },
-  input: {
-    width: "100%",
-    height: "42px",
-    padding: "0 12px",
-    border: "1px solid #D1D5DB",
-    borderRadius: "8px",
-    fontSize: "13.5px",
-    color: "#111827",
-    backgroundColor: "#FFFFFF",
-    outline: "none",
-    boxSizing: "border-box",
-    transition: "border-color 0.15s, box-shadow 0.15s",
-  },
-  charCount: {
-    textAlign: "right",
-    fontSize: "12px",
-    color: "#6B7280",
-    marginTop: "5px",
-  },
-  dropzone: {
-    border: "1.5px dashed #D1D5DB",
-    borderRadius: "8px",
-    padding: "20px 14px 18px",
-    textAlign: "center",
-    cursor: "pointer",
-    transition: "border-color 0.15s, background-color 0.15s",
-    boxSizing: "border-box",
-    userSelect: "none",
-  },
-  uploadPrimaryText: {
-    fontSize: "14.5px",
-    fontWeight: "600",
-    color: "#111827",
-    marginBottom: "3px",
-  },
-  uploadSubText: {
-    fontSize: "12px",
-    color: "#6B7280",
-  },
-  linkContainer: {
-    display: "flex",
-    alignItems: "center",
-    border: "1px solid #D1D5DB",
-    borderRadius: "8px",
-    backgroundColor: "#FFFFFF",
-    padding: "0 10px",
-    height: "40px",
-    marginTop: "10px",
-    boxSizing: "border-box",
-  },
-  linkInput: {
-    border: "none",
-    outline: "none",
-    width: "100%",
-    height: "100%",
-    fontSize: "13px",
-    color: "#111827",
-    marginLeft: "8px",
-    backgroundColor: "transparent",
-  },
-  chipsContainer: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
-    marginTop: "8px",
-  },
-  fileChip: {
-    display: "flex",
-    alignItems: "center",
-    gap: "6px",
-    backgroundColor: "#F3F4F6",
-    border: "1px solid #E5E7EB",
-    borderRadius: "6px",
-    padding: "4px 8px",
-    fontSize: "12px",
-    color: "#374151",
-  },
-  chipText: {
-    flex: 1,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    fontWeight: "500",
-  },
-  chipFileSize: {
-    fontSize: "11px",
-    color: "#6B7280",
-    flexShrink: 0,
-  },
-  linkChipAnchor: {
-    flex: 1,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    color: "#1558D6",
-    textDecoration: "none",
-    fontWeight: "500",
-  },
-  chipRemoveBtn: {
-    background: "none",
-    border: "none",
-    color: "#9CA3AF",
-    cursor: "pointer",
-    fontSize: "15px",
-    lineHeight: 1,
-    padding: "0 2px",
-    marginLeft: "2px",
-    borderRadius: "3px",
-  },
-  actionsRow: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: "10px",
-    marginTop: "8px",
-  },
-  cancelBtn: {
-    backgroundColor: "#FFFFFF",
-    color: "#111827",
-    border: "1px solid #D1D5DB",
-    borderRadius: "8px",
-    padding: "8px 18px",
-    fontSize: "13.5px",
-    fontWeight: "500",
-    cursor: "pointer",
-    transition: "background-color 0.15s, border-color 0.15s",
-  },
-  sendBtn: {
-    backgroundColor: "#1558D6",
-    color: "#FFFFFF",
-    border: "none",
-    borderRadius: "8px",
-    padding: "8px 24px",
-    fontSize: "13.5px",
-    fontWeight: "600",
-    cursor: "pointer",
-    boxShadow: "0 1px 2px rgba(21, 88, 214, 0.25)",
-    transition: "background-color 0.15s, opacity 0.15s",
-  },
-};

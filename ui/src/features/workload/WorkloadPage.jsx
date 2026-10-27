@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiList, errorMessage } from '../../services/api/apiClient.js';
+import { apiList, errorMessage } from '../../shared/api/apiClient.js';
 import { ProjectSelectionContext } from '../projects/projectSelectionContext.js';
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -139,7 +139,6 @@ export default function WorkloadPage() {
 
   // Reset to page 1 when filter/search changes
 
-
   const counts = {
     All: workloadData.length,
     Overloaded: workloadData.filter((u) => u.status === "Overloaded").length,
@@ -196,140 +195,41 @@ export default function WorkloadPage() {
 
   // ── Render ─────────────────────────────────────────────────────────
   return (
-    <div style={{ width: "100%", fontFamily: "Inter, sans-serif" }}>
-      <style>{`
-        * { box-sizing: border-box; }
+    <div className="w-full! [font-family:Inter,_sans-serif]!">
 
-        .material-symbols-outlined {
-          font-family: 'Material Symbols Outlined';
-          font-weight: normal;
-          font-style: normal;
-          font-size: 24px;
-          line-height: 1;
-          letter-spacing: normal;
-          text-transform: none;
-          display: inline-block;
-          white-space: nowrap;
-          word-wrap: normal;
-          direction: ltr;
-          -webkit-font-smoothing: antialiased;
-        }
-        .table-row-hover:hover { background-color: var(--color-slate-50) !important; }
-        .wl-page-btn:hover:not(:disabled) { background-color: var(--color-slate-100); }
-        @keyframes wl-spin {
-          to { transform: rotate(360deg); }
-        }
-        .wl-spinner {
-          display: inline-block;
-          width: 20px; height: 20px;
-          border: 2px solid var(--color-slate-200);
-          border-top-color: var(--color-primary);
-          border-radius: 50%;
-          animation: wl-spin 0.7s linear infinite;
-        }
-
-        /* Right-side page scrollbar */
-        .wl-scroll-canvas {
-          scrollbar-width: thin;
-          scrollbar-color: var(--color-slate-300) var(--color-slate-100);
-        }
-        .wl-scroll-canvas::-webkit-scrollbar {
-          width: 8px;
-        }
-        .wl-scroll-canvas::-webkit-scrollbar-track {
-          background: var(--color-slate-100);
-        }
-        .wl-scroll-canvas::-webkit-scrollbar-thumb {
-          background: var(--color-slate-300);
-          border-radius: 4px;
-        }
-        .wl-scroll-canvas::-webkit-scrollbar-thumb:hover {
-          background: var(--color-slate-400);
-        }
-
-        /* Table card right-side scrollbar */
-        .wl-table-scroll {
-          overflow-y: auto;
-          scrollbar-width: thin;
-          scrollbar-color: var(--color-slate-300) var(--color-slate-50);
-        }
-        .wl-table-scroll::-webkit-scrollbar {
-          width: 8px;
-        }
-        .wl-table-scroll::-webkit-scrollbar-track {
-          background: var(--color-slate-50);
-          border-top-right-radius: 12px;
-          border-bottom-right-radius: 12px;
-        }
-        .wl-table-scroll::-webkit-scrollbar-thumb {
-          background: var(--color-slate-300);
-          border-radius: 4px;
-        }
-        .wl-table-scroll::-webkit-scrollbar-thumb:hover {
-          background: var(--color-slate-400);
-        }
-
-        /* Slide-over Drawer animation */
-        @keyframes wl-slide-in {
-          from {
-            transform: translateX(100%);
-          }
-          to {
-            transform: translateX(0);
-          }
-        }
-        .wl-drawer-panel {
-          animation: wl-slide-in 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-          scrollbar-width: thin;
-          scrollbar-color: var(--color-slate-300) var(--color-white);
-        }
-        .wl-drawer-panel::-webkit-scrollbar {
-          width: 6px;
-        }
-        .wl-drawer-panel::-webkit-scrollbar-track {
-          background: var(--color-white);
-        }
-        .wl-drawer-panel::-webkit-scrollbar-thumb {
-          background: var(--color-slate-300);
-          border-radius: 3px;
-        }
-      `}</style>
-
-      <div style={{ width: "100%", minWidth: 0 }}>
+      <div className="w-full! min-w-0!">
         {/* Content Body */}
-        <div style={styles.contentBody}>
+        <div className="p-[32px]! flex-1!">
           {/* Title */}
-          <div style={styles.titleSection}>
-            <h1 style={styles.pageTitle}>Team Workload</h1>
-            <p style={styles.pageSubtitle}>
+          <div className="mb-[32px]!">
+            <h1 className="text-[24px]! font-bold! [color:var(--color-slate-900)]! m-[0_0_4px_0]!">Team Workload</h1>
+            <p className="text-[13px]! [color:var(--color-slate-500)]! m-0! leading-[1.5]!">
               Current week capacity based on scheduled task points in this project.
             </p>
           </div>
 
           {/* Filters & Actions Row */}
-          <div style={styles.filtersBar}>
+          <div className="flex! justify-between! items-center! mb-[20px]! gap-[16px]! flex-wrap!">
             {/* Status Pills */}
-            <div style={styles.pillsContainer}>
+            <div className="flex! gap-[8px]! items-center! flex-wrap!">
               {["All", "Overloaded", "Balanced", "Underloaded", "Idle"].map((pill) => {
                 const isActive = activeFilter === pill;
                 return (
                   <button
                     key={pill}
                     onClick={() => setActiveFilter(pill)}
-                    style={{
-                      ...styles.pillBtn,
-                      backgroundColor: isActive ? "var(--color-slate-900)" : "var(--color-white)",
-                      color: isActive ? "var(--color-white)" : "var(--color-slate-600)",
-                      borderColor: isActive ? "var(--color-slate-900)" : "var(--color-slate-300)",
-                    }}
+                    className="flex! items-center! p-[8px_16px]! rounded-[20px]! text-[13px]! font-semibold! cursor-pointer! [border:1px_solid]! outline-none! [transition:all_0.15s_ease]!" style={{
+  backgroundColor: isActive ? "var(--color-slate-900)" : "var(--color-white)",
+  color: isActive ? "var(--color-white)" : "var(--color-slate-600)",
+  borderColor: isActive ? "var(--color-slate-900)" : "var(--color-slate-300)"
+}}
                   >
                     {pill}
                     <span
-                      style={{
-                        ...styles.pillCountBadge,
-                        backgroundColor: isActive ? "var(--color-slate-700)" : "var(--color-slate-100)",
-                        color: isActive ? "var(--color-white)" : "var(--color-slate-600)",
-                      }}
+                      className="text-[11px]! p-[2px_6px]! rounded-[10px]! ml-[8px]! font-bold!" style={{
+  backgroundColor: isActive ? "var(--color-slate-700)" : "var(--color-slate-100)",
+  color: isActive ? "var(--color-white)" : "var(--color-slate-600)"
+}}
                     >
                       {counts[pill]}
                     </span>
@@ -339,9 +239,9 @@ export default function WorkloadPage() {
             </div>
 
             {/* Search & Sort */}
-            <div style={styles.rightFilters}>
-              <div style={styles.innerSearchWrapper}>
-                <span className="material-symbols-outlined" style={styles.innerSearchIcon}>
+            <div className="flex! items-center! gap-[12px]!">
+              <div className="relative! w-[220px]!">
+                <span className={"material-symbols-outlined" + " " + "absolute! left-[10px]! top-[50%]! [transform:translateY(-50%)]! [color:var(--color-slate-400)]! text-[18px]!"} >
                   search
                 </span>
                 <input
@@ -349,21 +249,21 @@ export default function WorkloadPage() {
                   placeholder="Search name or role"
                   value={searchQuery}
                   onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                  style={styles.innerSearchInput}
+                  className="w-full! h-[36px]! pl-[32px]! pr-[10px]! [border:1px_solid_var(--color-slate-300)]! rounded-[8px]! text-[13px]! outline-none! [color:var(--color-slate-800)]! [background-color:var(--color-white)]! [font-family:inherit]!"
                 />
               </div>
-              <button onClick={() => setSortAsc(!sortAsc)} style={styles.sortBtn}>
-                <span className="material-symbols-outlined" style={styles.sortIcon}>
+              <button onClick={() => setSortAsc(!sortAsc)} className="flex! items-center! gap-[6px]! h-[36px]! p-[0_12px]! [border:1px_solid_var(--color-slate-300)]! rounded-[8px]! [background-color:var(--color-white)]! text-[13px]! font-medium! [color:var(--color-slate-600)]! cursor-pointer! outline-none! [transition:all_0.15s_ease]!">
+                <span className={"material-symbols-outlined" + " " + "text-[18px]! [color:var(--color-slate-500)]!"} >
                   swap_vert
                 </span>
                 Load {sortAsc ? "↑" : "↓"}
               </button>
               <button
                 onClick={fetchWorkload}
-                style={{ ...styles.sortBtn, gap: "4px" }}
+                className="flex! items-center! gap-[4px]! h-[36px]! p-[0_12px]! [border:1px_solid_var(--color-slate-300)]! rounded-[8px]! [background-color:var(--color-white)]! text-[13px]! font-medium! [color:var(--color-slate-600)]! cursor-pointer! outline-none! [transition:all_0.15s_ease]!"
                 title="Refresh workload"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--color-slate-500)" }}>
+                <span className={"material-symbols-outlined" + " " + "text-[16px]! [color:var(--color-slate-500)]!"} >
                   refresh
                 </span>
               </button>
@@ -371,36 +271,36 @@ export default function WorkloadPage() {
           </div>
 
           {/* Table */}
-          <div className="wl-table-scroll" style={styles.tableCard}>
-            <table style={styles.table}>
+          <div className={"wl-table-scroll" + " " + "[background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-200)]! rounded-[12px]! overflow-y-auto! overflow-x-auto! max-h-[340px]! [box-shadow:0_1px_3px_0_rgba(0,0,0,0.05)]! relative!"} >
+            <table className="w-full! [border-collapse:collapse]! text-[13px]! text-left!">
               <thead>
                 <tr>
-                  <th style={{ ...styles.th, width: "28%" }}>User</th>
-                  <th style={{ ...styles.th, width: "15%" }}>Status</th>
-                  <th style={{ ...styles.th, width: "32%" }}>Workload</th>
-                  <th style={{ ...styles.th, width: "15%" }}>Task Days / Week</th>
-                  <th style={{ ...styles.th, width: "10%", textAlign: "center" }}>Action</th>
+                  <th className="p-[12px_18px]! [background-color:var(--color-primary-subtle)]! [color:var(--color-slate-600)]! font-semibold! text-[12px]! [border-bottom:1px_solid_var(--color-slate-200)]! sticky! top-[0]! z-[10]! w-[28%]!">User</th>
+                  <th className="p-[12px_18px]! [background-color:var(--color-primary-subtle)]! [color:var(--color-slate-600)]! font-semibold! text-[12px]! [border-bottom:1px_solid_var(--color-slate-200)]! sticky! top-[0]! z-[10]! w-[15%]!">Status</th>
+                  <th className="p-[12px_18px]! [background-color:var(--color-primary-subtle)]! [color:var(--color-slate-600)]! font-semibold! text-[12px]! [border-bottom:1px_solid_var(--color-slate-200)]! sticky! top-[0]! z-[10]! w-[32%]!">Workload</th>
+                  <th className="p-[12px_18px]! [background-color:var(--color-primary-subtle)]! [color:var(--color-slate-600)]! font-semibold! text-[12px]! [border-bottom:1px_solid_var(--color-slate-200)]! sticky! top-[0]! z-[10]! w-[15%]!">Task Days / Week</th>
+                  <th className="p-[12px_18px]! [background-color:var(--color-primary-subtle)]! [color:var(--color-slate-600)]! font-semibold! text-[12px]! [border-bottom:1px_solid_var(--color-slate-200)]! sticky! top-[0]! z-[10]! w-[10%]! text-center!">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="5" style={{ ...styles.emptyCell, padding: "40px" }}>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+                    <td colSpan="5" className="p-[40px]! text-center! [color:var(--color-slate-500)]! text-[14px]!">
+                      <div className="flex! flex-col! items-center! gap-[12px]!">
                         <span className="wl-spinner" />
-                        <span style={{ color: "var(--color-slate-400)", fontSize: "13px" }}>Loading workload data…</span>
+                        <span className="[color:var(--color-slate-400)]! text-[13px]!">Loading workload data…</span>
                       </div>
                     </td>
                   </tr>
                 ) : error ? (
                   <tr>
-                    <td colSpan="5" style={styles.emptyCell}>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
-                        <span className="material-symbols-outlined" style={{ color: "var(--color-danger)", fontSize: "32px" }}>
+                    <td colSpan="5" className="p-[32px]! text-center! [color:var(--color-slate-500)]! text-[14px]!">
+                      <div className="flex! flex-col! items-center! gap-[12px]!">
+                        <span className={"material-symbols-outlined" + " " + "[color:var(--color-danger)]! text-[32px]!"} >
                           error_outline
                         </span>
-                        <span style={{ color: "var(--color-danger)" }}>{error}</span>
-                        <button onClick={fetchWorkload} style={styles.sortBtn}>
+                        <span className="[color:var(--color-danger)]!">{error}</span>
+                        <button onClick={fetchWorkload} className="flex! items-center! gap-[6px]! h-[36px]! p-[0_12px]! [border:1px_solid_var(--color-slate-300)]! rounded-[8px]! [background-color:var(--color-white)]! text-[13px]! font-medium! [color:var(--color-slate-600)]! cursor-pointer! outline-none! [transition:all_0.15s_ease]!">
                           Retry
                         </button>
                       </div>
@@ -408,7 +308,7 @@ export default function WorkloadPage() {
                   </tr>
                 ) : pagedData.length === 0 ? (
                   <tr>
-                    <td colSpan="5" style={styles.emptyCell}>
+                    <td colSpan="5" className="p-[32px]! text-center! [color:var(--color-slate-500)]! text-[14px]!">
                       No users match the current filter.
                     </td>
                   </tr>
@@ -417,31 +317,21 @@ export default function WorkloadPage() {
                     const badge = getStatusBadgeStyle(row.status);
                     const globalIdx = (safeCurrentPage - 1) * PAGE_SIZE + idx;
                     return (
-                      <tr key={row.id} className="table-row-hover" style={styles.tr}>
+                      <tr key={row.id} className={"table-row-hover" + " " + "[border-bottom:1px_solid_var(--color-slate-100)]! [transition:background-color_0.15s_ease]!"} >
                         {/* User cell */}
-                        <td style={styles.td}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <td className="p-[14px_18px]! [color:var(--color-slate-900)]! [vertical-align:middle]!">
+                          <div className="flex! items-center! gap-[10px]!">
                             <div
-                              style={{
-                                width: "32px",
-                                height: "32px",
-                                borderRadius: "50%",
-                                backgroundColor: avatarColor(globalIdx),
-                                color: "var(--color-white)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontWeight: "700",
-                                fontSize: "12px",
-                                flexShrink: 0,
-                              }}
+                              className="w-[32px]! h-[32px]! rounded-[50%]! [color:var(--color-white)]! flex! items-center! justify-center! font-bold! text-[12px]! shrink-0!" style={{
+  backgroundColor: avatarColor(globalIdx)
+}}
                             >
                               {getInitials(row.name)}
                             </div>
                             <div>
-                              <div style={{ fontWeight: "700", color: "var(--color-slate-900)" }}>{row.name}</div>
+                              <div className="font-bold! [color:var(--color-slate-900)]!">{row.name}</div>
                               {row.designation && (
-                                <div style={{ fontSize: "11px", color: "var(--color-slate-400)", marginTop: "1px" }}>
+                                <div className="text-[11px]! [color:var(--color-slate-400)]! mt-[1px]!">
                                   {row.designation}
                                 </div>
                               )}
@@ -450,52 +340,51 @@ export default function WorkloadPage() {
                         </td>
 
                         {/* Status badge */}
-                        <td style={styles.td}>
+                        <td className="p-[14px_18px]! [color:var(--color-slate-900)]! [vertical-align:middle]!">
                           <span
-                            style={{
-                              ...styles.statusBadge,
-                              backgroundColor: badge.backgroundColor,
-                              color: badge.color,
-                            }}
+                            className="inline-flex! items-center! gap-[6px]! p-[4px_10px]! rounded-[12px]! text-[12px]! font-semibold!" style={{
+  backgroundColor: badge.backgroundColor,
+  color: badge.color
+}}
                           >
                             <span
-                              style={{ ...styles.statusDot, backgroundColor: badge.dotColor }}
+                              className="w-[6px]! h-[6px]! rounded-[50%]!" style={{
+  backgroundColor: badge.dotColor
+}}
                             />
                             {row.status}
                           </span>
                         </td>
 
                         {/* Progress bar */}
-                        <td style={styles.td}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                            <div style={styles.progressBarTrack}>
+                        <td className="p-[14px_18px]! [color:var(--color-slate-900)]! [vertical-align:middle]!">
+                          <div className="flex! items-center! gap-[10px]!">
+                            <div className="flex-1! h-[8px]! rounded-[4px]! [background-color:var(--color-slate-200)]! overflow-hidden!">
                               <div
-                                style={{
-                                  ...styles.progressBarFill,
-                                  width: `${row.load}%`,
-                                  backgroundColor: badge.barColor,
-                                  transition: "width 0.4s ease",
-                                }}
+                                className="h-full! rounded-[4px]! [transition:width_0.4s_ease]!" style={{
+  width: `${row.load}%`,
+  backgroundColor: badge.barColor
+}}
                               />
                             </div>
-                            <span style={{ fontSize: "12px", color: "var(--color-slate-500)", minWidth: "32px", textAlign: "right" }}>
+                            <span className="text-[12px]! [color:var(--color-slate-500)]! min-w-[32px]! text-right!">
                               {row.load}%
                             </span>
                           </div>
                         </td>
 
                         {/* Task days */}
-                        <td style={{ ...styles.td, color: "var(--color-slate-600)" }}>{row.taskAssign}</td>
+                        <td className="p-[14px_18px]! [color:var(--color-slate-600)]! [vertical-align:middle]!">{row.taskAssign}</td>
 
                         {/* Action */}
-                        <td style={styles.td}>
-                          <div style={{ display: "flex", justifyContent: "center" }}>
+                        <td className="p-[14px_18px]! [color:var(--color-slate-900)]! [vertical-align:middle]!">
+                          <div className="flex! justify-center!">
                             <button
-                              style={styles.actionBtn}
+                              className="[background:none]! border-0! cursor-pointer! inline-flex! items-center! justify-center! p-[6px]! rounded-[6px]! [color:var(--color-slate-500)]! [transition:all_0.15s_ease]!"
                               title="View Capacity"
                               onClick={() => openModal(row)}
                             >
-                              <span className="material-symbols-outlined" style={styles.actionIcon}>
+                              <span className={"material-symbols-outlined" + " " + "text-[18px]!"} >
                                 visibility
                               </span>
                             </button>
@@ -510,13 +399,13 @@ export default function WorkloadPage() {
           </div>
 
           {/* Alert Banner */}
-          <div style={styles.alertBanner}>
-            <span className="material-symbols-outlined" style={styles.alertIcon}>
+          <div className="flex! items-center! gap-[10px]! p-[12px_16px]! rounded-[8px]! [background-color:var(--color-primary-subtle)]! mt-[24px]! [border:1px_solid_var(--color-primary-border-mid)]!">
+            <span className={"material-symbols-outlined" + " " + "[color:var(--color-primary)]! text-[20px]!"} >
               info
             </span>
-            <span style={styles.alertText}>
+            <span className="text-[13px]! [color:var(--color-primary-active)]!">
               Load is built from task estimates. Tasks waiting for approvals may not be reflected.{" "}
-              <span style={styles.alertLink} onClick={() => navigate("/pm/approvals")}>
+              <span className="font-semibold! [color:var(--color-primary)]! underline! cursor-pointer! ml-[4px]!" onClick={() => navigate("/pm/approvals")}>
                 Review approvals
               </span>
             </span>
@@ -524,20 +413,20 @@ export default function WorkloadPage() {
 
           {/* Pagination */}
           {!loading && !error && filteredData.length > 0 && (
-            <div style={styles.footerRow}>
-              <span style={styles.footerText}>
+            <div className="flex! justify-between! items-center! mt-[24px]! p-[4px_8px]!">
+              <span className="text-[12px]! [color:var(--color-slate-500)]!">
                 Showing {Math.min((safeCurrentPage - 1) * PAGE_SIZE + 1, filteredData.length)}–
                 {Math.min(safeCurrentPage * PAGE_SIZE, filteredData.length)} of{" "}
                 {filteredData.length} users
               </span>
-              <div style={styles.paginationGroup}>
+              <div className="flex! items-center! gap-[6px]!">
                 <button
-                  className="wl-page-btn"
-                  style={styles.pageBtn}
+                  className={"wl-page-btn" + " " + "w-[32px]! h-[32px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! [background-color:var(--color-white)]! [color:var(--color-slate-600)]! text-[12px]! font-medium! flex! items-center! justify-center! cursor-pointer! [transition:all_0.15s_ease]!"}
+
                   disabled={safeCurrentPage === 1}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 >
-                  <span className="material-symbols-outlined" style={styles.paginationIcon}>
+                  <span className={"material-symbols-outlined" + " " + "text-[16px]!"} >
                     chevron_left
                   </span>
                 </button>
@@ -555,30 +444,27 @@ export default function WorkloadPage() {
                   }, [])
                   .map((item, i) =>
                     item === "..." ? (
-                      <span key={`ellipsis-${i}`} style={{ padding: "0 4px", color: "var(--color-slate-400)", fontSize: "12px" }}>
+                      <span key={`ellipsis-${i}`} className="p-[0_4px]! [color:var(--color-slate-400)]! text-[12px]!">
                         …
                       </span>
                     ) : (
                       <button
                         key={item}
-                        className="wl-page-btn"
+                        className={"wl-page-btn" + " " + (item === safeCurrentPage ? "[width:32px]! [height:32px]! [border-radius:6px]! [border:1px_solid_var(--color-slate-300)]! [background-color:var(--color-primary)]! [color:var(--color-white)]! [font-size:12px]! [font-weight:600]! [display:flex]! [align-items:center]! [justify-content:center]! [cursor:pointer]! [transition:all_0.15s_ease]! [border-color:var(--color-primary)]!" : "[width:32px]! [height:32px]! [border-radius:6px]! [border:1px_solid_var(--color-slate-300)]! [background-color:var(--color-white)]! [color:var(--color-slate-600)]! [font-size:12px]! [font-weight:500]! [display:flex]! [align-items:center]! [justify-content:center]! [cursor:pointer]! [transition:all_0.15s_ease]!")}
                         onClick={() => setCurrentPage(item)}
-                        style={{
-                          ...styles.pageBtn,
-                          ...(item === safeCurrentPage ? styles.pageBtnActive : {}),
-                        }}
+
                       >
                         {item}
                       </button>
                     )
                   )}
                 <button
-                  className="wl-page-btn"
-                  style={styles.pageBtn}
+                  className={"wl-page-btn" + " " + "w-[32px]! h-[32px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! [background-color:var(--color-white)]! [color:var(--color-slate-600)]! text-[12px]! font-medium! flex! items-center! justify-center! cursor-pointer! [transition:all_0.15s_ease]!"}
+
                   disabled={safeCurrentPage === totalPages}
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 >
-                  <span className="material-symbols-outlined" style={styles.paginationIcon}>
+                  <span className={"material-symbols-outlined" + " " + "text-[16px]!"} >
                     chevron_right
                   </span>
                 </button>
@@ -594,62 +480,28 @@ export default function WorkloadPage() {
           {/* Backdrop Overlay */}
           <div
             onClick={closeModal}
-            style={{
-              position: "fixed",
-              inset: 0,
-              backgroundColor: "rgba(15, 23, 42, 0.35)",
-              zIndex: 999,
-              transition: "opacity 0.25s ease",
-            }}
+            className="fixed! [inset:0]! [background-color:rgba(15,_23,_42,_0.35)]! z-[999]! [transition:opacity_0.25s_ease]!"
           />
 
           {/* Right Drawer Panel */}
           <div
-            className="wl-drawer-panel"
-            style={{
-              position: "fixed",
-              top: 0,
-              right: 0,
-              bottom: 0,
-              width: "460px",
-              maxWidth: "92vw",
-              height: "100vh",
-              backgroundColor: "var(--color-white)",
-              boxShadow: "-8px 0 32px rgba(15, 23, 42, 0.12)",
-              zIndex: 1000,
-              display: "flex",
-              flexDirection: "column",
-              overflowY: "auto",
-              padding: "32px 28px",
-              fontFamily: "'Inter', sans-serif",
-            }}
+            className={"wl-drawer-panel" + " " + "fixed! top-[0]! right-[0]! bottom-[0]! w-[460px]! max-w-[92vw]! h-screen! [background-color:var(--color-white)]! [box-shadow:-8px_0_32px_rgba(15,_23,_42,_0.12)]! z-[1000]! flex! flex-col! overflow-y-auto! p-[32px_28px]! [font-family:'Inter',_sans-serif]!"}
+
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header: Avatar, Name & Subtitle, Close Button */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <div className="flex! justify-between! items-start! mb-[24px]!">
+              <div className="flex! items-center! gap-[14px]!">
                 <div
-                  style={{
-                    width: "44px",
-                    height: "44px",
-                    borderRadius: "50%",
-                    backgroundColor: "var(--color-primary)",
-                    color: "var(--color-white)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: "700",
-                    fontSize: "15px",
-                    flexShrink: 0,
-                  }}
+                  className="w-[44px]! h-[44px]! rounded-[50%]! [background-color:var(--color-primary)]! [color:var(--color-white)]! flex! items-center! justify-center! font-bold! text-[15px]! shrink-0!"
                 >
                   {getInitials(selectedUser.name)}
                 </div>
                 <div>
-                  <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "700", color: "var(--color-slate-900)", lineHeight: 1.2 }}>
+                  <h2 className="m-0! text-[18px]! font-bold! [color:var(--color-slate-900)]! leading-[1.2]!">
                     {selectedUser.name}
                   </h2>
-                  <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "var(--color-slate-500)" }}>
+                  <p className="m-[4px_0_0_0]! text-[12px]! [color:var(--color-slate-500)]!">
                     {[
                       selectedUser.department || "Design",
                       "Member",
@@ -661,70 +513,49 @@ export default function WorkloadPage() {
               <button
                 type="button"
                 onClick={closeModal}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "var(--color-slate-500)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "4px",
-                  borderRadius: "6px",
-                }}
+                className="[background:none]! border-0! cursor-pointer! [color:var(--color-slate-500)]! flex! items-center! justify-center! p-[4px]! rounded-[6px]!"
                 aria-label="Close"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>close</span>
+                <span className={"material-symbols-outlined" + " " + "text-[20px]!"} >close</span>
               </button>
             </div>
 
             {/* Metric Box (Load, Capacity, Projects) */}
             <div
-              style={{
-                backgroundColor: "var(--color-primary-subtle)",
-                borderRadius: "14px",
-                padding: "20px 22px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "18px",
-              }}
+              className="[background-color:var(--color-primary-subtle)]! rounded-[14px]! p-[20px_22px]! flex! flex-col! gap-[18px]!"
             >
-              <div style={{ display: "flex", gap: "24px", justifyContent: "space-between" }}>
+              <div className="flex! gap-[24px]! justify-between!">
                 {/* LOAD */}
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "10.5px", fontWeight: "700", color: "var(--color-slate-600)", letterSpacing: "0.6px", textTransform: "uppercase" }}>
+                <div className="flex-1!">
+                  <div className="text-[10.5px]! font-bold! [color:var(--color-slate-600)]! tracking-[0.6px]! [text-transform:uppercase]!">
                     LOAD
                   </div>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: "6px", marginTop: "4px", flexWrap: "wrap" }}>
-                    <span style={{ fontSize: "22px", fontWeight: "700", color: "var(--color-slate-900)" }}>
+                  <div className="flex! [align-items:baseline]! gap-[6px]! mt-[4px]! flex-wrap!">
+                    <span className="text-[22px]! font-bold! [color:var(--color-slate-900)]!">
                       {selectedUser.load}%
                     </span>
-                    <span style={{ fontSize: "12px", color: "var(--color-slate-500)" }}>
+                    <span className="text-[12px]! [color:var(--color-slate-500)]!">
                       · {modalTasks.length} assigned tasks
                     </span>
                   </div>
                   {/* Progress bar line */}
                   <div
-                    style={{
-                      height: "3.5px",
-                      borderRadius: "2px",
-                      backgroundColor: selectedUser.load >= 80 ? "var(--color-danger-dark)" : (selectedUser.load >= 50 ? "var(--color-success-alt)" : "var(--color-warning)"),
-                      marginTop: "8px",
-                      width: "100%",
-                    }}
+                    className="h-[3.5px]! rounded-[2px]! mt-[8px]! w-full!" style={{
+  backgroundColor: selectedUser.load >= 80 ? "var(--color-danger-dark)" : selectedUser.load >= 50 ? "var(--color-success-alt)" : "var(--color-warning)"
+}}
                   />
                 </div>
 
                 {/* CAPACITY */}
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "10.5px", fontWeight: "700", color: "var(--color-slate-600)", letterSpacing: "0.6px", textTransform: "uppercase" }}>
+                <div className="flex-1!">
+                  <div className="text-[10.5px]! font-bold! [color:var(--color-slate-600)]! tracking-[0.6px]! [text-transform:uppercase]!">
                     CAPACITY
                   </div>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: "6px", marginTop: "4px" }}>
-                    <span style={{ fontSize: "22px", fontWeight: "700", color: "var(--color-slate-900)" }}>
+                  <div className="flex! [align-items:baseline]! gap-[6px]! mt-[4px]!">
+                    <span className="text-[22px]! font-bold! [color:var(--color-slate-900)]!">
                       {selectedUser.availData?.weekly_capacity ?? 0} points / week
                     </span>
-                    <span style={{ fontSize: "12px", color: "var(--color-slate-500)" }}>
+                    <span className="text-[12px]! [color:var(--color-slate-500)]!">
                       · full week
                     </span>
                   </div>
@@ -733,10 +564,10 @@ export default function WorkloadPage() {
 
               {/* PROJECTS */}
               <div>
-                <div style={{ fontSize: "10.5px", fontWeight: "700", color: "var(--color-slate-600)", letterSpacing: "0.6px", textTransform: "uppercase" }}>
+                <div className="text-[10.5px]! font-bold! [color:var(--color-slate-600)]! tracking-[0.6px]! [text-transform:uppercase]!">
                   PROJECTS
                 </div>
-                <div style={{ fontSize: "13px", fontWeight: "500", color: "var(--color-slate-800)", marginTop: "4px" }}>
+                <div className="text-[13px]! font-medium! [color:var(--color-slate-800)]! mt-[4px]!">
                   {(() => {
                     const projects = Array.from(new Set(modalTasks.map((t) => t.Project_Name).filter(Boolean)));
                     return projects.length > 0 ? projects.join(", ") : (selectedMainProject || "Project");
@@ -746,16 +577,9 @@ export default function WorkloadPage() {
             </div>
 
             {/* Task List Section */}
-            <div style={{ marginTop: "12px" }}>
+            <div className="mt-[12px]!">
               <div
-                style={{
-                  fontSize: "11px",
-                  fontWeight: "700",
-                  color: "var(--color-slate-500)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.6px",
-                  marginBottom: "18px",
-                }}
+                className="text-[11px]! font-bold! [color:var(--color-slate-500)]! [text-transform:uppercase]! tracking-[0.6px]! mb-[18px]!"
               >
                 {modalTasksLoading
                   ? "THIS WEEK · LOADING ITEMS…"
@@ -763,14 +587,14 @@ export default function WorkloadPage() {
               </div>
 
               {modalTasksLoading ? (
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "var(--color-slate-400)", padding: "16px 0" }}>
+                <div className="flex! items-center! gap-[10px]! [color:var(--color-slate-400)]! p-[16px_0]!">
                   <span className="wl-spinner" />
-                  <span style={{ fontSize: "13px" }}>Fetching tasks…</span>
+                  <span className="text-[13px]!">Fetching tasks…</span>
                 </div>
               ) : modalTasks.length === 0 ? (
-                <p style={{ fontSize: "13px", color: "var(--color-slate-400)" }}>No tasks assigned this week.</p>
+                <p className="text-[13px]! [color:var(--color-slate-400)]!">No tasks assigned this week.</p>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <div className="flex! flex-col! gap-[16px]!">
                   {modalTasks.map((task, idx) => {
                     const statusStyle = getTaskStatusStyle(task.status);
                     const dueLabel = formatDueLabel(task.Due_Date);
@@ -784,48 +608,25 @@ export default function WorkloadPage() {
                     return (
                       <div
                         key={task.Id || idx}
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "flex-start",
-                          gap: "12px",
-                          paddingBottom: "14px",
-                          borderBottom: idx === modalTasks.length - 1 ? "none" : "1px solid var(--color-slate-100)",
-                        }}
+                        className="flex! justify-between! items-start! gap-[12px]! pb-[14px]!" style={{
+  borderBottom: idx === modalTasks.length - 1 ? "none" : "1px solid var(--color-slate-100)"
+}}
                       >
                         {/* Left: Dot & Name / Project / Due */}
-                        <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", flex: 1, minWidth: 0 }}>
+                        <div className="flex! gap-[10px]! items-start! flex-1! min-w-0!">
                           <span
-                            style={{
-                              width: "8px",
-                              height: "8px",
-                              borderRadius: "50%",
-                              backgroundColor: statusStyle.dot,
-                              marginTop: "5px",
-                              flexShrink: 0,
-                            }}
+                            className="w-[8px]! h-[8px]! rounded-[50%]! mt-[5px]! shrink-0!" style={{
+  backgroundColor: statusStyle.dot
+}}
                           />
-                          <div style={{ minWidth: 0 }}>
+                          <div className="min-w-0!">
                             <h4
-                              style={{
-                                margin: 0,
-                                fontSize: "13.5px",
-                                fontWeight: "600",
-                                color: "var(--color-slate-900)",
-                                lineHeight: "1.3",
-                                wordBreak: "break-word",
-                              }}
+                              className="m-0! text-[13.5px]! font-semibold! [color:var(--color-slate-900)]! leading-[1.3]! [word-break:break-word]!"
                             >
                               {task.Task_Name || "Untitled Task"}
                             </h4>
                             <p
-                              style={{
-                                margin: "3px 0 0 0",
-                                fontSize: "11.5px",
-                                color: "var(--color-slate-500)",
-                                lineHeight: "1.4",
-                                wordBreak: "break-word",
-                              }}
+                              className="m-[3px_0_0_0]! text-[11.5px]! [color:var(--color-slate-500)]! leading-[1.4]! [word-break:break-word]!"
                             >
                               {subtitleParts.map((part, pIdx) => (
                                 <React.Fragment key={pIdx}>
@@ -840,31 +641,17 @@ export default function WorkloadPage() {
                         </div>
 
                         {/* Right: Hours & Status Badge */}
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                        <div className="flex! items-center! gap-[8px]! shrink-0!">
                           <span
-                            style={{
-                              fontSize: "11px",
-                              color: "var(--color-slate-500)",
-                              backgroundColor: "var(--color-slate-100)",
-                              padding: "3px 7px",
-                              borderRadius: "5px",
-                              fontWeight: "500",
-                              minWidth: "26px",
-                              textAlign: "center",
-                            }}
+                            className="text-[11px]! [color:var(--color-slate-500)]! [background-color:var(--color-slate-100)]! p-[3px_7px]! rounded-[5px]! font-medium! min-w-[26px]! text-center!"
                           >
                             {hoursLabel}
                           </span>
                           <span
-                            style={{
-                              fontSize: "11px",
-                              color: statusStyle.color,
-                              backgroundColor: statusStyle.bg,
-                              padding: "3px 9px",
-                              borderRadius: "6px",
-                              fontWeight: "600",
-                              whiteSpace: "nowrap",
-                            }}
+                            className="text-[11px]! p-[3px_9px]! rounded-[6px]! font-semibold! whitespace-nowrap!" style={{
+  color: statusStyle.color,
+  backgroundColor: statusStyle.bg
+}}
                           >
                             {statusStyle.label}
                           </span>
@@ -883,325 +670,3 @@ export default function WorkloadPage() {
 }
 
 // ── Styles ────────────────────────────────────────────────────────────
-
-const styles = {
-  layoutWrapper: {
-    display: "flex",
-    minHeight: "100vh",
-    maxHeight: "100vh",
-    overflow: "hidden",
-    backgroundColor: "var(--color-slate-50)",
-    fontFamily: "'Inter', sans-serif",
-  },
-  mainContainer: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    minWidth: 0,
-    height: "100vh",
-    maxHeight: "100vh",
-    overflowY: "auto",
-  },
-  header: {
-    height: "50px",
-    minHeight: "50px",
-    flexShrink: 0,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "0 32px",
-    backgroundColor: "var(--color-white)",
-    borderBottom: "1px solid var(--color-slate-200)",
-    position: "sticky",
-    top: 0,
-    zIndex: 40,
-  },
-  projectSelectorWrapper: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    height: "34px",
-    padding: "0 12px",
-    border: "1px solid var(--color-slate-200)",
-    borderRadius: "8px",
-    cursor: "pointer",
-    backgroundColor: "var(--color-white)",
-    position: "relative",
-    userSelect: "none",
-    boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
-    boxSizing: "border-box",
-  },
-  projectSelectorText: {
-    fontSize: "14px",
-    fontWeight: "600",
-    color: "var(--color-slate-900)",
-  },
-  dropdownChevron: {
-    fontSize: "18px",
-    color: "var(--color-slate-500)",
-  },
-  dropdownMenu: {
-    position: "absolute",
-    top: "40px",
-    left: 0,
-    backgroundColor: "var(--color-white)",
-    border: "1px solid var(--color-slate-300)",
-    borderRadius: "8px",
-    boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
-    minWidth: "160px",
-    zIndex: 50,
-    padding: "4px 0",
-  },
-  dropdownMenuItem: {
-    padding: "8px 12px",
-    fontSize: "13px",
-    color: "var(--color-slate-700)",
-    cursor: "pointer",
-    transition: "background-color 0.15s ease",
-  },
-  headerRight: {
-    display: "flex",
-    alignItems: "center",
-    gap: "16px",
-  },
-  headerSearchWrapper: {
-    position: "relative",
-    width: "280px",
-  },
-  headerSearchIcon: {
-    position: "absolute",
-    left: "10px",
-    top: "50%",
-    transform: "translateY(-50%)",
-    color: "var(--color-slate-400)",
-    fontSize: "18px",
-  },
-  headerSearchInput: {
-    width: "100%",
-    height: "34px",
-    paddingLeft: "34px",
-    paddingRight: "12px",
-    border: "1px solid var(--color-slate-200)",
-    borderRadius: "8px",
-    fontSize: "13px",
-    outline: "none",
-    color: "var(--color-slate-900)",
-    backgroundColor: "var(--color-white)",
-    boxSizing: "border-box",
-    fontFamily: "inherit",
-  },
-  bellWrapper: {
-    position: "relative",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-    width: "34px",
-    height: "34px",
-    borderRadius: "8px",
-    border: "1px solid var(--color-slate-200)",
-    backgroundColor: "var(--color-white)",
-  },
-  bellIcon: { color: "var(--color-slate-600)", fontSize: "20px" },
-  bellBadge: {
-    position: "absolute",
-    top: "6px",
-    right: "6px",
-    width: "7px",
-    height: "7px",
-    backgroundColor: "var(--color-danger)",
-    borderRadius: "50%",
-  },
-  profileBadge: {
-    width: "32px",
-    height: "32px",
-    borderRadius: "50%",
-    backgroundColor: "var(--color-role-pm)",
-    color: "var(--color-white)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "12px",
-    fontWeight: "700",
-    cursor: "pointer",
-    userSelect: "none",
-  },
-  contentBody: { padding: "32px", flex: 1 },
-  titleSection: { marginBottom: "32px" },
-  pageTitle: { fontSize: "24px", fontWeight: "700", color: "var(--color-slate-900)", margin: "0 0 4px 0" },
-  pageSubtitle: { fontSize: "13px", color: "var(--color-slate-500)", margin: 0, lineHeight: "1.5" },
-  filtersBar: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "20px",
-    gap: "16px",
-    flexWrap: "wrap",
-  },
-  pillsContainer: { display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" },
-  pillBtn: {
-    display: "flex",
-    alignItems: "center",
-    padding: "8px 16px",
-    borderRadius: "20px",
-    fontSize: "13px",
-    fontWeight: "600",
-    cursor: "pointer",
-    border: "1px solid",
-    outline: "none",
-    transition: "all 0.15s ease",
-  },
-  pillCountBadge: {
-    fontSize: "11px",
-    padding: "2px 6px",
-    borderRadius: "10px",
-    marginLeft: "8px",
-    fontWeight: "700",
-  },
-  rightFilters: { display: "flex", alignItems: "center", gap: "12px" },
-  innerSearchWrapper: { position: "relative", width: "220px" },
-  innerSearchIcon: {
-    position: "absolute",
-    left: "10px",
-    top: "50%",
-    transform: "translateY(-50%)",
-    color: "var(--color-slate-400)",
-    fontSize: "18px",
-  },
-  innerSearchInput: {
-    width: "100%",
-    height: "36px",
-    paddingLeft: "32px",
-    paddingRight: "10px",
-    border: "1px solid var(--color-slate-300)",
-    borderRadius: "8px",
-    fontSize: "13px",
-    outline: "none",
-    color: "var(--color-slate-800)",
-    backgroundColor: "var(--color-white)",
-    fontFamily: "inherit",
-  },
-  sortBtn: {
-    display: "flex",
-    alignItems: "center",
-    gap: "6px",
-    height: "36px",
-    padding: "0 12px",
-    border: "1px solid var(--color-slate-300)",
-    borderRadius: "8px",
-    backgroundColor: "var(--color-white)",
-    fontSize: "13px",
-    fontWeight: "500",
-    color: "var(--color-slate-600)",
-    cursor: "pointer",
-    outline: "none",
-    transition: "all 0.15s ease",
-  },
-  sortIcon: { fontSize: "18px", color: "var(--color-slate-500)" },
-  tableCard: {
-    backgroundColor: "var(--color-white)",
-    border: "1px solid var(--color-slate-200)",
-    borderRadius: "12px",
-    overflowY: "auto",
-    overflowX: "auto",
-    maxHeight: "340px",
-    boxShadow: "0 1px 3px 0 rgba(0,0,0,0.05)",
-    position: "relative",
-  },
-  table: { width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" },
-  th: {
-    padding: "12px 18px",
-    backgroundColor: "var(--color-primary-subtle)",
-    color: "var(--color-slate-600)",
-    fontWeight: "600",
-    fontSize: "12px",
-    borderBottom: "1px solid var(--color-slate-200)",
-    position: "sticky",
-    top: 0,
-    zIndex: 10,
-  },
-  tr: { borderBottom: "1px solid var(--color-slate-100)", transition: "background-color 0.15s ease" },
-  td: { padding: "14px 18px", color: "var(--color-slate-900)", verticalAlign: "middle" },
-  statusBadge: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "6px",
-    padding: "4px 10px",
-    borderRadius: "12px",
-    fontSize: "12px",
-    fontWeight: "600",
-  },
-  statusDot: { width: "6px", height: "6px", borderRadius: "50%" },
-  progressBarTrack: {
-    flex: 1,
-    height: "8px",
-    borderRadius: "4px",
-    backgroundColor: "var(--color-slate-200)",
-    overflow: "hidden",
-  },
-  progressBarFill: { height: "100%", borderRadius: "4px" },
-  actionBtn: {
-    background: "none",
-    border: "none",
-    cursor: "pointer",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "6px",
-    borderRadius: "6px",
-    color: "var(--color-slate-500)",
-    transition: "all 0.15s ease",
-  },
-  actionIcon: { fontSize: "18px" },
-  emptyCell: { padding: "32px", textAlign: "center", color: "var(--color-slate-500)", fontSize: "14px" },
-  alertBanner: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    padding: "12px 16px",
-    borderRadius: "8px",
-    backgroundColor: "var(--color-primary-subtle)",
-    marginTop: "24px",
-    border: "1px solid var(--color-primary-border-mid)",
-  },
-  alertIcon: { color: "var(--color-primary)", fontSize: "20px" },
-  alertText: { fontSize: "13px", color: "var(--color-primary-active)" },
-  alertLink: {
-    fontWeight: "600",
-    color: "var(--color-primary)",
-    textDecoration: "underline",
-    cursor: "pointer",
-    marginLeft: "4px",
-  },
-  footerRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: "24px",
-    padding: "4px 8px",
-  },
-  footerText: { fontSize: "12px", color: "var(--color-slate-500)" },
-  paginationGroup: { display: "flex", alignItems: "center", gap: "6px" },
-  pageBtn: {
-    width: "32px",
-    height: "32px",
-    borderRadius: "6px",
-    border: "1px solid var(--color-slate-300)",
-    backgroundColor: "var(--color-white)",
-    color: "var(--color-slate-600)",
-    fontSize: "12px",
-    fontWeight: "500",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-    transition: "all 0.15s ease",
-  },
-  pageBtnActive: {
-    backgroundColor: "var(--color-primary)",
-    borderColor: "var(--color-primary)",
-    color: "var(--color-white)",
-    fontWeight: "600",
-  },
-  paginationIcon: { fontSize: "16px" },
-};

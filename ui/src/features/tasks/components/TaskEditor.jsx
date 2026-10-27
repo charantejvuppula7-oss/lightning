@@ -1,249 +1,6 @@
 import { useState, useEffect } from "react";
-import { apiRequest, errorMessage } from '../../../services/api/apiClient.js';
-import DatePicker from "../../../components/common/DatePicker.jsx";
-
-const STYLES = `
-  .edit-task-overlay {
-    position: fixed;
-    inset: 0;
-    background-color: rgba(15, 23, 42, 0.45);
-    backdrop-filter: blur(2px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 16px;
-    box-sizing: border-box;
-  }
-
-  .edit-task-modal {
-    background: #FFFFFF;
-    border-radius: 12px;
-    width: 100%;
-    max-width: 640px;
-    max-height: 92vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: #1E293B;
-    overflow: hidden;
-  }
-
-  /* Header */
-  .edit-task-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 20px 24px 14px 24px;
-  }
-  .edit-task-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: #0F172A;
-    margin: 0 0 4px 0;
-  }
-  .edit-task-subtitle {
-    font-size: 13px;
-    color: #64748B;
-    margin: 0;
-  }
-  .edit-task-close-btn {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    color: #64748B;
-    padding: 4px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    transition: background-color 0.15s ease, color 0.15s ease;
-  }
-  .edit-task-close-btn:hover {
-    background-color: #F1F5F9;
-    color: #0F172A;
-  }
-
-  /* Scrollable Body */
-  .edit-task-body {
-    padding: 0 24px 16px 24px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  /* Card Section */
-  .edit-task-section {
-    border: 1px solid #E2E8F0;
-    border-radius: 8px;
-    padding: 16px;
-    background: #FFFFFF;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .edit-task-section-header {
-    margin-bottom: -2px;
-  }
-  .edit-task-section-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: #0F172A;
-    margin: 0 0 2px 0;
-  }
-  .edit-task-section-subtitle {
-    font-size: 12px;
-    color: #64748B;
-    margin: 0;
-  }
-
-  /* Form Elements */
-  .edit-task-grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-  }
-  .edit-task-grid-dates {
-    display: grid;
-    grid-template-columns: 1.2fr 1.2fr 1fr 0.8fr;
-    gap: 12px;
-  }
-
-  .edit-task-field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .edit-task-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #334155;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .edit-task-label-icon {
-    display: inline-flex;
-    align-items: center;
-    color: #475569;
-  }
-  .edit-task-required {
-    color: #DC2626;
-    margin-left: 2px;
-  }
-  .edit-task-optional {
-    color: #64748B;
-    font-weight: 400;
-    font-size: 12px;
-    margin-left: 4px;
-  }
-
-  .edit-task-input,
-  .edit-task-select,
-  .edit-task-textarea {
-    width: 100%;
-    border: 1px solid #CBD5E1;
-    border-radius: 6px;
-    padding: 9px 12px;
-    font-size: 13px;
-    color: #0F172A;
-    background: #FFFFFF;
-    outline: none;
-    box-sizing: border-box;
-    font-family: inherit;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  }
-  .edit-task-input:focus,
-  .edit-task-select:focus,
-  .edit-task-textarea:focus {
-    border-color: #2563EB;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-  }
-  .edit-task-input::placeholder,
-  .edit-task-textarea::placeholder {
-    color: #94A3B8;
-  }
-  .edit-task-textarea {
-    resize: vertical;
-    min-height: 48px;
-  }
-
-  /* Custom Select Wrapper */
-  .edit-task-select-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-  .edit-task-select {
-    appearance: none;
-    padding-right: 32px;
-    cursor: pointer;
-  }
-  .edit-task-select-arrow {
-    position: absolute;
-    right: 10px;
-    pointer-events: none;
-    color: #64748B;
-    display: inline-flex;
-  }
-
-  /* Date Input Wrapper with Calendar Icon */
-  .edit-task-date-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-  .edit-task-date-input {
-    padding-right: 34px;
-    cursor: pointer;
-  }
-  .edit-task-date-icon {
-    position: absolute;
-    right: 10px;
-    pointer-events: none;
-    color: #475569;
-    display: inline-flex;
-  }
-
-  /* Footer */
-  .edit-task-footer {
-    display: flex;
-    justify-content: flex-end;
-    padding: 14px 24px 20px 24px;
-    border-top: 1px solid #F1F5F9;
-  }
-  .edit-task-save-btn {
-    background-color: #1558D6;
-    color: #FFFFFF;
-    border: none;
-    border-radius: 6px;
-    padding: 10px 32px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    transition: background-color 0.18s ease, transform 0.1s ease;
-  }
-  .edit-task-save-btn:hover:not(:disabled) {
-    background-color: #114bb8;
-  }
-  .edit-task-save-btn:active:not(:disabled) {
-    transform: scale(0.985);
-  }
-  .edit-task-save-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  @media (max-width: 640px) {
-    .edit-task-grid-2,
-    .edit-task-grid-dates {
-      grid-template-columns: 1fr;
-    }
-  }
-`;
+import { apiRequest, errorMessage } from '../../../shared/api/apiClient.js';
+import DatePicker from "../../../shared/components/DatePicker.jsx";
 
 /**
  * EditTask Modal Component (PM/edit task POP UP)
@@ -330,7 +87,7 @@ export default function EditTask({
 
   return (
     <>
-      <style>{STYLES}</style>
+
       <div className="edit-task-overlay" onClick={onClose}>
         <div className="edit-task-modal" onClick={(e) => e.stopPropagation()}>
           {/* Header */}
@@ -355,9 +112,9 @@ export default function EditTask({
             </button>
           </div>
 
-          {(optionsError || saveError) && <p role="alert" style={{padding:16,color:"#991b1b"}}>{optionsError || saveError}</p>}
+          {(optionsError || saveError) && <p role="alert" className="p-[16px]! [color:#991b1b]!">{optionsError || saveError}</p>}
           {/* Form */}
-          <form onSubmit={handleSubmit} style={{ display: "contents" }}>
+          <form onSubmit={handleSubmit} className="[display:contents]!">
             <div className="edit-task-body">
               {/* Card 1: Basic Information */}
               <div className="edit-task-section">
@@ -436,9 +193,9 @@ export default function EditTask({
                       }}
                       allowPastDates={true}
                       placeholder="Select due date"
-                      style={{ height: "42px", borderRadius: "6px", border: "1px solid #CBD5E1" }}
+                      controlClassName="[height:42px]! [border-radius:6px]! [border:1px_solid_#CBD5E1]!"
                     />
-                    {dueDateError && <span style={{ color: "#DC2626", fontSize: "12px" }}>{dueDateError}</span>}
+                    {dueDateError && <span className="[color:#DC2626]! text-[12px]!">{dueDateError}</span>}
                   </div>
 
                   {/* Priority */}

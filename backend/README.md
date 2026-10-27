@@ -129,6 +129,48 @@ virtual environment and database configuration; no additional dependency is need
 Other deployments should schedule `python manage.py cleanup_logs` every 24 hours using
 their existing job scheduler.
 
+## Version caching and rate limits
+
+The browser displays the last validated version from localStorage, then checks
+`/api/user/app-version/` once per page load. Login/sidebar share the same request.
+There is no version polling timer. A page refresh checks again; an explicit
+`window.dispatchEvent(new Event('app:updated'))` also rechecks, and another tab's
+version update is reflected through the storage event. An already open page
+cannot discover a server deployment without a refresh or an update signal.
+Only the public version string is stored; passwords, OTPs and reset tokens are not.
+
+`apps/core/throttling.py` selects the use-case policy. Limits are configured in
+`config/settings/base.py`; each view class and HTTP method has its own counter,
+shared across IDs and URL aliases. Authenticated requests use the user ID;
+anonymous requests use the client IP. Production counters use Redis with the
+`lighting_v2` prefix. Nginx is the sole trusted proxy and the backend stays bound
+to loopback. Login also uses a normalized, hashed identifier counter across IPs.
+
+| Use case | Limit |
+| --- | --- |
+| Standard resource reads | 300/minute per endpoint |
+| Standard writes and task status | 60/minute per endpoint |
+| Session, CSRF and logout | 60/minute per endpoint |
+| Login | 10/minute per IP and 5/minute per entered identifier |
+| Request password-reset code | 5/hour per IP; 60-second resend delay and 3 requests/10 minutes per account |
+| Verify OTP | 20/hour per IP; code invalidates after 5 incorrect guesses |
+| Confirm reset | 10/hour per IP; verified token expires and is single-use |
+| Version | 30/minute per IP |
+| Search | 60/minute per user |
+| Analytics and monitoring | 30/minute per endpoint |
+| Multipart uploads | 20/minute unless a more specific endpoint policy applies |
+| Document downloads | 60/minute |
+| Chat send and typing | 60/minute per endpoint |
+| Chat presence | 10/minute |
+| Stream establishment/reconnection | 10/minute; existing connection frames are not new requests |
+
+HTTP 429 includes both `Retry-After` and JSON `retry_after` seconds. Login and all
+password-reset actions show retry countdowns and disable submission until the
+deadline; deadlines are stored in sessionStorage so refreshing cannot reset the
+displayed wait. The server remains authoritative. OTP resend uses its own timer,
+so waiting to resend does not prevent verifying an already received code.
+Tests mock the email service; they do not send real messages.
+
 ## Notifications and chat
 
 `python manage.py generate_due_notifications` checks tasks and dependencies with

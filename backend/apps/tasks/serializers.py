@@ -9,6 +9,24 @@ from apps.core.utils import normalize_aliases, validate_model_attributes
 from apps.tasks.permissions import can_review_task
 
 
+class TaskListSerializer(serializers.ListSerializer):
+    def to_representation(self, data):
+        tasks = list(data.all() if hasattr(data, 'all') else data)
+        milestone_ids = set()
+        for task in tasks:
+            if not task.feature_id:
+                try:
+                    milestone_ids.add(UUID(str(json.loads(task.Remarks or '{}').get('milestone_id'))))
+                except (ValueError, AttributeError):
+                    continue
+        self.context['milestone_names'] = {
+            (project_id, milestone_id): name for project_id, milestone_id, name in Milestones.objects.filter(
+                pk__in=milestone_ids, project_id__in={task.project_id for task in tasks}
+            ).values_list('project_id', 'pk', 'name')
+        }
+        return super().to_representation(tasks)
+
+
 class TaskSerializer(serializers.ModelSerializer):
     """
     Serializer for the Task entity handling status normalization, project scope checks,
@@ -49,6 +67,8 @@ class TaskSerializer(serializers.ModelSerializer):
             milestone_id = UUID(str(milestone_id))
         except ValueError:
             return ''
+        if 'milestone_names' in self.context:
+            return self.context['milestone_names'].get((instance.project_id, milestone_id), '')
         return Milestones.objects.filter(pk=milestone_id, project_id=instance.project_id).values_list('name', flat=True).first() or ''
 
     def get_assigned_to_name(self, instance):
@@ -60,6 +80,7 @@ class TaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
+        list_serializer_class = TaskListSerializer
         fields = ('id', 'Task_Name', 'project', 'assigned_to', 'description', 'status',
                   'Remarks', 'Time_Taken', 'Due_Date', 'planned_start_date', 'start_Time', 'pause_Time',
                   'review_by', 'sprint', 'feature', 'created_at', 'updated_at',

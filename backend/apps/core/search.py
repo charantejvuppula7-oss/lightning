@@ -35,10 +35,8 @@ class GlobalSearchView(APIView):
                     username=person.user_name, email=person.email, role=person.role, designation=person.designation))
         if has_permission(user, 'Documents', 'View'):
             documents = ResourceFile.objects.filter(project__in=allowed_projects(user)).select_related('project')
-            # Some Company model versions call the field name, others file_name.
-            name_field = 'file_name' if any(f.name == 'file_name' for f in ResourceFile._meta.fields) else 'name'
-            for document in documents.filter(**{name_field + '__icontains': query})[:8]:
-                results['documents'].append(dict(id=str(document.pk), name=getattr(document, name_field),
+            for document in documents.filter(file_name__icontains=query)[:8]:
+                results['documents'].append(dict(id=str(document.pk), name=document.file_name,
                     project_id=str(document.project_id), project_name=document.project.project_name))
         results['total'] = sum(len(results[key]) for key in ('tasks', 'projects', 'people', 'documents'))
         return Response(results)

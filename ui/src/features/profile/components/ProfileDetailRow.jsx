@@ -1,51 +1,10 @@
-import React from 'react';
-
-const styles = {
-  detailRow: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '16px 0',
-    borderBottom: '1px solid var(--color-slate-50)',
-  },
-  labelCol: {
-    width: '220px',
-    fontSize: '13.5px',
-    fontWeight: '600',
-    color: 'var(--color-slate-900)',
-    flexShrink: 0,
-  },
-  valueCol: {
-    fontSize: '13.5px',
-    color: 'var(--color-slate-700)',
-    flex: 1,
-  },
-};
-
-export default function ProfileDetailRow({
-  label,
-  value,
-  required = false,
-  children,
-  isLast = false,
-  style,
-  labelStyle,
-  valueStyle,
-}) {
-  return (
-    <div
-      style={{
-        ...styles.detailRow,
-        ...(isLast ? { borderBottom: 'none' } : {}),
-        ...style,
-      }}
-    >
-      <div style={{ ...styles.labelCol, ...labelStyle }}>
-        {label}
-        {required && <span style={{ color: 'var(--color-danger)', marginLeft: '3px' }}>*</span>}
-      </div>
-      <div style={{ ...styles.valueCol, ...valueStyle }}>
-        {children !== undefined ? children : (value || '—')}
-      </div>
+export default function ProfileDetailRow({ label, value, required = false, children, isLast = false, rowClassName = '', labelClassName = '', valueClassName = '' }) {
+  return <div className={`flex items-center py-[16px] ${isLast ? 'border-b-0' : 'border-b border-(--color-slate-50)'} ${rowClassName}`}>
+    <div className={`w-[220px] shrink-0 text-[13.5px] font-semibold text-(--color-slate-900) ${labelClassName}`}>
+      {label}{required && <span className="text-(--color-danger) ml-[3px]">*</span>}
     </div>
-  );
+    <div className={`flex-1 text-[13.5px] text-(--color-slate-700) ${valueClassName}`}>
+      {children !== undefined ? children : (value || '—')}
+    </div>
+  </div>
 }

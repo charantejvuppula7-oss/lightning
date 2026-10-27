@@ -49,124 +49,6 @@ const TIMER_COLORS = {
   },
 };
 
-const TIMER_STYLES = `
-  .task-timer-btn {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 9999px;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    user-select: none;
-    white-space: nowrap;
-    text-decoration: none;
-    transition: background-color 0.2s ease, transform 0.12s ease, box-shadow 0.2s ease;
-    box-sizing: border-box;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  }
-
-  .task-timer-btn:active:not(:disabled) {
-    transform: scale(0.985);
-  }
-
-  .task-timer-btn:focus-visible {
-    box-shadow: 0 0 0 3px rgba(0, 176, 216, 0.35);
-  }
-
-  .task-timer-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    pointer-events: none;
-    transform: none !important;
-  }
-
-  .task-timer-btn:disabled[data-status="completed"] {
-    opacity: 1;
-  }
-
-  .task-timer-btn[data-status="completed"],
-  .task-timer-btn[data-status="completed"]:focus-visible,
-  .task-timer-btn[data-status="completed"] .task-timer-circle,
-  .task-timer-btn[data-status="completed"] .task-timer-divider,
-  .task-timer-btn[data-status="completed"] .task-timer-display {
-    box-shadow: none;
-    transition: none;
-  }
-
-  /* Sizes */
-  .task-timer-btn--sm {
-    padding: 3px 14px 3px 4px;
-    min-height: 38px;
-    gap: 8px;
-  }
-  .task-timer-btn--sm .task-timer-circle {
-    width: 30px;
-    height: 30px;
-  }
-  .task-timer-btn--sm .task-timer-divider {
-    height: 18px;
-  }
-  .task-timer-btn--sm .task-timer-display {
-    font-size: 15px;
-  }
-
-  .task-timer-btn--md {
-    padding: 5px 20px 5px 6px;
-    min-height: 48px;
-    gap: 12px;
-  }
-  .task-timer-btn--md .task-timer-circle {
-    width: 38px;
-    height: 38px;
-  }
-  .task-timer-btn--md .task-timer-divider {
-    height: 24px;
-  }
-  .task-timer-btn--md .task-timer-display {
-    font-size: 18px;
-  }
-
-  .task-timer-btn--lg {
-    padding: 6px 26px 6px 8px;
-    min-height: 56px;
-    gap: 14px;
-  }
-  .task-timer-btn--lg .task-timer-circle {
-    width: 44px;
-    height: 44px;
-  }
-  .task-timer-btn--lg .task-timer-divider {
-    height: 28px;
-  }
-  .task-timer-btn--lg .task-timer-display {
-    font-size: 21px;
-  }
-
-  /* Inner elements */
-  .task-timer-circle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    flex-shrink: 0;
-    transition: background-color 0.2s ease, transform 0.15s ease;
-  }
-
-  .task-timer-divider {
-    width: 2px;
-    border-radius: 1px;
-    flex-shrink: 0;
-    transition: background-color 0.2s ease;
-  }
-
-  .task-timer-display {
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    font-variant-numeric: tabular-nums;
-    transition: color 0.2s ease;
-  }
-`;
-
 // Helper: Format seconds to HH:MM:SS
 function formatTime(totalSeconds) {
   const s = Math.max(0, Math.floor(totalSeconds || 0));
@@ -265,7 +147,7 @@ export default function TaskTimerButton({
 
   return (
     <>
-      <style>{TIMER_STYLES}</style>
+
       <button
         type={type}
         className={`task-timer-btn task-timer-btn--${size} ${className}`.trim()}
@@ -290,7 +172,7 @@ export default function TaskTimerButton({
               height="15"
               viewBox="0 0 24 24"
               fill={theme.iconColor}
-              style={{ display: "block" }}
+              className="block!"
             >
               <rect x="6" y="5" width="4" height="14" rx="1" />
               <rect x="14" y="5" width="4" height="14" rx="1" />
@@ -302,7 +184,7 @@ export default function TaskTimerButton({
               height="15"
               viewBox="0 0 24 24"
               fill={theme.iconColor}
-              style={{ display: "block", transform: "translateX(1px)" }}
+              className="block! [transform:translateX(1px)]!"
             >
               <path d="M8 5.5v13a1 1 0 0 0 1.54.84l10.2-6.5a1 1 0 0 0 0-1.68l-10.2-6.5A1 1 0 0 0 8 5.5z" />
             </svg>

@@ -31,35 +31,6 @@ function normalizePriority(val) {
   return PRIORITY_CONFIG[p] ? p : "medium";
 }
 
-const PRIORITY_TOOLTIP_STYLES = `
-  .priority-icon-wrapper {
-    display: inline-flex;
-    align-items: center;
-  }
-  .priority-tooltip {
-    background: #FFFFFF;
-    color: #1E293B;
-    border: 1px solid #E2E8F0;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 500;
-    white-space: nowrap;
-    pointer-events: none;
-    z-index: 99999;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-  .priority-tooltip::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 4px solid transparent;
-    border-top-color: #E2E8F0;
-  }
-`;
-
 /**
  * PriorityIcon Component
  * Renders the rounded diamond with white exclamation mark '!'
@@ -79,8 +50,8 @@ export function PriorityIcon({ priority = "medium", size = 22, className = "", s
       height={size}
       viewBox="0 0 24 24"
       fill="none"
-      className={className}
-      style={{ display: "inline-block", flexShrink: 0 }}
+      className={className + " " + "inline-block! shrink-0!"}
+
       onMouseEnter={() => {
         if (iconRef.current) {
           const rect = iconRef.current.getBoundingClientRect();
@@ -118,18 +89,16 @@ export function PriorityIcon({ priority = "medium", size = 22, className = "", s
 
   return (
     <>
-      <style>{PRIORITY_TOOLTIP_STYLES}</style>
+
       <span className="priority-icon-wrapper">
         {icon}
         {show && createPortal(
           <div
-            className="priority-tooltip"
+            className={"priority-tooltip" + " " + "fixed! [transform:translateX(-50%)]!"}
             style={{
-              position: 'fixed',
-              top: `${position.top - 35}px`,
-              left: `${position.left}px`,
-              transform: 'translateX(-50%)',
-            }}
+  top: `${position.top - 35}px`,
+  left: `${position.left}px`
+}}
           >
             {cfg.label}
           </div>,
@@ -139,129 +108,6 @@ export function PriorityIcon({ priority = "medium", size = 22, className = "", s
     </>
   );
 }
-
-const STYLES = `
-  .priority-btn {
-    display: inline-flex;
-    align-items: center;
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 8px;
-    cursor: pointer;
-    user-select: none;
-    outline: none;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-weight: 500;
-    line-height: 1.25;
-    white-space: nowrap;
-    overflow: hidden;
-    box-sizing: border-box;
-    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.18s ease, transform 0.12s ease;
-    position: relative;
-  }
-
-  .priority-btn:active:not(:disabled) {
-    transform: scale(0.97);
-  }
-
-  .priority-btn:focus-visible {
-    box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.25);
-  }
-
-  .priority-btn:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-    pointer-events: none;
-  }
-
-  /* Sizes */
-  .priority-btn--sm {
-    padding: 3px;
-    min-height: 28px;
-    min-width: 28px;
-    font-size: 13px;
-  }
-  .priority-btn--md {
-    padding: 5px;
-    min-height: 36px;
-    min-width: 36px;
-    font-size: 16px;
-  }
-  .priority-btn--lg {
-    padding: 7px;
-    min-height: 44px;
-    min-width: 44px;
-    font-size: 18px;
-  }
-
-  /* Tooltip for PriorityButton */
-  .priority-btn .priority-tooltip {
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #FFFFFF;
-    color: #1E293B;
-    border: 1px solid #E2E8F0;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 500;
-    white-space: nowrap;
-    margin-bottom: 6px;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.15s ease, visibility 0.15s ease;
-    pointer-events: none;
-    z-index: 9999;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-  .priority-btn .priority-tooltip::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 4px solid transparent;
-    border-top-color: #E2E8F0;
-  }
-  .priority-btn:hover .priority-tooltip {
-    opacity: 1;
-    visibility: visible;
-  }
-
-  /* Sliding label container for when showText is true */
-  .priority-btn-text {
-    max-width: 0;
-    opacity: 0;
-    margin-left: 0;
-    overflow: hidden;
-    color: #475569;
-    letter-spacing: -0.01em;
-    transition: max-width 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.18s ease, margin-left 0.18s ease;
-  }
-
-  /* Always show text when showText is true */
-  .priority-btn--always-show {
-    background-color: rgba(0, 0, 0, 0.04);
-  }
-
-  .priority-btn--sm.priority-btn--always-show {
-    padding: 3px 8px 3px 5px;
-  }
-  .priority-btn--md.priority-btn--always-show {
-    padding: 5px 12px 5px 7px;
-  }
-  .priority-btn--lg.priority-btn--always-show {
-    padding: 7px 16px 7px 9px;
-  }
-
-  .priority-btn--always-show .priority-btn-text {
-    max-width: 120px;
-    opacity: 1;
-    margin-left: 8px;
-  }
-`;
 
 /**
  * PriorityButton Component
@@ -315,7 +161,7 @@ export default function PriorityButton({
 
   return (
     <>
-      <style>{STYLES}</style>
+
       <button
         ref={buttonRef}
         type={type}
@@ -338,13 +184,11 @@ export default function PriorityButton({
       </button>
       {!showText && isHovered && createPortal(
         <div
-          className="priority-tooltip"
+          className={"priority-tooltip" + " " + "fixed! [transform:translateX(-50%)]!"}
           style={{
-            position: 'fixed',
-            top: `${tooltipPosition.top - 35}px`,
-            left: `${tooltipPosition.left}px`,
-            transform: 'translateX(-50%)',
-          }}
+  top: `${tooltipPosition.top - 35}px`,
+  left: `${tooltipPosition.left}px`
+}}
         >
           {cfg.label}
         </div>,

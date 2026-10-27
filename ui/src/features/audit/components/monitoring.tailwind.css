@@ -1,0 +1,31 @@
+@utility api-row {
+  &:hover {
+    @apply [background-color:var(--color-slate-50)]!;
+  }
+}
+@utility audit-row {
+  &:hover {
+    @apply [background-color:var(--color-slate-50)]!;
+  }
+}
+@utility db-row {
+  &:hover {
+    @apply [background-color:var(--color-slate-50)]!;
+  }
+}
+@utility tbl-nav-item {
+  @apply [transition:all_.15s_ease];
+  @apply cursor-pointer;
+  &:hover:not(.active) {
+    @apply [background-color:var(--color-slate-100)];
+  }
+}
+@utility spinner {
+  @apply inline-block;
+  @apply w-[20px];
+  @apply h-[20px];
+  @apply [border:2px_solid_var(--color-slate-200)];
+  @apply [border-top-color:var(--color-primary)];
+  @apply rounded-[50%];
+  @apply [animation:spin_.7s_linear_infinite];
+}

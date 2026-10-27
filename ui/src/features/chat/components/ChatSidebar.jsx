@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import useApiData from '../../../app/hooks/useApiData.js'
+import useApiData from '../../../shared/hooks/useApiData.js'
 import { Avatar, FileCard } from './ChatElements.jsx'
 import ChatMessage from './ChatMessage.jsx'
 import ChatComposer from './ChatComposer.jsx'

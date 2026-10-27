@@ -1,55 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { notificationService } from './notificationService.js';
-
-/* styling */
-const tailwindStyling = {
-  "material-symbols-outlined": [
-    "[font-family:'Material_Symbols_Outlined']",
-    "[font-weight:normal]",
-    "[font-style:normal]",
-    "[font-size:20px]",
-    "[line-height:1]",
-    "[letter-spacing:normal]",
-    "[text-transform:none]",
-    "[white-space:nowrap]",
-    "[word-wrap:normal]",
-    "[direction:ltr]",
-    "[font-feature-settings:'liga']",
-    "[-webkit-font-smoothing:antialiased]",
-    "[&.sidebar-icon]:[font-size:20px]"
-  ],
-  "notification": [
-    "[width:32px]",
-    "[height:32px]",
-    "[border:0]",
-    "[background:transparent]",
-    "[color:var(--color-slate-500)]",
-    "[cursor:pointer]",
-    "[display:grid]",
-    "[place-items:center]",
-    "[&_.material-symbols-outlined]:[font-size:20px]"
-  ],
-  "priority": [
-    "[display:inline-flex]",
-    "[min-width:73px]",
-    "[height:36px]",
-    "[align-items:center]",
-    "[justify-content:center]",
-    "[border-radius:9px]",
-    "[font-size:11px]",
-    "[&.low]:[background:#c9d77f]",
-    "[&.high]:[background:#ef777b]",
-    "[&.medium]:[background:#bdc8f7]"
-  ]
-}
-const styling = value => {
-  const classes = typeof value === 'string' ? value : ''
-  const utilities = classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])
-  return [...new Set([...classes.split(/\s+/), ...utilities])].filter(Boolean).join(' ')
-}
-
-
 
 function renderFormattedMessage(text) {
   if (!text) return "";
@@ -57,7 +8,7 @@ function renderFormattedMessage(text) {
   return parts.map((part, index) => {
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
-        <strong key={index} style={{ fontWeight: "700", color: "var(--color-slate-900)" }}>
+        <strong key={index} className="font-bold! [color:var(--color-slate-900)]!">
           {part.slice(2, -2)}
         </strong>
       );
@@ -102,30 +53,18 @@ export function NotificationBell({
   const [unreadCount, setUnreadCount] = useState(0);
   const containerRef = useRef(null);
 
-  // Fetch notifications from backend
-  const fetchNotifications = useCallback(async () => {
-    try {
-      const [items, count] = await Promise.all([
-        notificationService.getRecentNotifications(),
-        notificationService.getUnreadCount(),
-      ]);
-      setNotifications(items);
-      setUnreadCount(count);
-    } catch (err) {
-      console.warn("Could not fetch notifications:", err);
-    }
-  }, []);
-
   useEffect(() => {
-    const initial = setTimeout(fetchNotifications, 0);
-    const interval = setInterval(fetchNotifications, 30000);
-    window.addEventListener('notifications:changed', fetchNotifications);
-    return () => {
-      clearTimeout(initial);
-      clearInterval(interval);
-      window.removeEventListener('notifications:changed', fetchNotifications);
+    let active = true;
+    const update = page => {
+      if (active) { setNotifications(page.results); setUnreadCount(page.unread_count); }
     };
-  }, [fetchNotifications]);
+    const unsubscribe = notificationService.subscribe(update);
+    notificationService.getSnapshot().then(update).catch(error => console.warn('Could not fetch notifications:', error));
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, []);
 
   // Click outside to close
   useEffect(() => {
@@ -188,8 +127,8 @@ export function NotificationBell({
   return (
     <div
       ref={containerRef}
-      className={styling(`notification-bell-container ${className}`)}
-      style={{ position: "relative", display: "inline-flex", alignItems: "center" }}
+      className={`notification-bell-container ${className}` + " " + "relative! inline-flex! items-center!"}
+
     >
       {/* Bell Trigger Button */}
       <button
@@ -215,32 +154,18 @@ export function NotificationBell({
           transition: "background-color 0.15s ease, color 0.15s ease",
           ...iconStyle,
         }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "rgba(241, 245, 249, 0.8)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "transparent";
-        }}
+        className={'' + ' ' + "hover:[background-color:rgba(241,_245,_249,_0.8)]!"}
+
       >
         <span
-          className={styling("material-symbols-outlined")}
-          style={{ fontSize: "21px", display: "block", lineHeight: 1 }}
+          className={"material-symbols-outlined" + " " + "text-[21px]! block! leading-[1]!"}
+
         >
           notifications
         </span>
         {unreadCount > 0 && (
           <span
-            style={{
-              position: "absolute",
-              top: "6px",
-              right: "6px",
-              width: "8px",
-              height: "8px",
-              borderRadius: "50%",
-              backgroundColor: "var(--color-danger)",
-              border: "2px solid var(--color-white)",
-              pointerEvents: "none",
-            }}
+            className="absolute! top-[6px]! right-[6px]! w-[8px]! h-[8px]! rounded-[50%]! [background-color:var(--color-danger)]! [border:2px_solid_var(--color-white)]! pointer-events-none!"
           />
         )}
       </button>
@@ -248,78 +173,22 @@ export function NotificationBell({
       {/* Popover Dropdown matching design mockup */}
       {isOpen && (
         <div
-          style={{
-            position: "absolute",
-            top: "calc(100% + 8px)",
-            ...(align === "right" ? { right: 0 } : { left: 0 }),
-            width: "440px",
-            maxWidth: "calc(100vw - 28px)",
-            backgroundColor: "var(--color-white)",
-            borderRadius: "14px",
-            boxShadow:
-              "0 20px 40px -10px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.08)",
-            zIndex: 9999,
-            overflow: "hidden",
-            fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-            display: "flex",
-            flexDirection: "column",
-            animation: "notifPopoverFadeIn 0.16s ease-out forwards",
-          }}
+          className={align === "right" ? "[position:absolute]! [top:calc(100%_+_8px)]! [right:0]! [width:440px]! [max-width:calc(100vw_-_28px)]! [background-color:var(--color-white)]! [border-radius:14px]! [box-shadow:0_20px_40px_-10px_rgba(15,_23,_42,_0.18),_0_0_0_1px_rgba(15,_23,_42,_0.08)]! [z-index:9999]! [overflow:hidden]! [font-family:'Inter',_-apple-system,_BlinkMacSystemFont,_sans-serif]! [display:flex]! [flex-direction:column]! [animation:notifPopoverFadeIn_0.16s_ease-out_forwards]!" : "[position:absolute]! [top:calc(100%_+_8px)]! [left:0]! [width:440px]! [max-width:calc(100vw_-_28px)]! [background-color:var(--color-white)]! [border-radius:14px]! [box-shadow:0_20px_40px_-10px_rgba(15,_23,_42,_0.18),_0_0_0_1px_rgba(15,_23,_42,_0.08)]! [z-index:9999]! [overflow:hidden]! [font-family:'Inter',_-apple-system,_BlinkMacSystemFont,_sans-serif]! [display:flex]! [flex-direction:column]! [animation:notifPopoverFadeIn_0.16s_ease-out_forwards]!"}
         >
-          <style>
-            {`
-              @keyframes notifPopoverFadeIn {
-                from {
-                  opacity: 0;
-                  transform: translateY(-6px) scale(0.98);
-                }
-                to {
-                  opacity: 1;
-                  transform: translateY(0) scale(1);
-                }
-              }
-              .notif-row-hover:hover {
-                background-color: var(--color-slate-50) !important;
-              }
-              .notif-row-highlighted:hover {
-                background-color: #E8F0FE !important;
-              }
-            `}
-          </style>
 
           {/* Header */}
           <div
-            style={{
-              padding: "16px 20px 14px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              borderBottom: "1px solid var(--color-slate-200)",
-            }}
+            className="p-[16px_20px_14px]! flex! justify-between! items-center! [border-bottom:1px_solid_var(--color-slate-200)]!"
           >
-            <div style={{ display: "flex", alignItems: "center" }}>
+            <div className="flex! items-center!">
               <span
-                style={{
-                  fontSize: "17px",
-                  fontWeight: "700",
-                  color: "var(--color-slate-900)",
-                  letterSpacing: "-0.3px",
-                }}
+                className="text-[17px]! font-bold! [color:var(--color-slate-900)]! tracking-[-0.3px]!"
               >
                 Notifications
               </span>
               {unreadCount > 0 && (
                 <span
-                  style={{
-                    marginLeft: "10px",
-                    backgroundColor: "var(--color-danger-border)",
-                    color: "var(--color-danger)",
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    padding: "2px 8px",
-                    borderRadius: "12px",
-                    lineHeight: "1.4",
-                  }}
+                  className="ml-[10px]! [background-color:var(--color-danger-border)]! [color:var(--color-danger)]! text-[12px]! font-semibold! p-[2px_8px]! rounded-[12px]! leading-[1.4]!"
                 >
                   {unreadCount} new
                 </span>
@@ -329,22 +198,8 @@ export function NotificationBell({
             <button
               type="button"
               onClick={handleMarkAllRead}
-              style={{
-                background: "none",
-                border: "none",
-                color: "var(--color-primary)",
-                fontSize: "13px",
-                fontWeight: "600",
-                cursor: "pointer",
-                padding: "4px 2px",
-                fontFamily: "inherit",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.textDecoration = "underline";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.textDecoration = "none";
-              }}
+              className={"[background:none]! border-0! [color:var(--color-primary)]! text-[13px]! font-semibold! cursor-pointer! p-[4px_2px]! [font-family:inherit]!" + ' ' + "hover:underline!"}
+
             >
               Mark all read
             </button>
@@ -352,21 +207,11 @@ export function NotificationBell({
 
           {/* Notifications List */}
           <div
-            style={{
-              maxHeight: "380px",
-              overflowY: "auto",
-              display: "flex",
-              flexDirection: "column",
-            }}
+            className="max-h-[380px]! overflow-y-auto! flex! flex-col!"
           >
             {notifications.length === 0 ? (
               <div
-                style={{
-                  padding: "36px 20px",
-                  textAlign: "center",
-                  color: "var(--color-slate-400)",
-                  fontSize: "13px",
-                }}
+                className="p-[36px_20px]! text-center! [color:var(--color-slate-400)]! text-[13px]!"
               >
                 No notifications right now
               </div>
@@ -385,43 +230,22 @@ export function NotificationBell({
                   <div
                     key={n.id || idx}
                     onClick={() => handleItemClick(n)}
-                    className={styling(
-                      isHighlighted
-                        ? "notif-row-highlighted"
-                        : "notif-row-hover"
-                    )}
+                    className={(isHighlighted ? "notif-row-highlighted" : "notif-row-hover") + " " + "flex! gap-[14px]! p-[14px_20px]! [border-bottom:1px_solid_var(--color-slate-200)]! cursor-pointer! items-start! [transition:background-color_0.15s_ease]!"}
                     style={{
-                      display: "flex",
-                      gap: "14px",
-                      padding: "14px 20px",
-                      backgroundColor: rowBg,
-                      borderBottom: "1px solid var(--color-slate-200)",
-                      cursor: "pointer",
-                      alignItems: "flex-start",
-                      transition: "background-color 0.15s ease",
-                    }}
+  backgroundColor: rowBg
+}}
                   >
                     {/* Status Dot */}
                     <div
-                      style={{
-                        width: "8px",
-                        height: "8px",
-                        borderRadius: "50%",
-                        backgroundColor: dotColor,
-                        marginTop: "6px",
-                        flexShrink: 0,
-                      }}
+                      className="w-[8px]! h-[8px]! rounded-[50%]! mt-[6px]! shrink-0!" style={{
+  backgroundColor: dotColor
+}}
                     />
 
                     {/* Message Body & Subtitle */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="flex-1! min-w-0!">
                       <div
-                        style={{
-                          fontSize: "13px",
-                          lineHeight: "1.45",
-                          color: "var(--color-slate-800)",
-                          wordBreak: "break-word",
-                        }}
+                        className="text-[13px]! leading-[1.45]! [color:var(--color-slate-800)]! [word-break:break-word]!"
                       >
                         {renderFormattedMessage(
                           n.formatted_text || n.message || n.title
@@ -429,14 +253,7 @@ export function NotificationBell({
                       </div>
 
                       <div
-                        style={{
-                          fontSize: "11.5px",
-                          color: "var(--color-slate-400)",
-                          marginTop: "5px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "14px",
-                        }}
+                        className="text-[11.5px]! [color:var(--color-slate-400)]! mt-[5px]! flex! items-center! gap-[14px]!"
                       >
                         <span>{n.project || "Project"}</span>
                         <span>{getRelativeTime(n.timestamp)}</span>
@@ -450,41 +267,16 @@ export function NotificationBell({
 
           {/* Bottom Button */}
           <div
-            style={{
-              padding: "12px 16px",
-              backgroundColor: "var(--color-white)",
-              borderTop: "1px solid var(--color-slate-200)",
-            }}
+            className="p-[12px_16px]! [background-color:var(--color-white)]! [border-top:1px_solid_var(--color-slate-200)]!"
           >
             <button
               type="button"
               onClick={handleOpenInbox}
-              style={{
-                width: "100%",
-                backgroundColor: "var(--color-slate-100)",
-                border: "1px solid var(--color-slate-200)",
-                borderRadius: "8px",
-                padding: "11px 16px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                fontSize: "13.5px",
-                fontWeight: "600",
-                color: "var(--color-slate-900)",
-                cursor: "pointer",
-                transition: "background-color 0.15s ease",
-                fontFamily: "inherit",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "var(--color-slate-200)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "var(--color-slate-100)";
-              }}
+              className={"w-full! [background-color:var(--color-slate-100)]! [border:1px_solid_var(--color-slate-200)]! rounded-[8px]! p-[11px_16px]! flex! items-center! justify-center! gap-[8px]! text-[13.5px]! font-semibold! [color:var(--color-slate-900)]! cursor-pointer! [transition:background-color_0.15s_ease]! [font-family:inherit]!" + ' ' + "hover:[background-color:var(--color-slate-200)]!"}
+
             >
               <span>Open notification inbox</span>
-              <span style={{ fontSize: "15px" }}>→</span>
+              <span className="text-[15px]!">→</span>
             </button>
           </div>
         </div>
@@ -492,5 +284,3 @@ export function NotificationBell({
     </div>
   );
 }
-
-

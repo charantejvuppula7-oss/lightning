@@ -1,13 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import useApiData from '../../app/hooks/useApiData.js'
-import { useProjectSelection } from '../../app/hooks/useProjectSelection.js'
-import { apiRequest, errorMessage } from '../../services/api/apiClient.js'
+import useApiData from '../../shared/hooks/useApiData.js'
+import { useProjectSelection } from '../projects/useProjectSelection.js'
+import { apiRequest, errorMessage } from '../../shared/api/apiClient.js'
 import { hasSidebarPermission } from '../../layouts/sidebarNavigation.js'
 import { Avatar, PeopleIcon, PushPinIcon } from './components/ChatElements.jsx'
 import ChatMessage from './components/ChatMessage.jsx'
 import ChatComposer from './components/ChatComposer.jsx'
 import ChatSidebar from './components/ChatSidebar.jsx'
-import './chat.css'
 
 function dateLabel(value) {
   const date=new Date(value); const today=new Date(); const yesterday=new Date(); yesterday.setDate(today.getDate()-1)
@@ -17,7 +16,7 @@ function dateLabel(value) {
 export default function ChatPage({ user,searchQuery = '' }) {
   const {projects,selectedProjectId} = useProjectSelection()
   const project=projects.find(project => project.id === selectedProjectId)
-  if (!project) return <section style={{padding:28}}><h1>Project Chat</h1><p>Select a project to open its conversation.</p></section>
+  if (!project) return <section className="p-[28px]!"><h1>Project Chat</h1><p>Select a project to open its conversation.</p></section>
   return <ProjectChat key={project.id} project={project} user={user} searchQuery={searchQuery}/>
 }
 

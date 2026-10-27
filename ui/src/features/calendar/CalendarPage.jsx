@@ -1,40 +1,14 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchCalendarEvents } from './calendarApi.js';
-import { useProjectSelection } from '../../app/hooks/index.js';
-
-/* styling */
-const tailwindStyling = {
-  "material-symbols-outlined": [
-    "[font-family:'Material_Symbols_Outlined']",
-    "[font-weight:normal]",
-    "[font-style:normal]",
-    "[font-size:20px]",
-    "[line-height:1]",
-    "[letter-spacing:normal]",
-    "[text-transform:none]",
-    "[white-space:nowrap]",
-    "[word-wrap:normal]",
-    "[direction:ltr]",
-    "[font-feature-settings:'liga']",
-    "[-webkit-font-smoothing:antialiased]",
-    "[&.sidebar-icon]:[font-size:20px]"
-  ]
-}
-const styling = value => {
-  const classes = typeof value === 'string' ? value : ''
-  const utilities = classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])
-  return [...new Set([...classes.split(/\s+/), ...utilities])].filter(Boolean).join(' ')
-}
-
-
+import { useProjectSelection } from '../projects/useProjectSelection.js'
 
 const monthNames = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
-export function formatDateStr(d) {
+function formatDateStr(d) {
   if (!d || !(d instanceof Date) || isNaN(d.getTime())) return '';
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -42,12 +16,12 @@ export function formatDateStr(d) {
   return `${y}-${m}-${day}`;
 }
 
-export function withoutIcons(value = '') {
+function withoutIcons(value = '') {
   if (value == null) return '';
   return String(value).replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').trim();
 }
 
-export function getVisibleRange(currentDate, viewMode) {
+function getVisibleRange(currentDate, viewMode) {
   if (!(currentDate instanceof Date) || isNaN(currentDate.getTime())) {
     return { start: '', end: '' };
   }
@@ -333,13 +307,13 @@ export default function CalendarPage() {
   };
 
   return (
-    <div style={styles.container}>
+    <div className="p-[24px_32px]! [background-color:#F9FBFF]! min-h-[100%]! box-border! flex! flex-col! gap-[16px]! [font-family:-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_Roboto,_Helvetica,_Arial,_sans-serif]!">
       {/* ── Page Header matching screenshot ── */}
-      <div style={styles.headerCard}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+      <div className="[background-color:var(--color-white)]! rounded-[12px]! [border:1px_solid_var(--color-slate-200)]! p-[18px_24px]! [box-shadow:0_1px_3px_rgba(0,_0,_0,_0.02)]!">
+        <div className="flex! justify-between! items-center! flex-wrap! gap-[12px]!">
           <div>
-            <h1 style={styles.headerTitle}>Calendar</h1>
-            <p style={styles.headerSubtitle}>
+            <h1 className="text-[22px]! font-extrabold! [color:var(--color-slate-900)]! m-[0_0_4px_0]! tracking-[-0.01em]!">Calendar</h1>
+            <p className="text-[13px]! [color:var(--color-slate-500)]! m-0! font-normal!">
               See all the task, dependency and blockers all at once
             </p>
           </div>
@@ -348,12 +322,12 @@ export default function CalendarPage() {
       </div>
 
       {error && (
-        <div style={styles.errorBanner} role="alert">
+        <div className="[background-color:#FEE2E2]! [border:1px_solid_#FCA5A5]! [color:#991B1B]! p-[10px_16px]! rounded-[8px]! flex! items-center! justify-between! text-[13px]! font-medium!" role="alert">
           <span>{error}</span>
           <button
             type="button"
             onClick={() => loadEvents(currentDate, viewMode, selectedProjectId)}
-            style={styles.retryBtn}
+            className="[background-color:#991B1B]! [color:#ffffff]! border-0! p-[4px_10px]! rounded-[4px]! text-[12px]! font-semibold! cursor-pointer!"
           >
             Retry
           </button>
@@ -361,24 +335,24 @@ export default function CalendarPage() {
       )}
 
       {/* ── Main Calendar Card Container ── */}
-      <div style={styles.mainCard}>
+      <div className="[background-color:var(--color-white)]! rounded-[12px]! [border:1px_solid_var(--color-slate-200)]! [box-shadow:0_1px_4px_rgba(0,_0,_0,_0.04)]! p-[20px_24px]! flex! flex-col! gap-[16px]!">
         {/* Header Toolbar: < Today >, Month Year ˅, Month | Week */}
-        <div style={styles.toolbar}>
+        <div className="flex! justify-between! items-center! flex-wrap! gap-[12px]!">
           {/* Left: < Today > */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div className="flex! items-center! gap-[6px]!">
             <button
               type="button"
               onClick={handlePrevMonth}
               title="Previous"
               aria-label="Previous"
-              style={styles.navBtn}
+              className="w-[32px]! h-[32px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! [background-color:var(--color-white)]! [color:var(--color-slate-700)]! text-[14px]! font-semibold! cursor-pointer! flex! items-center! justify-center!"
             >
               &lt;
             </button>
             <button
               type="button"
               onClick={handleToday}
-              style={styles.todayBtn}
+              className="p-[6px_14px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! [background-color:var(--color-white)]! [color:var(--color-slate-700)]! text-[13px]! font-semibold! cursor-pointer!"
             >
               Today
             </button>
@@ -387,49 +361,48 @@ export default function CalendarPage() {
               onClick={handleNextMonth}
               title="Next"
               aria-label="Next"
-              style={styles.navBtn}
+              className="w-[32px]! h-[32px]! rounded-[6px]! [border:1px_solid_var(--color-slate-300)]! [background-color:var(--color-white)]! [color:var(--color-slate-700)]! text-[14px]! font-semibold! cursor-pointer! flex! items-center! justify-center!"
             >
               &gt;
             </button>
           </div>
 
           {/* Center: Month & Year with dropdown arrow */}
-          <div style={{ position: 'relative' }}>
+          <div className="relative!">
             <button
               type="button"
               onClick={() => setShowMonthDropdown(!showMonthDropdown)}
-              style={styles.monthTitleBtn}
+              className="[background:none]! border-0! cursor-pointer! flex! items-center! gap-[6px]! p-[4px_8px]! rounded-[6px]!"
               aria-label="Choose Month"
             >
-              <span style={styles.monthTitleText}>
+              <span className="text-[18px]! font-extrabold! [color:var(--color-slate-900)]! tracking-[-0.01em]! flex! items-center! gap-[6px]!">
                 {monthNames[month]} {year}
                 {loading && (
                   <span
-                    className={styling("material-symbols-outlined")}
-                    style={{ fontSize: '16px', color: 'var(--color-primary)', animation: 'spin 1s linear infinite' }}
+                    className={"material-symbols-outlined" + " " + "text-[16px]! [color:var(--color-primary)]! [animation:spin_1s_linear_infinite]!"}
+
                     aria-hidden="true"
                   >
                     autorenew
                   </span>
                 )}
               </span>
-              <span style={{ fontSize: '13px', color: 'var(--color-slate-500)', fontWeight: '700' }} aria-hidden="true">
+              <span className="text-[13px]! [color:var(--color-slate-500)]! font-bold!" aria-hidden="true">
                 {showMonthDropdown ? '▴' : '▾'}
               </span>
             </button>
 
             {showMonthDropdown && (
-              <div style={styles.monthDropdownMenu}>
+              <div className="absolute! top-[calc(100%_+_6px)]! left-[50%]! [transform:translateX(-50%)]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-200)]! rounded-[8px]! [box-shadow:0_10px_25px_-5px_rgba(0,_0,_0,_0.1)]! z-[100]! w-[180px]! max-h-[220px]! overflow-y-auto! p-[4px]!">
                 {monthNames.map((mName, idx) => (
                   <div
                     key={mName}
                     onClick={() => handleMonthSelect(idx)}
-                    style={{
-                      ...styles.monthDropdownItem,
-                      backgroundColor: idx === month ? 'var(--color-primary-subtle)' : 'transparent',
-                      fontWeight: idx === month ? '700' : '500',
-                      color: idx === month ? 'var(--color-primary)' : 'var(--color-slate-800)',
-                    }}
+                    className="p-[8px_12px]! rounded-[4px]! text-[13px]! cursor-pointer!" style={{
+  backgroundColor: idx === month ? 'var(--color-primary-subtle)' : 'transparent',
+  fontWeight: idx === month ? '700' : '500',
+  color: idx === month ? 'var(--color-primary)' : 'var(--color-slate-800)'
+}}
                   >
                     {mName} {year}
                   </div>
@@ -439,30 +412,28 @@ export default function CalendarPage() {
           </div>
 
           {/* Right: View Toggle (Month / Week) */}
-          <div style={styles.viewToggleWrap}>
+          <div className="flex! [background-color:var(--color-slate-100)]! rounded-[8px]! p-[3px]! gap-[2px]! [border:1px_solid_var(--color-slate-200)]!">
             <button
               type="button"
               onClick={() => setViewMode('month')}
-              style={{
-                ...styles.viewToggleBtn,
-                fontWeight: viewMode === 'month' ? '700' : '500',
-                backgroundColor: viewMode === 'month' ? 'var(--color-white)' : 'transparent',
-                color: viewMode === 'month' ? '#4F46E5' : 'var(--color-slate-500)',
-                boxShadow: viewMode === 'month' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-              }}
+              className="border-0! p-[5px_14px]! rounded-[6px]! text-[12px]! cursor-pointer! [transition:all_0.15s_ease]!" style={{
+  fontWeight: viewMode === 'month' ? '700' : '500',
+  backgroundColor: viewMode === 'month' ? 'var(--color-white)' : 'transparent',
+  color: viewMode === 'month' ? '#4F46E5' : 'var(--color-slate-500)',
+  boxShadow: viewMode === 'month' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+}}
             >
               Month
             </button>
             <button
               type="button"
               onClick={() => setViewMode('week')}
-              style={{
-                ...styles.viewToggleBtn,
-                fontWeight: viewMode === 'week' ? '700' : '500',
-                backgroundColor: viewMode === 'week' ? 'var(--color-white)' : 'transparent',
-                color: viewMode === 'week' ? '#4F46E5' : 'var(--color-slate-500)',
-                boxShadow: viewMode === 'week' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-              }}
+              className="border-0! p-[5px_14px]! rounded-[6px]! text-[12px]! cursor-pointer! [transition:all_0.15s_ease]!" style={{
+  fontWeight: viewMode === 'week' ? '700' : '500',
+  backgroundColor: viewMode === 'week' ? 'var(--color-white)' : 'transparent',
+  color: viewMode === 'week' ? '#4F46E5' : 'var(--color-slate-500)',
+  boxShadow: viewMode === 'week' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+}}
             >
               Week
             </button>
@@ -470,28 +441,26 @@ export default function CalendarPage() {
         </div>
 
         {/* Filter Bar: [✓] Tasks, [✓] Dependencies, [✓] Blockers, [✓] All, Clear all */}
-        <div style={styles.filterBar}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        <div className="flex! justify-between! items-center! pb-[8px]! [border-bottom:1px_solid_var(--color-slate-100)]! flex-wrap! gap-[10px]!">
+          <div className="flex! items-center! gap-[10px]! flex-wrap!">
             {/* Tasks Filter */}
             <label
-              style={{
-                ...styles.filterPill,
-                backgroundColor: filters.tasks ? 'var(--color-success-bg, #DCFCE7)' : 'var(--color-slate-50)',
-                color: filters.tasks ? 'var(--color-success-dark, #15803D)' : 'var(--color-slate-500)',
-                borderColor: filters.tasks ? '#86EFAC' : 'var(--color-slate-200)',
-              }}
+              className="inline-flex! items-center! gap-[6px]! p-[4px_10px]! rounded-[6px]! text-[12px]! font-semibold! [border:1px_solid]! cursor-pointer! select-none! [transition:all_0.15s_ease]!" style={{
+  backgroundColor: filters.tasks ? 'var(--color-success-bg, #DCFCE7)' : 'var(--color-slate-50)',
+  color: filters.tasks ? 'var(--color-success-dark, #15803D)' : 'var(--color-slate-500)',
+  borderColor: filters.tasks ? '#86EFAC' : 'var(--color-slate-200)'
+}}
             >
               <input
                 type="checkbox"
                 checked={filters.tasks}
                 onChange={() => handleToggleFilter('tasks')}
-                style={{ display: 'none' }}
+                className="hidden!"
               />
               <span
-                style={{
-                  ...styles.checkIconBadge,
-                  backgroundColor: filters.tasks ? 'var(--color-success-dark, #15803D)' : 'var(--color-slate-300)',
-                }}
+                className="w-[14px]! h-[14px]! rounded-[3px]! inline-flex! items-center! justify-center! [color:var(--color-white)]! text-[9px]! [font-weight:900]! shrink-0!" style={{
+  backgroundColor: filters.tasks ? 'var(--color-success-dark, #15803D)' : 'var(--color-slate-300)'
+}}
               >
                 ✓
               </span>
@@ -500,24 +469,22 @@ export default function CalendarPage() {
 
             {/* Dependencies Filter */}
             <label
-              style={{
-                ...styles.filterPill,
-                backgroundColor: filters.dependencies ? '#F3E8FF' : 'var(--color-slate-50)',
-                color: filters.dependencies ? '#7E22CE' : 'var(--color-slate-500)',
-                borderColor: filters.dependencies ? '#D8B4FE' : 'var(--color-slate-200)',
-              }}
+              className="inline-flex! items-center! gap-[6px]! p-[4px_10px]! rounded-[6px]! text-[12px]! font-semibold! [border:1px_solid]! cursor-pointer! select-none! [transition:all_0.15s_ease]!" style={{
+  backgroundColor: filters.dependencies ? '#F3E8FF' : 'var(--color-slate-50)',
+  color: filters.dependencies ? '#7E22CE' : 'var(--color-slate-500)',
+  borderColor: filters.dependencies ? '#D8B4FE' : 'var(--color-slate-200)'
+}}
             >
               <input
                 type="checkbox"
                 checked={filters.dependencies}
                 onChange={() => handleToggleFilter('dependencies')}
-                style={{ display: 'none' }}
+                className="hidden!"
               />
               <span
-                style={{
-                  ...styles.checkIconBadge,
-                  backgroundColor: filters.dependencies ? '#7E22CE' : 'var(--color-slate-300)',
-                }}
+                className="w-[14px]! h-[14px]! rounded-[3px]! inline-flex! items-center! justify-center! [color:var(--color-white)]! text-[9px]! [font-weight:900]! shrink-0!" style={{
+  backgroundColor: filters.dependencies ? '#7E22CE' : 'var(--color-slate-300)'
+}}
               >
                 ✓
               </span>
@@ -526,24 +493,22 @@ export default function CalendarPage() {
 
             {/* Blockers Filter */}
             <label
-              style={{
-                ...styles.filterPill,
-                backgroundColor: filters.blockers ? 'var(--color-danger-border, #FEE2E2)' : 'var(--color-slate-50)',
-                color: filters.blockers ? '#B91C1C' : 'var(--color-slate-500)',
-                borderColor: filters.blockers ? '#FCA5A5' : 'var(--color-slate-200)',
-              }}
+              className="inline-flex! items-center! gap-[6px]! p-[4px_10px]! rounded-[6px]! text-[12px]! font-semibold! [border:1px_solid]! cursor-pointer! select-none! [transition:all_0.15s_ease]!" style={{
+  backgroundColor: filters.blockers ? 'var(--color-danger-border, #FEE2E2)' : 'var(--color-slate-50)',
+  color: filters.blockers ? '#B91C1C' : 'var(--color-slate-500)',
+  borderColor: filters.blockers ? '#FCA5A5' : 'var(--color-slate-200)'
+}}
             >
               <input
                 type="checkbox"
                 checked={filters.blockers}
                 onChange={() => handleToggleFilter('blockers')}
-                style={{ display: 'none' }}
+                className="hidden!"
               />
               <span
-                style={{
-                  ...styles.checkIconBadge,
-                  backgroundColor: filters.blockers ? '#B91C1C' : 'var(--color-slate-300)',
-                }}
+                className="w-[14px]! h-[14px]! rounded-[3px]! inline-flex! items-center! justify-center! [color:var(--color-white)]! text-[9px]! [font-weight:900]! shrink-0!" style={{
+  backgroundColor: filters.blockers ? '#B91C1C' : 'var(--color-slate-300)'
+}}
               >
                 ✓
               </span>
@@ -552,24 +517,22 @@ export default function CalendarPage() {
 
             {/* All Filter */}
             <label
-              style={{
-                ...styles.filterPill,
-                backgroundColor: filters.all ? 'var(--color-primary-subtle, #eff6ff)' : 'var(--color-slate-50)',
-                color: filters.all ? 'var(--color-primary, #2563eb)' : 'var(--color-slate-500)',
-                borderColor: filters.all ? '#93C5FD' : 'var(--color-slate-200)',
-              }}
+              className="inline-flex! items-center! gap-[6px]! p-[4px_10px]! rounded-[6px]! text-[12px]! font-semibold! [border:1px_solid]! cursor-pointer! select-none! [transition:all_0.15s_ease]!" style={{
+  backgroundColor: filters.all ? 'var(--color-primary-subtle, #eff6ff)' : 'var(--color-slate-50)',
+  color: filters.all ? 'var(--color-primary, #2563eb)' : 'var(--color-slate-500)',
+  borderColor: filters.all ? '#93C5FD' : 'var(--color-slate-200)'
+}}
             >
               <input
                 type="checkbox"
                 checked={filters.all}
                 onChange={() => handleToggleFilter('all')}
-                style={{ display: 'none' }}
+                className="hidden!"
               />
               <span
-                style={{
-                  ...styles.checkIconBadge,
-                  backgroundColor: filters.all ? 'var(--color-primary, #2563eb)' : 'var(--color-slate-300)',
-                }}
+                className="w-[14px]! h-[14px]! rounded-[3px]! inline-flex! items-center! justify-center! [color:var(--color-white)]! text-[9px]! [font-weight:900]! shrink-0!" style={{
+  backgroundColor: filters.all ? 'var(--color-primary, #2563eb)' : 'var(--color-slate-300)'
+}}
               >
                 ✓
               </span>
@@ -581,16 +544,16 @@ export default function CalendarPage() {
           <button
             type="button"
             onClick={handleClearAll}
-            style={styles.clearAllBtn}
+            className="[background:none]! border-0! [color:#7C3AED]! text-[12px]! font-semibold! cursor-pointer! p-[4px_8px]! rounded-[4px]!"
           >
             Clear all
           </button>
         </div>
 
         {/* Days of Week Header */}
-        <div style={styles.daysHeaderGrid}>
+        <div className="grid! grid-cols-[repeat(7,_1fr)]! text-center! pb-[8px]! [border-bottom:1px_solid_var(--color-slate-200)]!">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((dayName) => (
-            <div key={dayName} style={styles.dayColHeader}>
+            <div key={dayName} className="text-[12px]! font-semibold! [color:var(--color-slate-500)]!">
               {dayName}
             </div>
           ))}
@@ -598,7 +561,7 @@ export default function CalendarPage() {
 
         {/* ── Month Grid View ── */}
         {viewMode === 'month' ? (
-          <div style={styles.monthGrid}>
+          <div className="grid! grid-cols-[repeat(7,_1fr)]! gap-[1px]! [background-color:var(--color-slate-200)]! rounded-[8px]! overflow-hidden! [border:1px_solid_var(--color-slate-200)]!">
             {calendarCells.map((cell, idx) => {
               const isToday = isTodayCell(cell.dateObj);
               const cellEvents = eventsByDate.get(cell.dateKey) || [];
@@ -606,39 +569,31 @@ export default function CalendarPage() {
               return (
                 <div
                   key={idx}
-                  style={{
-                    ...styles.monthCell,
-                    backgroundColor: isToday
-                      ? 'var(--color-primary-subtle, #eff6ff)'
-                      : cell.isCurrentMonth
-                      ? 'var(--color-white)'
-                      : '#FAFAFA',
-                    opacity: cell.isCurrentMonth ? 1 : 0.5,
-                    boxShadow: isToday ? 'inset 0 0 0 2px var(--color-primary, #2563eb)' : 'none',
-                  }}
+                  className="min-h-[100px]! p-[8px]! flex! flex-col! gap-[4px]! box-border! relative!" style={{
+  backgroundColor: isToday ? 'var(--color-primary-subtle, #eff6ff)' : cell.isCurrentMonth ? 'var(--color-white)' : '#FAFAFA',
+  opacity: cell.isCurrentMonth ? 1 : 0.5,
+  boxShadow: isToday ? 'inset 0 0 0 2px var(--color-primary, #2563eb)' : 'none'
+}}
                 >
                   {/* Day Number */}
                   {isToday ? (
-                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2px' }}>
-                      <span style={styles.todayCellBadge}>
+                    <div className="flex! items-center! mb-[2px]!">
+                      <span className="[background-color:var(--color-primary,_#2563eb)]! [color:var(--color-white)]! rounded-[10px]! p-[2px_6px]! text-[10px]! font-extrabold! inline-flex! items-center! gap-[3px]! leading-[1.2]!">
                         {String(cell.dayNumber).padStart(2, '0')} • Today
                       </span>
                     </div>
                   ) : (
                     <div
-                      style={{
-                        fontSize: '11px',
-                        fontWeight: '700',
-                        color: cell.isCurrentMonth ? 'var(--color-slate-700)' : 'var(--color-slate-400)',
-                        marginBottom: '2px',
-                      }}
+                      className="text-[11px]! font-bold! mb-[2px]!" style={{
+  color: cell.isCurrentMonth ? 'var(--color-slate-700)' : 'var(--color-slate-400)'
+}}
                     >
                       {String(cell.dayNumber).padStart(2, '0')}
                     </div>
                   )}
 
                   {/* Events Container */}
-                  <div style={styles.cellEventsContainer}>
+                  <div className="flex! flex-col! gap-[4px]! overflow-y-auto! max-h-[120px]!">
                     {cellEvents.map((event) => {
                       const catConfig = categoryStyles[event.category] || categoryStyles.tasks;
 
@@ -647,19 +602,18 @@ export default function CalendarPage() {
                           key={event.id}
                           onClick={() => setSelectedEvent(event)}
                       title={`${withoutIcons(event?.fullTitle ?? event?.title ?? '')} • ${event?.project ?? 'General'} • ${event?.time ?? ''}`}
-                          style={{
-                            ...styles.eventPill,
-                            backgroundColor: catConfig.bg,
-                            color: catConfig.color,
-                            borderColor: catConfig.border,
-                          }}
+                          className="rounded-[5px]! p-[4px_6px]! [border:1px_solid]! cursor-pointer! flex! flex-col! gap-[2px]! [transition:transform_0.1s_ease,_box-shadow_0.1s_ease]!" style={{
+  backgroundColor: catConfig.bg,
+  color: catConfig.color,
+  borderColor: catConfig.border
+}}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', overflow: 'hidden' }}>
-                            <span style={styles.eventTitleText}>
+                          <div className="flex! items-center! gap-[4px]! overflow-hidden!">
+                            <span className="font-bold! whitespace-nowrap! overflow-hidden! text-ellipsis! text-[11px]! leading-[1.2]!">
                           {withoutIcons(event?.title ?? '')}
                             </span>
                           </div>
-                          <div style={styles.eventTimeText}>
+                          <div className="text-[9px]! font-semibold! opacity-[0.9]! leading-[1]!">
                         {event?.time ?? ''}
                           </div>
                         </div>
@@ -672,7 +626,7 @@ export default function CalendarPage() {
           </div>
         ) : (
           /* ── Week View ── */
-          <div style={styles.weekGrid}>
+          <div className="grid! grid-cols-[repeat(7,_1fr)]! gap-[8px]! rounded-[8px]!">
             {calendarCells.map((cell, idx) => {
               const isToday = isTodayCell(cell.dateObj);
               const cellEvents = eventsByDate.get(cell.dateKey) || [];
@@ -680,28 +634,23 @@ export default function CalendarPage() {
               return (
                 <div
                   key={idx}
-                  style={{
-                    ...styles.weekCell,
-                    backgroundColor: isToday ? 'var(--color-primary-subtle, #eff6ff)' : 'var(--color-white)',
-                    borderColor: isToday ? 'var(--color-primary, #2563eb)' : 'var(--color-slate-200)',
-                  }}
+                  className="min-h-[320px]! [border:1px_solid]! rounded-[8px]! p-[10px]! flex! flex-col! gap-[8px]! box-border!" style={{
+  backgroundColor: isToday ? 'var(--color-primary-subtle, #eff6ff)' : 'var(--color-white)',
+  borderColor: isToday ? 'var(--color-primary, #2563eb)' : 'var(--color-slate-200)'
+}}
                 >
                   <div
-                    style={{
-                      fontSize: '12px',
-                      fontWeight: '700',
-                      color: isToday ? 'var(--color-primary)' : 'var(--color-slate-800)',
-                      paddingBottom: '6px',
-                      borderBottom: '1px solid var(--color-slate-200)',
-                    }}
+                    className="text-[12px]! font-bold! pb-[6px]! [border-bottom:1px_solid_var(--color-slate-200)]!" style={{
+  color: isToday ? 'var(--color-primary)' : 'var(--color-slate-800)'
+}}
                   >
                     {cell.dateObj.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })}
                     {isToday && ' • Today'}
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto' }}>
+                  <div className="flex! flex-col! gap-[6px]! overflow-y-auto!">
                     {cellEvents.length === 0 ? (
-                      <div style={{ fontSize: '11px', color: 'var(--color-slate-400)', fontStyle: 'italic', padding: '4px 0' }}>
+                      <div className="text-[11px]! [color:var(--color-slate-400)]! [font-style:italic]! p-[4px_0]!">
                         No events
                       </div>
                     ) : (
@@ -711,20 +660,18 @@ export default function CalendarPage() {
                           <div
                             key={event.id}
                             onClick={() => setSelectedEvent(event)}
-                            style={{
-                              ...styles.eventPill,
-                              padding: '6px 8px',
-                              backgroundColor: catConfig.bg,
-                              color: catConfig.color,
-                              borderColor: catConfig.border,
-                            }}
+                            className="rounded-[5px]! p-[6px_8px]! [border:1px_solid]! cursor-pointer! flex! flex-col! gap-[2px]! [transition:transform_0.1s_ease,_box-shadow_0.1s_ease]!" style={{
+  backgroundColor: catConfig.bg,
+  color: catConfig.color,
+  borderColor: catConfig.border
+}}
                           >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <span style={styles.eventTitleText}>
+                            <div className="flex! items-center! gap-[4px]!">
+                              <span className="font-bold! whitespace-nowrap! overflow-hidden! text-ellipsis! text-[11px]! leading-[1.2]!">
                                 {withoutIcons(event.fullTitle)}
                               </span>
                             </div>
-                            <div style={{ fontSize: '10px', opacity: 0.9 }}>
+                            <div className="text-[10px]! opacity-[0.9]!">
                               {event.time}
                             </div>
                           </div>
@@ -741,15 +688,15 @@ export default function CalendarPage() {
 
       {/* ── Event Detail Modal ── */}
       {selectedEvent && (
-        <div onClick={() => setSelectedEvent(null)} style={styles.modalOverlay}>
-          <div onClick={(e) => e.stopPropagation()} style={styles.modalCard}>
+        <div onClick={() => setSelectedEvent(null)} className="fixed! top-[0]! left-[0]! right-[0]! bottom-[0]! [background-color:rgba(15,_23,_42,_0.4)]! flex! items-center! justify-center! z-[1000]! [backdrop-filter:blur(2px)]!">
+          <div onClick={(e) => e.stopPropagation()} className="[background-color:var(--color-white)]! rounded-[12px]! [box-shadow:0_20px_25px_-5px_rgba(0,_0,_0,_0.15)]! w-[480px]! max-w-[90%]! overflow-hidden! [border:1px_solid_var(--color-slate-200)]!">
             {/* Modal Header */}
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>{withoutIcons(selectedEvent?.fullTitle ?? selectedEvent?.title ?? '')}</h3>
+            <div className="p-[16px_20px]! [border-bottom:1px_solid_var(--color-slate-200)]! flex! items-center! justify-between! [background-color:var(--color-slate-50)]!">
+              <h3 className="text-[16px]! font-bold! [color:var(--color-slate-900)]! m-0!">{withoutIcons(selectedEvent?.fullTitle ?? selectedEvent?.title ?? '')}</h3>
               <button
                 type="button"
                 onClick={() => setSelectedEvent(null)}
-                style={styles.modalCloseBtn}
+                className="[background:none]! border-0! text-[16px]! [color:var(--color-slate-500)]! cursor-pointer! p-[4px]! leading-[1]!"
                 aria-label="Close"
               >
                 ✕
@@ -757,93 +704,80 @@ export default function CalendarPage() {
             </div>
 
             {/* Modal Body */}
-            <div style={styles.modalBody}>
-              <div style={styles.modalRow}>
-                <strong style={{ color: 'var(--color-slate-600)' }}>Project:</strong>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}>
-                  <span className={styling("material-symbols-outlined")} style={{ fontSize: '16px', color: 'var(--color-slate-500)' }} aria-hidden="true">
+            <div className="p-[20px]! flex! flex-col! gap-[12px]! text-[13px]! [color:var(--color-slate-700)]!">
+              <div className="flex! justify-between! items-center!">
+                <strong className="[color:var(--color-slate-600)]!">Project:</strong>
+                <span className="inline-flex! items-center! gap-[4px]! font-semibold!">
+                  <span className={"material-symbols-outlined" + " " + "text-[16px]! [color:var(--color-slate-500)]!"}  aria-hidden="true">
                     folder
                   </span>
                   {selectedEvent?.project || 'General'}
                 </span>
               </div>
 
-              <div style={styles.modalRow}>
-                <strong style={{ color: 'var(--color-slate-600)' }}>Date:</strong>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  <span className={styling("material-symbols-outlined")} style={{ fontSize: '16px', color: 'var(--color-slate-500)' }} aria-hidden="true">
+              <div className="flex! justify-between! items-center!">
+                <strong className="[color:var(--color-slate-600)]!">Date:</strong>
+                <span className="inline-flex! items-center! gap-[4px]!">
+                  <span className={"material-symbols-outlined" + " " + "text-[16px]! [color:var(--color-slate-500)]!"}  aria-hidden="true">
                     calendar_today
                   </span>
                   {selectedEvent?.dateKey}
                 </span>
               </div>
 
-              <div style={styles.modalRow}>
-                <strong style={{ color: 'var(--color-slate-600)' }}>Schedule:</strong>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  <span className={styling("material-symbols-outlined")} style={{ fontSize: '16px', color: 'var(--color-slate-500)' }} aria-hidden="true">
+              <div className="flex! justify-between! items-center!">
+                <strong className="[color:var(--color-slate-600)]!">Schedule:</strong>
+                <span className="inline-flex! items-center! gap-[4px]!">
+                  <span className={"material-symbols-outlined" + " " + "text-[16px]! [color:var(--color-slate-500)]!"}  aria-hidden="true">
                     schedule
                   </span>
                   {selectedEvent?.time}
                 </span>
               </div>
 
-              <div style={styles.modalRow}>
-                <strong style={{ color: 'var(--color-slate-600)' }}>Category:</strong>
+              <div className="flex! justify-between! items-center!">
+                <strong className="[color:var(--color-slate-600)]!">Category:</strong>
                 <span
-                  style={{
-                    textTransform: 'capitalize',
-                    padding: '3px 10px',
-                    borderRadius: '12px',
-                    backgroundColor: categoryStyles[selectedEvent.category]?.bg || 'var(--color-slate-100)',
-                    color: categoryStyles[selectedEvent.category]?.color || 'var(--color-slate-700)',
-                    fontWeight: '700',
-                    fontSize: '12px',
-                  }}
+                  className="[text-transform:capitalize]! p-[3px_10px]! rounded-[12px]! font-bold! text-[12px]!" style={{
+  backgroundColor: categoryStyles[selectedEvent.category]?.bg || 'var(--color-slate-100)',
+  color: categoryStyles[selectedEvent.category]?.color || 'var(--color-slate-700)'
+}}
                 >
                   {selectedEvent?.category}
                 </span>
               </div>
 
-              <div style={styles.modalRow}>
-                <strong style={{ color: 'var(--color-slate-600)' }}>Status:</strong>
+              <div className="flex! justify-between! items-center!">
+                <strong className="[color:var(--color-slate-600)]!">Status:</strong>
                 <span
-                  style={{
-                    textTransform: 'uppercase',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    padding: '3px 8px',
-                    borderRadius: '6px',
-                    backgroundColor: 'var(--color-slate-100)',
-                    color: 'var(--color-slate-700)',
-                  }}
+                  className="[text-transform:uppercase]! text-[11px]! font-bold! p-[3px_8px]! rounded-[6px]! [background-color:var(--color-slate-100)]! [color:var(--color-slate-700)]!"
                 >
                   {selectedEvent?.status}
                 </span>
               </div>
 
               {selectedEvent?.assignedTo && (
-                <div style={styles.modalRow}>
-                  <strong style={{ color: 'var(--color-slate-600)' }}>Assigned To:</strong>
+                <div className="flex! justify-between! items-center!">
+                  <strong className="[color:var(--color-slate-600)]!">Assigned To:</strong>
                   <span>👤 {selectedEvent.assignedTo}</span>
                 </div>
               )}
 
               {selectedEvent?.description && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px', paddingTop: '10px', borderTop: '1px solid var(--color-slate-100)' }}>
-                  <strong style={{ fontSize: '12px', color: 'var(--color-slate-600)' }}>Description:</strong>
-                  <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--color-slate-700)', lineHeight: '1.5', whiteSpace: 'pre-line' }}>
+                <div className="flex! flex-col! gap-[4px]! mt-[6px]! pt-[10px]! [border-top:1px_solid_var(--color-slate-100)]!">
+                  <strong className="text-[12px]! [color:var(--color-slate-600)]!">Description:</strong>
+                  <p className="m-0! text-[12.5px]! [color:var(--color-slate-700)]! leading-[1.5]! [white-space:pre-line]!">
                     {selectedEvent.description}
                   </p>
                 </div>
               )}
 
               {/* Action Buttons */}
-              <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              <div className="mt-[12px]! flex! justify-end! gap-[8px]!">
                 <button
                   type="button"
                   onClick={() => setSelectedEvent(null)}
-                  style={styles.modalBtnSecondary}
+                  className="[background-color:var(--color-slate-100)]! [color:var(--color-slate-600)]! border-0! p-[8px_16px]! rounded-[8px]! text-[12.5px]! font-semibold! cursor-pointer!"
                 >
                   Close
                 </button>
@@ -853,7 +787,7 @@ export default function CalendarPage() {
                     setSelectedEvent(null);
                     navigate('/tasks');
                   }}
-                  style={styles.modalBtnPrimary}
+                  className="[background-color:var(--color-primary)]! [color:var(--color-white)]! border-0! p-[8px_16px]! rounded-[8px]! text-[12.5px]! font-bold! cursor-pointer! flex! items-center! gap-[6px]!"
                 >
                   <span>View in Tasks</span>
                   <span>→</span>
@@ -866,369 +800,3 @@ export default function CalendarPage() {
     </div>
   );
 }
-
-const styles = {
-  container: {
-    padding: '24px 32px',
-    backgroundColor: '#F9FBFF',
-    minHeight: '100%',
-    boxSizing: 'border-box',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-  },
-  headerCard: {
-    backgroundColor: 'var(--color-white)',
-    borderRadius: '12px',
-    border: '1px solid var(--color-slate-200)',
-    padding: '18px 24px',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
-  },
-  headerTitle: {
-    fontSize: '22px',
-    fontWeight: '800',
-    color: 'var(--color-slate-900)',
-    margin: '0 0 4px 0',
-    letterSpacing: '-0.01em',
-  },
-  headerSubtitle: {
-    fontSize: '13px',
-    color: 'var(--color-slate-500)',
-    margin: 0,
-    fontWeight: '400',
-  },
-  mainCard: {
-    backgroundColor: 'var(--color-white)',
-    borderRadius: '12px',
-    border: '1px solid var(--color-slate-200)',
-    boxShadow: '0 1px 4px rgba(0, 0, 0, 0.04)',
-    padding: '20px 24px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
-  },
-  toolbar: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '12px',
-  },
-  navBtn: {
-    width: '32px',
-    height: '32px',
-    borderRadius: '6px',
-    border: '1px solid var(--color-slate-300)',
-    backgroundColor: 'var(--color-white)',
-    color: 'var(--color-slate-700)',
-    fontSize: '14px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  todayBtn: {
-    padding: '6px 14px',
-    borderRadius: '6px',
-    border: '1px solid var(--color-slate-300)',
-    backgroundColor: 'var(--color-white)',
-    color: 'var(--color-slate-700)',
-    fontSize: '13px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-  monthTitleBtn: {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '4px 8px',
-    borderRadius: '6px',
-  },
-  monthTitleText: {
-    fontSize: '18px',
-    fontWeight: '800',
-    color: 'var(--color-slate-900)',
-    letterSpacing: '-0.01em',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-  },
-  monthDropdownMenu: {
-    position: 'absolute',
-    top: 'calc(100% + 6px)',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    backgroundColor: 'var(--color-white)',
-    border: '1px solid var(--color-slate-200)',
-    borderRadius: '8px',
-    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
-    zIndex: 100,
-    width: '180px',
-    maxHeight: '220px',
-    overflowY: 'auto',
-    padding: '4px',
-  },
-  monthDropdownItem: {
-    padding: '8px 12px',
-    borderRadius: '4px',
-    fontSize: '13px',
-    cursor: 'pointer',
-  },
-  viewToggleWrap: {
-    display: 'flex',
-    backgroundColor: 'var(--color-slate-100)',
-    borderRadius: '8px',
-    padding: '3px',
-    gap: '2px',
-    border: '1px solid var(--color-slate-200)',
-  },
-  viewToggleBtn: {
-    border: 'none',
-    padding: '5px 14px',
-    borderRadius: '6px',
-    fontSize: '12px',
-    cursor: 'pointer',
-    transition: 'all 0.15s ease',
-  },
-  filterBar: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingBottom: '8px',
-    borderBottom: '1px solid var(--color-slate-100)',
-    flexWrap: 'wrap',
-    gap: '10px',
-  },
-  filterPill: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '4px 10px',
-    borderRadius: '6px',
-    fontSize: '12px',
-    fontWeight: '600',
-    border: '1px solid',
-    cursor: 'pointer',
-    userSelect: 'none',
-    transition: 'all 0.15s ease',
-  },
-  checkIconBadge: {
-    width: '14px',
-    height: '14px',
-    borderRadius: '3px',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'var(--color-white)',
-    fontSize: '9px',
-    fontWeight: '900',
-    flexShrink: 0,
-  },
-  clearAllBtn: {
-    background: 'none',
-    border: 'none',
-    color: '#7C3AED',
-    fontSize: '12px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    padding: '4px 8px',
-    borderRadius: '4px',
-  },
-  daysHeaderGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(7, 1fr)',
-    textAlign: 'center',
-    paddingBottom: '8px',
-    borderBottom: '1px solid var(--color-slate-200)',
-  },
-  dayColHeader: {
-    fontSize: '12px',
-    fontWeight: '600',
-    color: 'var(--color-slate-500)',
-  },
-  monthGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(7, 1fr)',
-    gap: '1px',
-    backgroundColor: 'var(--color-slate-200)',
-    borderRadius: '8px',
-    overflow: 'hidden',
-    border: '1px solid var(--color-slate-200)',
-  },
-  monthCell: {
-    minHeight: '100px',
-    padding: '8px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-    boxSizing: 'border-box',
-    position: 'relative',
-  },
-  todayCellBadge: {
-    backgroundColor: 'var(--color-primary, #2563eb)',
-    color: 'var(--color-white)',
-    borderRadius: '10px',
-    padding: '2px 6px',
-    fontSize: '10px',
-    fontWeight: '800',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '3px',
-    lineHeight: '1.2',
-  },
-  cellEventsContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-    overflowY: 'auto',
-    maxHeight: '120px',
-  },
-  eventPill: {
-    borderRadius: '5px',
-    padding: '4px 6px',
-    border: '1px solid',
-    cursor: 'pointer',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2px',
-    transition: 'transform 0.1s ease, box-shadow 0.1s ease',
-  },
-  eventTitleText: {
-    fontWeight: '700',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    fontSize: '11px',
-    lineHeight: '1.2',
-  },
-  eventTimeText: {
-    fontSize: '9px',
-    fontWeight: '600',
-    opacity: 0.9,
-    lineHeight: '1',
-  },
-  weekGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(7, 1fr)',
-    gap: '8px',
-    borderRadius: '8px',
-  },
-  weekCell: {
-    minHeight: '320px',
-    border: '1px solid',
-    borderRadius: '8px',
-    padding: '10px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-    boxSizing: 'border-box',
-  },
-  modalOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(15, 23, 42, 0.4)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    backdropFilter: 'blur(2px)',
-  },
-  modalCard: {
-    backgroundColor: 'var(--color-white)',
-    borderRadius: '12px',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15)',
-    width: '480px',
-    maxWidth: '90%',
-    overflow: 'hidden',
-    border: '1px solid var(--color-slate-200)',
-  },
-  modalHeader: {
-    padding: '16px 20px',
-    borderBottom: '1px solid var(--color-slate-200)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'var(--color-slate-50)',
-  },
-  modalTitle: {
-    fontSize: '16px',
-    fontWeight: '700',
-    color: 'var(--color-slate-900)',
-    margin: 0,
-  },
-  modalCloseBtn: {
-    background: 'none',
-    border: 'none',
-    fontSize: '16px',
-    color: 'var(--color-slate-500)',
-    cursor: 'pointer',
-    padding: '4px',
-    lineHeight: '1',
-  },
-  modalBody: {
-    padding: '20px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-    fontSize: '13px',
-    color: 'var(--color-slate-700)',
-  },
-  modalRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  modalBtnSecondary: {
-    backgroundColor: 'var(--color-slate-100)',
-    color: 'var(--color-slate-600)',
-    border: 'none',
-    padding: '8px 16px',
-    borderRadius: '8px',
-    fontSize: '12.5px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-  modalBtnPrimary: {
-    backgroundColor: 'var(--color-primary)',
-    color: 'var(--color-white)',
-    border: 'none',
-    padding: '8px 16px',
-    borderRadius: '8px',
-    fontSize: '12.5px',
-    fontWeight: '700',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-  },
-  errorBanner: {
-    backgroundColor: '#FEE2E2',
-    border: '1px solid #FCA5A5',
-    color: '#991B1B',
-    padding: '10px 16px',
-    borderRadius: '8px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    fontSize: '13px',
-    fontWeight: '500',
-  },
-  retryBtn: {
-    backgroundColor: '#991B1B',
-    color: '#ffffff',
-    border: 'none',
-    padding: '4px 10px',
-    borderRadius: '4px',
-    fontSize: '12px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-};

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-import { apiRequest, errorMessage } from '../../services/api/apiClient.js'
-import './userEditor.css'
+import { apiRequest, errorMessage } from '../../shared/api/apiClient.js'
 
 export default function UserEditor({ initial, projectId, onClose, onSaved }) {
   const editing = Boolean(initial.id)

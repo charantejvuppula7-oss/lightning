@@ -172,6 +172,7 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = not DEBUG
 
 REST_FRAMEWORK = {
+    'NUM_PROXIES': 0,
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "apps.users.auth.backends.UserSessionAuthentication",
     ],
@@ -179,12 +180,25 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_THROTTLE_CLASSES": [
-        "rest_framework.throttling.AnonRateThrottle",
-        "rest_framework.throttling.UserRateThrottle",
+        "apps.core.throttling.EndpointRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "10000/hour",
-        "user": "10000/hour",
+        "read": "300/minute",
+        "write": "60/minute",
+        "session": "60/minute",
+        "login": "10/minute",
+        "login_identifier": "5/minute",
+        "version": "30/minute",
+        "search": "60/minute",
+        "analytics": "30/minute",
+        "monitoring": "30/minute",
+        "upload": "20/minute",
+        "download": "60/minute",
+        "chat_send": "60/minute",
+        "typing": "60/minute",
+        "presence": "10/minute",
+        "stream": "10/minute",
+        "task_status": "60/minute",
         "password_reset_request": "5/hour",
         "password_reset_verify": "20/hour",
         "password_reset_confirm": "10/hour",

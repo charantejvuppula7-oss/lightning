@@ -1,4 +1,4 @@
-import { roleSlug } from '../../utils/roles.js'
+import { roleSlug } from '../../shared/utils/roles.js'
 
 export function prepareRecordForm(record, columns) {
   const form = {}

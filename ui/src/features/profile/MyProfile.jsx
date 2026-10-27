@@ -1,37 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { apiRequest } from '../../services/api/apiClient.js';
-import { SidebarLayout } from '../../layouts/Sidebar.jsx';
-import Button from '../../components/ui/Button.jsx';
-import Input from '../../components/ui/Input.jsx';
+import { apiRequest } from '../../shared/api/apiClient.js';
+import AppLayout from '../../layouts/AppLayout.jsx'
+import Button from '../../shared/ui/Button.jsx';
+import Input from '../../shared/ui/Input.jsx';
 import ProfileAvatar from './components/ProfileAvatar.jsx';
 import ProfileDetailRow from './components/ProfileDetailRow.jsx';
-
-/* styling */
-const tailwindStyling = {
-  "material-symbols-outlined": [
-    "[font-family:'Material_Symbols_Outlined']",
-    "[font-weight:normal]",
-    "[font-style:normal]",
-    "[font-size:20px]",
-    "[line-height:1]",
-    "[letter-spacing:normal]",
-    "[text-transform:none]",
-    "[white-space:nowrap]",
-    "[word-wrap:normal]",
-    "[direction:ltr]",
-    "[font-feature-settings:'liga']",
-    "[-webkit-font-smoothing:antialiased]",
-    "[&.sidebar-icon]:[font-size:20px]"
-  ]
-}
-const styling = value => {
-  const classes = typeof value === 'string' ? value : ''
-  const utilities = classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])
-  return [...new Set([...classes.split(/\s+/), ...utilities])].filter(Boolean).join(' ')
-}
-
-
 
 function ToastNotification({ toast, onClose }) {
   if (!toast) return null;
@@ -41,41 +15,18 @@ function ToastNotification({ toast, onClose }) {
   return (
     <div
       role="alert"
-      style={{
-        position: 'fixed',
-        top: '20px',
-        right: '24px',
-        zIndex: 9999,
-        padding: '12px 18px',
-        borderRadius: '8px',
-        backgroundColor: isError ? '#ef4444' : isSuccess ? '#10b981' : '#3b82f6',
-        color: '#ffffff',
-        fontSize: '14px',
-        fontWeight: '500',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
-        animation: 'fadeIn 0.2s ease',
-      }}
+      className="fixed! top-[20px]! right-[24px]! z-[9999]! p-[12px_18px]! rounded-[8px]! [color:#ffffff]! text-[14px]! font-medium! [box-shadow:0_4px_12px_rgba(0,0,0,0.15)]! flex! items-center! gap-[10px]! [animation:fadeIn_0.2s_ease]!" style={{
+  backgroundColor: isError ? '#ef4444' : isSuccess ? '#10b981' : '#3b82f6'
+}}
     >
-      <span className={styling("material-symbols-outlined")} style={{ fontSize: '18px' }} aria-hidden="true">
+      <span className={"material-symbols-outlined" + " " + "text-[18px]!"}  aria-hidden="true">
         {isError ? 'error' : isSuccess ? 'check_circle' : 'info'}
       </span>
       <span>{toast.text}</span>
       <button
         type="button"
         onClick={onClose}
-        style={{
-          background: 'none',
-          border: 'none',
-          color: '#ffffff',
-          cursor: 'pointer',
-          padding: '0 0 0 8px',
-          fontSize: '16px',
-          lineHeight: 1,
-          opacity: 0.8,
-        }}
+        className="[background:none]! border-0! [color:#ffffff]! cursor-pointer! p-[0_0_0_8px]! text-[16px]! leading-[1]! opacity-[0.8]!"
         aria-label="Dismiss alert"
       >
         ✕
@@ -246,9 +197,9 @@ export function ProfileContent({ onBack }) {
 
   if (loading) {
     return (
-      <div style={styles.loadingContainer}>
-        <div style={styles.spinner} />
-        <span style={{ color: 'var(--color-slate-500)', fontSize: '14px', fontWeight: '500' }}>
+      <div className="flex! flex-col! items-center! justify-center! min-h-[400px]! gap-[12px]! w-full!">
+        <div className="w-[32px]! h-[32px]! [border:3px_solid_var(--color-slate-200)]! [border-top-color:var(--color-primary)]! rounded-[50%]! [animation:spin_0.7s_linear_infinite]!" />
+        <span className="[color:var(--color-slate-500)]! text-[14px]! font-medium!">
           Loading profile...
         </span>
       </div>
@@ -256,34 +207,34 @@ export function ProfileContent({ onBack }) {
   }
 
   return (
-    <div style={styles.pageContainer}>
+    <div className="flex! flex-col! w-full! [background-color:var(--color-slate-50)]! min-h-[100%]! box-border! [font-family:'Inter',_-apple-system,_BlinkMacSystemFont,_sans-serif]!">
       <ToastNotification toast={toast} onClose={() => setToast(null)} />
 
       {/* Top Header Card */}
-      <div style={styles.headerCard}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div className="[background-color:var(--color-white)]! [border-bottom:1px_solid_var(--color-slate-200)]! p-[18px_32px]! flex! items-center! justify-between! w-full! box-border!">
+        <div className="flex! items-center! gap-[10px]!">
           {onBack && (
             <Button
               type="button"
               onClick={onBack}
-              style={styles.backBtn}
+              className="[background:transparent]! [border:none]! [padding:4px]! [cursor:pointer]! [display:flex]! [align-items:center]! [justify-content:center]! [border-radius:6px]! [transition:background_0.15s_ease]!"
               ariaLabel="Back"
               title="Back"
             >
-              <span className={styling("material-symbols-outlined")} style={{ fontSize: '20px', color: 'var(--color-slate-500)' }}>
+              <span className={"material-symbols-outlined" + " " + "text-[20px]! [color:var(--color-slate-500)]!"} >
                 arrow_back
               </span>
             </Button>
           )}
-          <h1 style={styles.headerTitle}>My Profile</h1>
+          <h1 className="text-[18px]! font-bold! [color:var(--color-slate-900)]! m-0! tracking-[-0.2px]!">My Profile</h1>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div style={styles.contentArea}>
+      <div className="p-[24px_32px]! flex! flex-col! gap-[18px]! w-full! box-border!">
         {/* Profile Hero Card */}
-        <div style={styles.card}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '22px' }}>
+        <div className="[background-color:var(--color-white)]! rounded-[14px]! [border:1px_solid_var(--color-slate-200)]! p-[22px_28px]! [box-shadow:0_1px_3px_rgba(0,0,0,0.02)]! box-border! w-full!">
+          <div className="flex! items-center! gap-[22px]!">
             <ProfileAvatar
               initials={initials}
               onPhotoChange={() => showToast('Photo updated', 'info')}
@@ -291,10 +242,10 @@ export function ProfileContent({ onBack }) {
 
             {/* Profile Info */}
             <div>
-              <div style={styles.profileName}>
+              <div className="text-[18px]! font-bold! [color:var(--color-slate-900)]! mb-[4px]! tracking-[-0.2px]!">
                 {profile?.full_name || 'User Name'}
               </div>
-              <div style={styles.profileSubtitle}>
+              <div className="text-[13.5px]! [color:var(--color-slate-500)]! font-medium!">
                 {profile?.role || 'Team Member'}
                 {profile?.employee_id ? ` · Employee ${profile.employee_id}` : ''}
               </div>
@@ -303,9 +254,9 @@ export function ProfileContent({ onBack }) {
         </div>
 
         {/* Basic Details Card */}
-        <div style={styles.card}>
-          <div style={styles.cardTitle}>Basic details</div>
-          <div style={styles.detailsList}>
+        <div className="[background-color:var(--color-white)]! rounded-[14px]! [border:1px_solid_var(--color-slate-200)]! p-[22px_28px]! [box-shadow:0_1px_3px_rgba(0,0,0,0.02)]! box-border! w-full!">
+          <div className="text-[15.5px]! font-bold! [color:var(--color-slate-900)]! pb-[14px]! [border-bottom:1px_solid_var(--color-slate-100)]! tracking-[-0.1px]!">Basic details</div>
+          <div className="flex! flex-col!">
             <ProfileDetailRow label="Full name" value={profile?.full_name} />
             <ProfileDetailRow label="Employee ID" value={profile?.employee_id} />
             <ProfileDetailRow label="Department" value={profile?.department} />
@@ -314,9 +265,9 @@ export function ProfileContent({ onBack }) {
         </div>
 
         {/* Contact Card */}
-        <div style={styles.card}>
-          <div style={styles.contactHeader}>
-            <div style={styles.cardTitle}>Contact</div>
+        <div className="[background-color:var(--color-white)]! rounded-[14px]! [border:1px_solid_var(--color-slate-200)]! p-[22px_28px]! [box-shadow:0_1px_3px_rgba(0,0,0,0.02)]! box-border! w-full!">
+          <div className="flex! items-center! justify-between! pb-[14px]! [border-bottom:1px_solid_var(--color-slate-100)]!">
+            <div className="text-[15.5px]! font-bold! [color:var(--color-slate-900)]! pb-[14px]! [border-bottom:1px_solid_var(--color-slate-100)]! tracking-[-0.1px]!">Contact</div>
             {!isEditing ? (
               <Button
                 type="button"
@@ -329,20 +280,20 @@ export function ProfileContent({ onBack }) {
                   });
                   setIsEditing(true);
                 }}
-                style={styles.editBtn}
+                className="[display:inline-flex]! [align-items:center]! [gap:5px]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-200)]! [border-radius:6px]! [padding:5px_12px]! [font-size:13px]! [font-weight:600]! [color:var(--color-slate-900)]! [cursor:pointer]! [transition:all_0.15s_ease]! [box-shadow:0_1px_2px_rgba(0,0,0,0.03)]!"
               >
-                <span className={styling("material-symbols-outlined")} style={{ fontSize: '15px' }}>
+                <span className={"material-symbols-outlined" + " " + "text-[15px]!"} >
                   edit
                 </span>
                 <span>Edit</span>
               </Button>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="flex! items-center! gap-[8px]!">
                 <Button
                   type="button"
                   onClick={handleCancel}
                   disabled={saving}
-                  style={styles.inlineCancelBtn}
+                  className="[background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-300)]! [border-radius:6px]! [padding:5px_12px]! [font-size:13px]! [font-weight:600]! [color:var(--color-slate-600)]! [cursor:pointer]! [transition:all_0.15s_ease]!"
                 >
                   Cancel
                 </Button>
@@ -352,7 +303,7 @@ export function ProfileContent({ onBack }) {
                   disabled={saving}
                   loading={saving}
                   loadingText="Saving..."
-                  style={styles.inlineSaveBtn}
+                  className="[background-color:var(--color-primary)]! [border:none]! [border-radius:6px]! [padding:5px_14px]! [font-size:13px]! [font-weight:600]! [color:var(--color-white)]! [cursor:pointer]! [box-shadow:0_1px_2px_rgba(37,99,235,0.25)]! [transition:all_0.15s_ease]!"
                 >
                   Save
                 </Button>
@@ -361,12 +312,12 @@ export function ProfileContent({ onBack }) {
           </div>
 
           {!isEditing ? (
-            <div style={styles.detailsList}>
+            <div className="flex! flex-col!">
               <ProfileDetailRow label="Work email">
                 {profile?.email ? (
                   <a
                     href={`mailto:${profile.email}`}
-                    style={{ color: 'var(--color-slate-900)', textDecoration: 'none' }}
+                    className="[color:var(--color-slate-900)]! no-underline!"
                   >
                     {profile.email}
                   </a>
@@ -385,41 +336,41 @@ export function ProfileContent({ onBack }) {
               )}
             </div>
           ) : (
-            <form onSubmit={handleSave} style={{ marginTop: '4px' }}>
-              <div style={styles.detailsList}>
-                <ProfileDetailRow label="Work email" required style={{ padding: '12px 0' }}>
+            <form onSubmit={handleSave} className="mt-[4px]!">
+              <div className="flex! flex-col!">
+                <ProfileDetailRow label="Work email" required rowClassName="[padding:12px_0]!">
                   <Input
                     name="email"
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="e.g. user@tachyonautomations.com"
-                    inputStyle={styles.inlineInput}
+                    inputClassName="[width:100%]! [max-width:380px]! [padding:8px_12px]! [border-radius:8px]! [border:1px_solid_var(--color-slate-300)]! [font-size:13.5px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! [outline:none]! [box-sizing:border-box]! [transition:border-color_0.15s_ease,_box-shadow_0.15s_ease]!"
                     required
                     ariaLabel="Work email"
                   />
                 </ProfileDetailRow>
 
-                <ProfileDetailRow label="Mobile no." style={{ padding: '12px 0' }}>
+                <ProfileDetailRow label="Mobile no." rowClassName="[padding:12px_0]!">
                   <Input
                     name="phone_number"
                     type="text"
                     value={formData.phone_number}
                     onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
                     placeholder="e.g. 87268399282"
-                    inputStyle={styles.inlineInput}
+                    inputClassName="[width:100%]! [max-width:380px]! [padding:8px_12px]! [border-radius:8px]! [border:1px_solid_var(--color-slate-300)]! [font-size:13.5px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! [outline:none]! [box-sizing:border-box]! [transition:border-color_0.15s_ease,_box-shadow_0.15s_ease]!"
                     ariaLabel="Mobile number"
                   />
                 </ProfileDetailRow>
 
-                <ProfileDetailRow label="Work location" isLast style={{ padding: '12px 0' }}>
+                <ProfileDetailRow label="Work location" isLast rowClassName="[padding:12px_0]!">
                   <Input
                     name="location"
                     type="text"
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     placeholder="e.g. Delhi, India"
-                    inputStyle={styles.inlineInput}
+                    inputClassName="[width:100%]! [max-width:380px]! [padding:8px_12px]! [border-radius:8px]! [border:1px_solid_var(--color-slate-300)]! [font-size:13.5px]! [color:var(--color-slate-900)]! [background-color:var(--color-white)]! [outline:none]! [box-sizing:border-box]! [transition:border-color_0.15s_ease,_box-shadow_0.15s_ease]!"
                     ariaLabel="Work location"
                   />
                 </ProfileDetailRow>
@@ -481,164 +432,8 @@ export default function MyProfile({ user, onBack, embedded = false }) {
   }
 
   return (
-    <SidebarLayout user={user}>
+    <AppLayout user={user}>
       <ProfileContent onBack={handleBack} />
-    </SidebarLayout>
+    </AppLayout>
   );
 }
-
-const styles = {
-  pageContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    width: '100%',
-    backgroundColor: 'var(--color-slate-50)',
-    minHeight: '100%',
-    boxSizing: 'border-box',
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-  },
-  headerCard: {
-    backgroundColor: 'var(--color-white)',
-    borderBottom: '1px solid var(--color-slate-200)',
-    padding: '18px 32px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    boxSizing: 'border-box',
-  },
-  backBtn: {
-    background: 'transparent',
-    border: 'none',
-    padding: '4px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: '6px',
-    transition: 'background 0.15s ease',
-  },
-  headerTitle: {
-    fontSize: '18px',
-    fontWeight: '700',
-    color: 'var(--color-slate-900)',
-    margin: 0,
-    letterSpacing: '-0.2px',
-  },
-  contentArea: {
-    padding: '24px 32px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '18px',
-    width: '100%',
-    boxSizing: 'border-box',
-  },
-  card: {
-    backgroundColor: 'var(--color-white)',
-    borderRadius: '14px',
-    border: '1px solid var(--color-slate-200)',
-    padding: '22px 28px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-    boxSizing: 'border-box',
-    width: '100%',
-  },
-  profileName: {
-    fontSize: '18px',
-    fontWeight: '700',
-    color: 'var(--color-slate-900)',
-    marginBottom: '4px',
-    letterSpacing: '-0.2px',
-  },
-  profileSubtitle: {
-    fontSize: '13.5px',
-    color: 'var(--color-slate-500)',
-    fontWeight: '500',
-  },
-  cardTitle: {
-    fontSize: '15.5px',
-    fontWeight: '700',
-    color: 'var(--color-slate-900)',
-    paddingBottom: '14px',
-    borderBottom: '1px solid var(--color-slate-100)',
-    letterSpacing: '-0.1px',
-  },
-  contactHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingBottom: '14px',
-    borderBottom: '1px solid var(--color-slate-100)',
-  },
-  editBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '5px',
-    backgroundColor: 'var(--color-white)',
-    border: '1px solid var(--color-slate-200)',
-    borderRadius: '6px',
-    padding: '5px 12px',
-    fontSize: '13px',
-    fontWeight: '600',
-    color: 'var(--color-slate-900)',
-    cursor: 'pointer',
-    transition: 'all 0.15s ease',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
-  },
-  detailsList: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  inlineInput: {
-    width: '100%',
-    maxWidth: '380px',
-    padding: '8px 12px',
-    borderRadius: '8px',
-    border: '1px solid var(--color-slate-300)',
-    fontSize: '13.5px',
-    color: 'var(--color-slate-900)',
-    backgroundColor: 'var(--color-white)',
-    outline: 'none',
-    boxSizing: 'border-box',
-    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
-  },
-  inlineCancelBtn: {
-    backgroundColor: 'var(--color-white)',
-    border: '1px solid var(--color-slate-300)',
-    borderRadius: '6px',
-    padding: '5px 12px',
-    fontSize: '13px',
-    fontWeight: '600',
-    color: 'var(--color-slate-600)',
-    cursor: 'pointer',
-    transition: 'all 0.15s ease',
-  },
-  inlineSaveBtn: {
-    backgroundColor: 'var(--color-primary)',
-    border: 'none',
-    borderRadius: '6px',
-    padding: '5px 14px',
-    fontSize: '13px',
-    fontWeight: '600',
-    color: 'var(--color-white)',
-    cursor: 'pointer',
-    boxShadow: '0 1px 2px rgba(37,99,235,0.25)',
-    transition: 'all 0.15s ease',
-  },
-  loadingContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: '400px',
-    gap: '12px',
-    width: '100%',
-  },
-  spinner: {
-    width: '32px',
-    height: '32px',
-    border: '3px solid var(--color-slate-200)',
-    borderTopColor: 'var(--color-primary)',
-    borderRadius: '50%',
-    animation: 'spin 0.7s linear infinite',
-  },
-};

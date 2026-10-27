@@ -26,6 +26,7 @@ PYTHON="$BACKEND_DIR/venv/bin/python"
 "$PYTHON" -m pip install -r "$BACKEND_DIR/requirements.txt"
 "$PYTHON" "$REPO_DIR/scripts/prepare_deployment.py" "${COMPANY_ENV:-}"
 cd "$BACKEND_DIR"
+"$PYTHON" manage.py shell -c 'import uuid; from django.core.cache import cache; key="deployment-check-"+uuid.uuid4().hex; cache.set(key, "ok", 30); assert cache.get(key)=="ok", "Redis cache check failed"; cache.delete(key); print("Redis cache check passed")'
 "$PYTHON" manage.py check
 "$PYTHON" manage.py migrate --noinput
 "$PYTHON" manage.py collectstatic --noinput

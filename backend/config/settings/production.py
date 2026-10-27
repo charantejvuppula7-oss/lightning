@@ -14,3 +14,15 @@ CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'True').lower() == 'tr
 SESSION_COOKIE_NAME = 'lighting_v2_sessionid'
 CSRF_COOKIE_NAME = 'lighting_v2_csrftoken'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Use the existing local Redis service; keep Company's keys separate.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/0'),
+        'KEY_PREFIX': 'lighting_v2',
+        'OPTIONS': {'socket_connect_timeout': 2, 'socket_timeout': 2},
+    },
+}
+# Nginx is the sole trusted proxy and appends the real client IP to X-Forwarded-For.
+REST_FRAMEWORK = {**REST_FRAMEWORK, 'NUM_PROXIES': 1}  # noqa: F405

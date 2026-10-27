@@ -1,12 +1,12 @@
-import { elapsedSeconds } from './taskTime.js';
+import normalizeTask from './normalizeTask.js';
 import { saveTask } from './saveTask.js';
 import { useState, useEffect, useMemo, useCallback, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { apiList, errorMessage } from '../../services/api/apiClient.js';
-import { useFeedback } from '../../components/common/Feedback.jsx';
+import { apiList, errorMessage } from '../../shared/api/apiClient.js';
+import { useFeedback } from '../../shared/components/Feedback.jsx';
 import { ProjectSelectionContext } from '../projects/projectSelectionContext.js';
 import { hasSidebarPermission } from '../../layouts/sidebarNavigation.js';
-import { roleSlug } from '../../utils/roles.js';
+import { roleSlug } from '../../shared/utils/roles.js';
 import TaskCard from './components/TaskCard.jsx';
 import EditTaskPage from './components/TaskEditor.jsx';
 import FilterDropdown from './components/FilterDropdown.jsx';
@@ -95,181 +95,6 @@ function TaskList({
 }
 
 // ── Data Normalization Helper ────────────────────────────────────────
-function normalizeTask(raw) {
-  if (!raw) return null;
-
-  // Determine status
-  const rawStatusLower = String(raw.Status || raw.status || "assigned").toLowerCase().replace(/-/g, "_");
-  let status = rawStatusLower;
-  const isChangeRequested = Boolean(raw.Change_Requested || raw.change_requested);
-  if (isChangeRequested) {
-    status = "change_requested";
-  } else if (status === "paused") {
-    status = "in_progress";
-  } else if (status === "started" || status === "open") {
-    status = "assigned";
-  }
-
-  // Parse Remarks / change request history
-  let changeRequests = [];
-  let isReopened = Boolean(raw.reopened || raw.is_reopened);
-  let reopenCount = Number(raw.reopen_count || raw.Reopen_Count || 0);
-  let resentForReview = Boolean(raw.resent_for_review || raw.Resent_For_Review);
-  if (raw.Remarks) {
-    try {
-      const meta = typeof raw.Remarks === "string" ? JSON.parse(raw.Remarks) : raw.Remarks;
-      if (meta && typeof meta === "object") {
-        if (meta.change_requested) status = 'change_requested';
-        if (meta.reopened || meta.is_reopened) {
-          isReopened = true;
-        }
-        if (meta.reopened === false || meta.is_reopened === false) {
-          isReopened = false;
-        }
-        if (meta.reopen_count !== undefined) {
-          reopenCount = Number(meta.reopen_count) || 0;
-        }
-        if (meta.resent_for_review !== undefined) {
-          resentForReview = Boolean(meta.resent_for_review);
-        }
-        if (Array.isArray(meta.change_requests) && meta.change_requests.length > 0) {
-          changeRequests = meta.change_requests;
-        } else if (meta.change_reason || isChangeRequested) {
-          changeRequests = [
-            {
-              title: "Change requested",
-              date: raw.Updated_At
-                ? new Date(raw.Updated_At).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-                : "Recent",
-              changes: [meta.change_reason || "Revisions requested for this task."],
-              attachments: meta.attachments || [],
-            },
-          ];
-        }
-      }
-    } catch {
-      // ignore JSON parse errors
-    }
-  }
-
-  // Assignee(s)
-  const assignedToName = raw.Assigned_To_Name || raw.assigned_to_name || "Unassigned";
-  const assignedToInitials = assignedToName
-    .split(/\s+/)
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase() || "UA";
-
-  const assignedTo = [
-    {
-      id: raw.Assigned_To || raw.assigned_to || null,
-      name: assignedToName,
-      role: raw.Assigned_To_Role || "Developer",
-      initials: assignedToInitials,
-      color: "#5F89C5",
-    },
-  ];
-
-  // Reviewer
-  const reviewerId = raw.review_by || raw.Review_By || raw.reviewer_id || null;
-  const reviewerName = raw.review_by_name || raw.Review_By_Name || (reviewerId ? "Reviewer" : "Unassigned");
-  const reviewerInitials = reviewerName
-    .split(/\s+/)
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase() || "YM";
-
-  const reviewer = {
-    id: reviewerId ? String(reviewerId) : null,
-    name: reviewerName,
-    role: "Reviewer",
-    initials: reviewerInitials,
-    color: "#C5A45F",
-  };
-
-  // Assigned by
-  const assignedBy = {
-    id: raw.Assigned_By || raw.assigned_by_id || raw.project_created_by || null,
-    name: raw.Assigned_By_Name || raw.assigned_by_name || raw.created_by_name || "Project Manager",
-    role: "Assigned by",
-    initials: "PM",
-    color: "#82B58B",
-  };
-
-  // Display ID e.g. T014 or first 5 chars
-  let displayId = "T001";
-  if (raw.Task_Name && raw.Task_Name.startsWith("SP-")) {
-    const prefix = raw.Task_Name.split(":")[0].trim();
-    displayId = prefix;
-  } else if (raw.Id) {
-    displayId = "T" + String(raw.Id).replace(/-/g, "").slice(0, 4).toUpperCase();
-  }
-
-  // Format Due Date
-  let formattedDue = raw.Due_Date || "No due date";
-  if (raw.Due_Date) {
-    try {
-      const d = new Date(raw.Due_Date);
-      if (!isNaN(d.getTime())) {
-        formattedDue = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-      }
-    } catch { /* Keep the original due date when formatting fails. */ }
-  }
-
-  // Timer status & seconds
-  let timerStatus = "default";
-  if (status === "in_progress") {
-    timerStatus = (rawStatusLower === "paused" || raw.pause_Time) ? "paused" : "running";
-  } else if (status === "completed") {
-    timerStatus = "completed";
-  }
-
-  const timerSeconds = elapsedSeconds(raw);
-
-  const normPriority = String(raw.Priority || raw.priority || "medium").toLowerCase();
-
-  return {
-    raw,
-    id: displayId,
-    dbId: String(raw.Id || raw.id || ""),
-    name: raw.Task_Name || "Untitled Task",
-    status,
-    priority: normPriority,
-    description: raw.description || "No description provided for this task.",
-    project: raw.Project_Name || raw.project_name || "General",
-    // Only use milestone/feature if they have actual values from API (not default fallbacks)
-    milestone: raw.Milestone_Name || raw.milestone_name || null,
-    feature: raw.Feature_Name || raw.feature_name || null,
-    sprint: (() => {
-      if (raw.Sprint_Label) return raw.Sprint_Label;
-      if (raw.Sprint_Number !== undefined && raw.Sprint_Number !== null) return `S${raw.Sprint_Number}`;
-      const rawSprint = String(raw.sprint_name || "").trim();
-      if (rawSprint) {
-        const match = rawSprint.match(/\d+/);
-        if (match) return `S${parseInt(match[0], 10)}`;
-        return rawSprint.startsWith("S") ? rawSprint : `S${rawSprint}`;
-      }
-      const taskNameMatch = String(raw.Task_Name || "").match(/SP-(\d+)/i);
-      if (taskNameMatch) return `S${parseInt(taskNameMatch[1], 10)}`;
-      return "";
-    })(),
-    points: (() => { try { return JSON.parse(raw.Remarks || "{}").points || 0; } catch { return 0; } })(),
-    dueDate: formattedDue,
-    timerStatus,
-    timerSeconds,
-    dependencyCount: raw.dependency_count ?? (Array.isArray(raw.dependencies) ? raw.dependencies.length : 0),
-    assignedBy,
-    assignedTo,
-    reviewer,
-    changeRequests,
-    isReopened,
-    reopenCount: Number.isFinite(reopenCount) ? Math.max(0, reopenCount) : 0,
-    resentForReview,
-  };
-}
-
 function isAssignedToUser(task, userId, userNames) {
   return Boolean(task?.assignedTo?.some((assignee) =>
     (userId && assignee.id && String(assignee.id) === String(userId)) ||
@@ -300,7 +125,7 @@ export default function TasksPage({ user: currentUser }) {
   const [error, setError] = useState(null);
   const fetchTasks = useCallback(async ({ signal } = {}) => {
     setLoading(true); setError(null);
-    try { setTasks((await apiList(`/tasks/${externalProjectId && externalProjectId !== 'all' ? `?project=${externalProjectId}` : ''}`, { signal })).map(normalizeTask)); }
+    try { setTasks((await apiList(`/tasks/?page_size=100${externalProjectId && externalProjectId !== 'all' ? `&project=${externalProjectId}` : ''}`, { signal })).map(normalizeTask)); }
     catch (error) { if (!signal?.aborted) { setError(errorMessage(error)); setTasks([]); } }
     finally { if (!signal?.aborted) setLoading(false); }
   }, [externalProjectId]);
@@ -318,8 +143,9 @@ export default function TasksPage({ user: currentUser }) {
     'in-review': myTasks.filter(task => task.status === 'in_review').length,
     'change-requested': myTasks.filter(task => task.status === 'change_requested').length,
     completed: myTasks.filter(task => task.status === 'completed').length };
-  const handleTaskUpdate = () => fetchTasks();
-  const handleTaskDelete = () => fetchTasks();
+  const handleTaskUpdate = (id, patch) => setTasks(previous => previous.map(task => task.dbId === String(id)
+    ? { ...(patch.raw ? normalizeTask(patch.raw) : task), ...patch } : task));
+  const handleTaskDelete = id => setTasks(previous => previous.filter(task => task.dbId !== String(id)));
   const handleAddDependency = task => navigate(`/${userRole}/dependencies?taskId=${task.id || task.Id}`, {state:{targetTaskId:task.id || task.Id}});
   const handleChat = () => navigate(`/${userRole}/chat`);
   // Edit / Create Task modal state
@@ -508,35 +334,16 @@ export default function TasksPage({ user: currentUser }) {
 
   return (
     <div
-      style={{
-        backgroundColor: "#F9FBFF",
-        minHeight: "100%",
-        padding: "24px 32px",
-        width: "100%",
-        boxSizing: "border-box",
-      }}
+      className="[background-color:#F9FBFF]! min-h-[100%]! p-[24px_32px]! w-full! box-border!"
     >
       {feedback}
       {/* ── Page Header ── */}
       <div
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          marginBottom: "20px",
-          flexWrap: "wrap",
-          gap: "12px",
-        }}
+        className="flex! items-start! justify-between! mb-[20px]! flex-wrap! gap-[12px]!"
       >
         <div>
           <h1
-            style={{
-              fontSize: "24px",
-              fontWeight: "800",
-              color: "var(--color-slate-900)",
-              margin: "0 0 4px 0",
-              letterSpacing: "-0.3px",
-            }}
+            className="text-[24px]! font-extrabold! [color:var(--color-slate-900)]! m-[0_0_4px_0]! tracking-[-0.3px]!"
           >
             {(() => {
               switch (activeTab) {
@@ -551,12 +358,7 @@ export default function TasksPage({ user: currentUser }) {
             })()}
           </h1>
           <p
-            style={{
-              fontSize: "13px",
-              color: "var(--color-slate-500)",
-              margin: 0,
-              fontWeight: "400",
-            }}
+            className="text-[13px]! [color:var(--color-slate-500)]! m-0! font-normal!"
           >
             {(() => {
               switch (activeTab) {
@@ -575,22 +377,7 @@ export default function TasksPage({ user: currentUser }) {
           <button
             type="button"
             onClick={handleAddTask}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              padding: "10px 16px",
-              border: "none",
-              borderRadius: "8px",
-              backgroundColor: "var(--color-primary, #2563EB)",
-              color: "#FFFFFF",
-              fontSize: "14px",
-              fontWeight: 600,
-              cursor: "pointer",
-              boxShadow: "0 1px 2px rgba(15, 23, 42, 0.12)",
-              whiteSpace: "nowrap",
-            }}
+            className="inline-flex! items-center! justify-center! gap-[8px]! p-[10px_16px]! border-0! rounded-[8px]! [background-color:var(--color-primary,_#2563EB)]! [color:#FFFFFF]! text-[14px]! font-semibold! cursor-pointer! [box-shadow:0_1px_2px_rgba(15,_23,_42,_0.12)]! whitespace-nowrap!"
           >
             Add Task
           </button>
@@ -600,17 +387,9 @@ export default function TasksPage({ user: currentUser }) {
 
       {/* ── Tabs: All Tasks / My Tasks / In Progress / In Review / Change Requested / Completed ── */}
       <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          borderBottom: "1px solid var(--color-slate-200)",
-          marginBottom: "16px",
-          flexWrap: "wrap",
-          rowGap: "10px",
-        }}
+        className="flex! items-center! justify-between! [border-bottom:1px_solid_var(--color-slate-200)]! mb-[16px]! flex-wrap! gap-y-[10px]!"
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "4px", flex: '1 1 680px', flexWrap: 'wrap', minWidth: 0 }}>
+        <div className="flex! items-center! gap-[4px]! [flex:1_1_680px]! flex-wrap! min-w-0!">
           {(() => {
             const allTabs = [
               { key: "all", label: "All Tasks", count: counts.all },
@@ -629,35 +408,18 @@ export default function TasksPage({ user: currentUser }) {
                 key={tab.key}
                 type="button"
                 onClick={() => handleTabChange(tab.key)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  padding: "6px 10px",
-                  fontSize: "13px",
-                  fontWeight: activeTab === tab.key ? "700" : "500",
-                  color: activeTab === tab.key ? "var(--color-primary, #2563EB)" : "var(--color-slate-500)",
-                  borderBottom: activeTab === tab.key ? "2.5px solid var(--color-primary, #2563EB)" : "2.5px solid transparent",
-                  marginBottom: "-1px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  transition: "all 0.15s ease",
-                  whiteSpace: "nowrap",
-                  flexShrink: 0,
-                }}
+                className="[background:none]! border-0! p-[6px_10px]! text-[13px]! mb-[-1px]! cursor-pointer! flex! items-center! gap-[4px]! [transition:all_0.15s_ease]! whitespace-nowrap! shrink-0!" style={{
+  fontWeight: activeTab === tab.key ? "700" : "500",
+  color: activeTab === tab.key ? "var(--color-primary, #2563EB)" : "var(--color-slate-500)",
+  borderBottom: activeTab === tab.key ? "2.5px solid var(--color-primary, #2563EB)" : "2.5px solid transparent"
+}}
               >
                 <span>{tab.label}</span>
                 <span
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: "700",
-                    padding: "1px 5px",
-                    borderRadius: "8px",
-                    backgroundColor: activeTab === tab.key ? "#EFF6FF" : "var(--color-slate-100)",
-                    color: activeTab === tab.key ? "var(--color-primary, #2563EB)" : "var(--color-slate-500)",
-                    transition: "all 0.15s ease",
-                  }}
+                  className="text-[10px]! font-bold! p-[1px_5px]! rounded-[8px]! [transition:all_0.15s_ease]!" style={{
+  backgroundColor: activeTab === tab.key ? "#EFF6FF" : "var(--color-slate-100)",
+  color: activeTab === tab.key ? "var(--color-primary, #2563EB)" : "var(--color-slate-500)"
+}}
                 >
                   {tab.count}
                 </span>
@@ -667,26 +429,16 @@ export default function TasksPage({ user: currentUser }) {
         </div>
 
         {/* Filter and Sort Buttons */}
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0, marginLeft: "12px", marginBottom: "2px", position: "relative" }}>
+        <div className="flex! items-center! gap-[6px]! shrink-0! ml-[12px]! mb-[2px]! relative!">
           <button
             type="button"
             data-filter-trigger="true"
             onClick={() => setIsFilterOpen((prev) => !prev)}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "4px",
-              padding: "6px 10px",
-              fontSize: "12px",
-              fontWeight: "600",
-              backgroundColor: activeFilterCount > 0 ? "#EFF6FF" : "#FFFFFF",
-              color: activeFilterCount > 0 ? "#1558D6" : "#475569",
-              border: activeFilterCount > 0 ? "1px solid #1558D6" : "1px solid #CBD5E1",
-              borderRadius: "6px",
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-              whiteSpace: "nowrap",
-            }}
+            className="inline-flex! items-center! gap-[4px]! p-[6px_10px]! text-[12px]! font-semibold! rounded-[6px]! cursor-pointer! [transition:all_0.15s_ease]! whitespace-nowrap!" style={{
+  backgroundColor: activeFilterCount > 0 ? "#EFF6FF" : "#FFFFFF",
+  color: activeFilterCount > 0 ? "#1558D6" : "#475569",
+  border: activeFilterCount > 0 ? "1px solid #1558D6" : "1px solid #CBD5E1"
+}}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
@@ -709,26 +461,16 @@ export default function TasksPage({ user: currentUser }) {
             counts={filterCounts}
           />
 
-          <div style={{ position: "relative" }}>
+          <div className="relative!">
             <button
               type="button"
               data-sort-trigger="true"
               onClick={() => setIsSortOpen((prev) => !prev)}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "4px",
-                padding: "6px 10px",
-                fontSize: "12px",
-                fontWeight: "600",
-                backgroundColor: isSortOpen || sortKey !== "task_newest" ? "#EFF6FF" : "#FFFFFF",
-                color: isSortOpen || sortKey !== "task_newest" ? "#1558D6" : "#475569",
-                border: isSortOpen || sortKey !== "task_newest" ? "1px solid #1558D6" : "1px solid #CBD5E1",
-                borderRadius: "6px",
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-                whiteSpace: "nowrap",
-              }}
+              className="inline-flex! items-center! gap-[4px]! p-[6px_10px]! text-[12px]! font-semibold! rounded-[6px]! cursor-pointer! [transition:all_0.15s_ease]! whitespace-nowrap!" style={{
+  backgroundColor: isSortOpen || sortKey !== "task_newest" ? "#EFF6FF" : "#FFFFFF",
+  color: isSortOpen || sortKey !== "task_newest" ? "#1558D6" : "#475569",
+  border: isSortOpen || sortKey !== "task_newest" ? "1px solid #1558D6" : "1px solid #CBD5E1"
+}}
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <line x1="12" y1="5" x2="12" y2="19" />
@@ -750,58 +492,27 @@ export default function TasksPage({ user: currentUser }) {
       {/* ── Content View ── */}
       {loading ? (
         <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "60px 20px",
-            background: "#FFFFFF",
-            borderRadius: "12px",
-            border: "1px solid #E2E8F0",
-          }}
+          className="flex! flex-col! items-center! justify-center! p-[60px_20px]! [background:#FFFFFF]! rounded-[12px]! [border:1px_solid_#E2E8F0]!"
         >
           <div
-            style={{
-              width: "32px",
-              height: "32px",
-              border: "3px solid #E2E8F0",
-              borderTopColor: "var(--color-primary, #2563EB)",
-              borderRadius: "50%",
-              animation: "spin 0.8s linear infinite",
-            }}
+            className="w-[32px]! h-[32px]! [border:3px_solid_#E2E8F0]! [border-top-color:var(--color-primary,_#2563EB)]! rounded-[50%]! [animation:spin_0.8s_linear_infinite]!"
           />
-          <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-          <p style={{ marginTop: "14px", color: "#64748B", fontSize: "14px", fontWeight: "500" }}>
+
+          <p className="mt-[14px]! [color:#64748B]! text-[14px]! font-medium!">
             Loading tasks from database...
           </p>
         </div>
       ) : error ? (
         <div
-          style={{
-            padding: "36px 20px",
-            background: "#FEF2F2",
-            border: "1px solid #FCA5A5",
-            borderRadius: "12px",
-            textAlign: "center",
-          }}
+          className="p-[36px_20px]! [background:#FEF2F2]! [border:1px_solid_#FCA5A5]! rounded-[12px]! text-center!"
         >
-          <p style={{ color: "#B91C1C", fontWeight: "600", fontSize: "14px", margin: "0 0 10px 0" }}>
+          <p className="[color:#B91C1C]! font-semibold! text-[14px]! m-[0_0_10px_0]!">
             {error}
           </p>
           <button
             type="button"
             onClick={fetchTasks}
-            style={{
-              padding: "6px 14px",
-              backgroundColor: "#DC2626",
-              color: "#FFFFFF",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontWeight: "600",
-              fontSize: "13px",
-            }}
+            className="p-[6px_14px]! [background-color:#DC2626]! [color:#FFFFFF]! border-0! rounded-[6px]! cursor-pointer! font-semibold! text-[13px]!"
           >
             Retry Connection
           </button>
@@ -825,44 +536,21 @@ export default function TasksPage({ user: currentUser }) {
       ) : (
         /* Empty State */
         <div
-          style={{
-            backgroundColor: "var(--color-white, #FFFFFF)",
-            borderRadius: "12px",
-            border: "1px solid var(--color-slate-200, #E2E8F0)",
-            padding: "48px 24px",
-            textAlign: "center",
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.02)",
-          }}
+          className="[background-color:var(--color-white,_#FFFFFF)]! rounded-[12px]! [border:1px_solid_var(--color-slate-200,_#E2E8F0)]! p-[48px_24px]! text-center! [box-shadow:0_1px_3px_rgba(0,_0,_0,_0.02)]!"
         >
           <span
-            className="material-symbols-outlined"
-            style={{
-              fontSize: "44px",
-              color: "var(--color-slate-400, #94A3B8)",
-              marginBottom: "12px",
-              display: "inline-block",
-            }}
+            className={"material-symbols-outlined" + " " + "text-[44px]! [color:var(--color-slate-400,_#94A3B8)]! mb-[12px]! inline-block!"}
+
           >
             assignment_late
           </span>
           <h3
-            style={{
-              fontSize: "16px",
-              fontWeight: "700",
-              color: "var(--color-slate-800, #1E293B)",
-              margin: "0 0 6px 0",
-            }}
+            className="text-[16px]! font-bold! [color:var(--color-slate-800,_#1E293B)]! m-[0_0_6px_0]!"
           >
             No tasks found
           </h3>
           <p
-            style={{
-              fontSize: "13px",
-              color: "var(--color-slate-500, #64748B)",
-              margin: "0 auto",
-              maxWidth: "420px",
-              lineHeight: "1.4",
-            }}
+            className="text-[13px]! [color:var(--color-slate-500,_#64748B)]! m-[0_auto]! max-w-[420px]! leading-[1.4]!"
           >
             {activeTab === "my"
               ? "You do not have any tasks assigned to you."
@@ -897,7 +585,6 @@ export default function TasksPage({ user: currentUser }) {
           }}
         />
       )}
-
 
     </div>
   );

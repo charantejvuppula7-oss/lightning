@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-import { apiRequest, apiUpload } from '../../../services/api/apiClient.js';
+import { apiRequest, apiUpload } from '../../../shared/api/apiClient.js';
 import ReviewButton from "./ReviewButton";
 import MarkAsCompletedButton from "./MarkAsCompletedButton";
 import TaskMoreOption from "./TaskMoreOption";
@@ -17,280 +17,6 @@ import { SprintBadge } from "./SprintIcon";
 // Import the ChangeRequestCard (shown only when status is change_requested)
 import ChangeRequestCard from "./ChangeRequestCard";
 import TaskReview from "./taskreview.jsx";
-
-const STYLES = `
-  /* ─── Task Card Container ─── */
-  .task-card {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 10px;
-    overflow: hidden;
-    box-sizing: border-box;
-    transition: box-shadow 0.2s ease, border-color 0.2s ease;
-  }
-  .task-card:hover {
-    border-color: #CBD5E1;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  }
-
-  /* ─── Header Row (always visible) ─── */
-  .task-card-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 14px 16px 10px 16px;
-    cursor: pointer;
-    user-select: none;
-    position: relative;
-  }
-
-  /* Chevron toggle */
-  .task-card-chevron {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    color: #64748B;
-    margin-top: 2px;
-    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
-  }
-  .task-card-chevron--open {
-    transform: rotate(90deg);
-    color: #334155;
-  }
-
-  /* Main header info (left side) */
-  .task-card-info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  /* Row 1: ID + Name + Status + Priority + Dependency */
-  .task-card-row1 {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .task-card-id {
-    font-size: 13px;
-    font-weight: 600;
-    color: #64748B;
-    white-space: nowrap;
-  }
-  .task-card-name {
-    font-size: 15px;
-    font-weight: 700;
-    color: #0F172A;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 240px;
-  }
-  .task-card-dep-icon {
-    display: inline-flex;
-    align-items: center;
-    color: #475569;
-    cursor: pointer;
-  }
-  .task-card-dep-icon:hover {
-    color: #1E293B;
-  }
-
-  /* Row 2: Breadcrumb */
-  .task-card-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 12px;
-    color: #64748B;
-    flex-wrap: wrap;
-  }
-  .task-card-subtitle {
-    font-size: 12px;
-    color: #475569;
-    line-height: 1.35;
-  }
-  .task-card-breadcrumb span {
-    white-space: nowrap;
-  }
-  .task-card-breadcrumb-sep {
-    color: #94A3B8;
-    font-size: 11px;
-  }
-
-  /* Row 3: Sprint + Points */
-  .task-card-sprint-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 2px;
-  }
-  .task-card-sprint-icon {
-    display: inline-flex;
-    align-items: center;
-    color: #2563EB;
-  }
-  .task-card-sprint {
-    font-size: 13px;
-    font-weight: 600;
-    color: #2563EB;
-  }
-  .task-card-points {
-    font-size: 13px;
-    font-weight: 600;
-    color: #2563EB;
-  }
-
-  /* Right side of header: Due date + Timer + Menu */
-  .task-card-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-shrink: 0;
-  }
-  .task-card-due {
-    font-size: 13px;
-    font-weight: 500;
-    color: #475569;
-    white-space: nowrap;
-  }
-  .task-card-due strong {
-    color: #0F172A;
-  }
-  /* ─── Expanded Body ─── */
-  .task-card-body {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .task-card-body--open {
-    max-height: 800px;
-  }
-  .task-card-body-inner {
-    padding: 12px 24px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  /* Divider */
-  .task-card-divider {
-    height: 1px;
-    background: #E2E8F0;
-    margin: 0 24px;
-  }
-
-  /* Task Details Section */
-  .task-card-details-title {
-    font-size: 14px;
-    font-weight: 700;
-    color: #0F172A;
-    margin: 0;
-  }
-  .task-card-desc-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #334155;
-    margin: 0 0 2px;
-  }
-  .task-card-desc {
-    font-size: 13px;
-    color: #475569;
-    line-height: 1.5;
-    margin: 0;
-  }
-
-  /* Info grid: Priority | Dependency | Assigned by | Assigned to | Reviewer */
-  .task-card-info-grid {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    align-items: center;
-    gap: 12px;
-    border: 1px solid #D1D5DB;
-    border-radius: 8px;
-    padding: 10px 12px;
-    background: #F1F2F4;
-  }
-  .task-card-info-col {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 6px;
-    min-width: 0;
-  }
-  .task-card-info-label {
-    font-size: 13px;
-    font-weight: 500;
-    color: #64748B;
-  }
-  .task-card-info-value {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: #0F172A;
-    font-weight: 500;
-  }
-  .task-card-dependency-count {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: #2563EB;
-    font: inherit;
-    text-decoration: underline;
-    cursor: pointer;
-  }
-  .task-card-dependency-count--static { cursor: default; text-decoration: none; }
-
-  /* Action bar */
-  .task-card-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    border-top: 1px solid #E2E8F0;
-    padding-top: 12px;
-  }
-  .task-card-action-secondary {
-    background: transparent;
-    color: #334155;
-    border: none;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 18px;
-    border-radius: 8px;
-    background: #F1F2F4;
-    min-height: 44px;
-    transition: background-color 0.15s ease;
-  }
-  .task-card-action-secondary:hover {
-    background: #E5E7EB;
-  }
-
-  @media (max-width: 760px) {
-    .task-card-info-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  }
-  @media (max-width: 540px) {
-    .task-card-row1 { flex-wrap: wrap; }
-    .task-card-right { flex-wrap: wrap; }
-    .task-card-info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-    .task-card-body-inner { padding: 12px 16px 16px; }
-    .task-card-divider { margin: 0 16px; }
-  }
-  @media (max-width: 360px) {
-    .task-card-info-grid { grid-template-columns: 1fr; }
-  }
-`;
 
 /**
  * Task Component
@@ -368,8 +94,6 @@ function TaskCard({
   const [isReopened, setIsReopened] = useState(Boolean(propIsReopened || task.isReopened || task.reopened || task.raw?.reopened));
   const [resentForReview, setResentForReview] = useState(Boolean(propResentForReview || task.resent_for_review || task.raw?.resent_for_review));
 
-
-
   const handleToggle = () => {
     const next = !isOpen;
     if (!isControlled) setInternalOpen(next);
@@ -394,8 +118,9 @@ function TaskCard({
     // Once started, running or pausing the timer must always remain in_progress
     const backendStatus = nextTimerStatus === "paused" ? "paused" : nextTimerStatus === "completed" ? "completed" : "in_progress";
     try {
-      await sendStatusUpdate(backendStatus);
+      const updated = await sendStatusUpdate(backendStatus);
       updateTask({
+        raw: updated,
         status: "in_progress",
         timerStatus: nextTimerStatus,
         timerSeconds: currentSeconds !== undefined ? currentSeconds : timerSeconds,
@@ -409,8 +134,8 @@ function TaskCard({
   const handleCompleteTask = async () => {
 
     try {
-      await sendStatusUpdate("completed");
-      updateTask({ status: "completed", timerStatus: "completed" });
+      const updated = await sendStatusUpdate("completed");
+      updateTask({ raw: updated, status: "completed", timerStatus: "completed" });
       toast.success("Task marked as completed");
     } catch (error) {
       toast.error(error.message);
@@ -419,10 +144,10 @@ function TaskCard({
 
   const handleReopenTask = async () => {
     try {
-      await sendStatusUpdate("started", { reopened: true });
+      const updated = await sendStatusUpdate("started", { reopened: true });
       const nextReopenCount = Math.max(0, Number(reopenCount) || 0) + 1;
       setIsReopened(true);
-      updateTask({ status: "assigned", isReopened: true, reopenCount: nextReopenCount, timerStatus: "default", timerSeconds: 0 });
+      updateTask({ raw: updated, status: "assigned", isReopened: true, reopenCount: nextReopenCount, timerStatus: "default", timerSeconds: 0 });
       toast.success("Task reopened");
     } catch (error) {
       toast.error(error.message);
@@ -437,14 +162,14 @@ function TaskCard({
   const handleConfirmReview = async ({ description, files, links }) => {
     const isResubmission = isReopened || status === "change_requested" || changeRequests.length > 0;
     try {
-      await sendStatusUpdate("in_review", {
+      const updated = await sendStatusUpdate("in_review", {
         description: description || "Task submitted for review by employee",
         links: links || [],
         files: files || [],
       });
       setIsReopened(false);
       setResentForReview(isResubmission);
-      updateTask({ status: "in_review", isReopened: false, resentForReview: isResubmission });
+      updateTask({ raw: updated, status: "in_review", isReopened: false, resentForReview: isResubmission });
       toast.success(isResubmission ? "Task resent for review!" : "Task sent for review!");
       setIsReviewOpen(false);
     } catch (error) {
@@ -496,10 +221,9 @@ function TaskCard({
     }
   };
 
-
   return (
     <>
-      <style>{STYLES}</style>
+
       <div className={`task-card ${className}`.trim()} style={style}>
         {/* ─── Header (Always Visible) ─── */}
         <div className="task-card-header" onClick={handleToggle}>
@@ -719,7 +443,7 @@ function TaskCard({
                 {canReviewTask && <button type="button" className="task-card-action-secondary" onClick={async () => {
                   const description = window.prompt('Describe the changes needed:');
                   if (!description?.trim()) return;
-                  try { await sendStatusUpdate('change_requested', { description: description.trim() }); updateTask({}); }
+                  try { const updated = await sendStatusUpdate('change_requested', { description: description.trim() }); updateTask({ raw: updated }); }
                   catch (error) { toast.error(error.message); }
                 }}>Request Changes</button>}
                 <ReviewButton state="sent" disabled>
@@ -769,6 +493,5 @@ function TaskCard({
     </>
   );
 }
-
 
 export default TaskCard;

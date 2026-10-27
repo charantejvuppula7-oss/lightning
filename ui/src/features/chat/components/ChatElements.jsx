@@ -10,31 +10,28 @@ export function Avatar({ name = "", size = 36, isOnline = undefined, showBadge =
   const badgeSize = Math.max(8, Math.round(size * 0.28));
 
   return (
-    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
-      <div title={name} style={{
-        width: size, height: size, borderRadius: "50%", background: bg,
-        color: "var(--color-white)", fontWeight: 700, fontSize: size * 0.38,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        userSelect: "none",
-        border: "2px solid var(--color-white)", boxShadow: "0 1px 4px rgba(0,0,0,0.10)",
-      }}>
+    <div className="relative! shrink-0!" style={{
+  width: size,
+  height: size
+}}>
+      <div title={name} className="rounded-[50%]! [color:var(--color-white)]! font-bold! flex! items-center! justify-center! select-none! [border:2px_solid_var(--color-white)]! [box-shadow:0_1px_4px_rgba(0,0,0,0.10)]!" style={{
+  width: size,
+  height: size,
+  background: bg,
+  fontSize: size * 0.38
+}}>
         {initials}
       </div>
       {shouldShow && (
         <span
-          style={{
-            position: "absolute",
-            bottom: -1,
-            right: -1,
-            width: badgeSize,
-            height: badgeSize,
-            borderRadius: "50%",
-            background: isOnline ? "var(--color-success-alt)" : "var(--color-slate-400)",
-            border: "2px solid var(--color-white)",
-            boxShadow: isOnline ? "0 0 0 1px rgba(34, 197, 94, 0.4)" : "none",
-            transition: "all 0.2s ease",
-            zIndex: 2,
-          }}
+          className="absolute! rounded-[50%]! [border:2px_solid_var(--color-white)]! [transition:all_0.2s_ease]! z-[2]!" style={{
+  bottom: -1,
+  right: -1,
+  width: badgeSize,
+  height: badgeSize,
+  background: isOnline ? "var(--color-success-alt)" : "var(--color-slate-400)",
+  boxShadow: isOnline ? "0 0 0 1px rgba(34, 197, 94, 0.4)" : "none"
+}}
           title={isOnline ? "Online" : "Offline"}
         />
       )}
@@ -44,7 +41,7 @@ export function Avatar({ name = "", size = 36, isOnline = undefined, showBadge =
 
 function RedPdfIcon({ size = 24 }) {
   return (
-    <svg width={size} height={size * 1.15} viewBox="0 0 20 24" fill="none" style={{ flexShrink: 0 }}>
+    <svg width={size} height={size * 1.15} viewBox="0 0 20 24" fill="none" className="shrink-0!">
       <path d="M3 1C1.9 1 1 1.9 1 3V21C1 22.1 1.9 23 3 23H17C18.1 23 19 22.1 19 21V7L13 1H3Z" fill="#EA4335" />
       <path d="M13 1V7H19L13 1Z" fill="#F87171" opacity="0.9" />
       <path d="M5 14H7.5C8.3 14 9 13.3 9 12.5C9 11.7 8.3 11 7.5 11H5V17H6.5V14.8" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
@@ -55,7 +52,7 @@ function RedPdfIcon({ size = 24 }) {
 
 export function PeopleIcon({ size = 18, color = "var(--color-slate-600)" }) {
   return (
-    <svg width={size} height={size * 0.88} viewBox="0 0 20 18" fill="none" style={{ flexShrink: 0 }}>
+    <svg width={size} height={size * 0.88} viewBox="0 0 20 18" fill="none" className="shrink-0!">
       {/* Front person */}
       <circle cx="7" cy="5" r="3.2" fill={color} />
       <path
@@ -75,7 +72,7 @@ export function PeopleIcon({ size = 18, color = "var(--color-slate-600)" }) {
 
 export function PushPinIcon({ size = 18, color = "var(--color-slate-600)" }) {
   return (
-    <svg width={size * 0.75} height={size} viewBox="0 0 15 20" fill="none" style={{ flexShrink: 0 }}>
+    <svg width={size * 0.75} height={size} viewBox="0 0 15 20" fill="none" className="shrink-0!">
       <path
         d="M1.5 2H13.5M3.5 2V7.5L1.5 10.5V12.5H13.5V10.5L11.5 7.5V2M7.5 12.5V19"
         stroke={color}
@@ -91,7 +88,7 @@ export function FileIcon({ name = "", size = 28 }) {
   const ext = (name || "").split(".").pop().toLowerCase();
   if (ext === "fig" || ext === "figma") {
     return (
-      <svg width={size * 0.7} height={size} viewBox="0 0 38 57" fill="none" style={{ flexShrink: 0 }}>
+      <svg width={size * 0.7} height={size} viewBox="0 0 38 57" fill="none" className="shrink-0!">
         <path d="M19 28.5C19 23.2533 23.2533 19 28.5 19C33.7467 19 38 23.2533 38 28.5C38 33.7467 33.7467 38 28.5 38C23.2533 38 19 33.7467 19 28.5Z" fill="#1ABCFE"/>
         <path d="M0 47.5C0 42.2533 4.25329 38 9.5 38H19V47.5C19 52.7467 14.7467 57 9.5 57C4.25329 57 0 52.7467 0 47.5Z" fill="#0ACF83"/>
         <path d="M19 0V19H28.5C33.7467 19 38 14.7467 38 9.5C38 4.25329 33.7467 0 28.5 0H19Z" fill="#FF7262"/>
@@ -141,7 +138,6 @@ function getFileCategoryLabel(name = "", type = "") {
   if (["png", "jpg", "jpeg", "webp", "gif"].includes(ext)) return "Image";
   return (type || ext || "File").toUpperCase();
 }
-
 
 export function MessageText({ content = '' }) {
   return content.split(/(\*\*[^*]+\*\*|_[^_]+_|@[A-Za-z0-9_.-]+)/g).map((part,index) =>

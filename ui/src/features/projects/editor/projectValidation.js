@@ -1,4 +1,4 @@
-import { roleSlug } from '../../../utils/roles.js'
+import { roleSlug } from '../../../shared/utils/roles.js'
 
 export const fileLimit = 100 * 1024 * 1024
 export const isManagerOption = user => ['admin', 'pm'].includes(roleSlug(user?.role_link__name || user?.role))

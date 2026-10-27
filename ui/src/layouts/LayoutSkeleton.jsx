@@ -1,4 +1,3 @@
-import './layoutSkeleton.css'
 
 function Skeleton({ className = '' }) {
   return <div className={`layout-skeleton-block ${className}`} />

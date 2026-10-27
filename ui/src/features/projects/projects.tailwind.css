@@ -1,0 +1,473 @@
+@utility live-projects {
+  @apply max-w-[1621px];
+  @apply m-[0_auto];
+  @apply p-[20px_28px_40px];
+  @apply [background:#fff];
+  @apply [font-family:Inter,sans-serif];
+  @apply [color:#0f172a];
+  @apply flex;
+  @apply flex-col;
+  @apply gap-[24px];
+  & h1 {
+    @apply text-[16px];
+    @apply font-bold;
+    @apply m-[0_0_12px];
+  }
+  & h2 {
+    @apply text-[16px];
+    @apply font-bold;
+    @apply m-[0_0_12px];
+  }
+  @media (max-width:650px) {
+    @apply p-[20px_16px];
+  }
+}
+@utility pm-projects-heading {
+  @apply flex;
+  @apply items-center;
+  @apply justify-between;
+  & h1 {
+    @apply m-0;
+  }
+  &>button {
+    @apply flex;
+    @apply items-center;
+    @apply gap-[6px];
+    @apply [background:var(--color-primary)];
+    @apply [color:#fff];
+    @apply p-[8px_16px];
+    @apply text-[13px];
+    @apply font-semibold;
+    @apply border-0;
+    @apply rounded-[8px];
+    @apply cursor-pointer;
+  }
+}
+@utility pm-project-cards {
+  @apply flex;
+  @apply gap-[16px];
+  @apply overflow-x-auto;
+  @apply p-[3px_3px_8px];
+  @apply [scrollbar-width:none];
+}
+@utility pm-project-card {
+  @apply min-w-[230px];
+  @apply max-w-[260px];
+  @apply shrink-0;
+  @apply [border:1px_solid_#e2e8f0];
+  @apply rounded-[12px];
+  @apply p-[16px];
+  @apply [background:#fff];
+  @apply text-left;
+  @apply cursor-pointer;
+  @apply [box-shadow:0_1px_3px_#0000000a];
+  @apply [transition:border-color_.15s,box-shadow_.15s];
+  &.selected {
+    @apply [border:2px_solid_var(--color-primary)];
+    @apply [box-shadow:0_0_0_3px_#2563eb1a];
+  }
+  &>p {
+    @apply text-[11px];
+    @apply [color:#64748b];
+    @apply m-[0_0_10px];
+    @apply leading-[1.3];
+  }
+  &>p.project-due {
+    @apply mb-[6px];
+  }
+}
+@utility pm-project-card-top {
+  @apply flex;
+  @apply justify-between;
+  @apply items-start;
+  @apply mb-[4px];
+  & strong {
+    @apply text-[14px];
+    @apply font-bold;
+    @apply leading-[1.3];
+  }
+}
+@utility project-state {
+  @apply text-[10px];
+  @apply font-semibold;
+  @apply [color:#2563eb];
+  @apply [background:#eff6ff];
+  @apply [border:1px_solid_#bfdbfe];
+  @apply p-[2px_8px];
+  @apply rounded-[10px];
+  @apply whitespace-nowrap;
+  @apply shrink-0;
+  @apply ml-[8px];
+  &.paused {
+    @apply [color:#b45309];
+    @apply [background:#fffbeb];
+    @apply [border-color:#fde68a];
+  }
+  &.delayed {
+    @apply [color:#dc2626];
+    @apply [background:#fef2f2];
+    @apply [border-color:#fecaca];
+  }
+  &.completed {
+    @apply [color:#16a34a];
+    @apply [background:#f0fdf4];
+    @apply [border-color:#bbf7d0];
+  }
+  &.upcoming {
+    @apply [color:#64748b];
+    @apply [background:#f8fafc];
+    @apply [border-color:#e2e8f0];
+  }
+}
+@utility project-progress-row {
+  @apply flex;
+  @apply items-center;
+  @apply gap-[8px];
+  @apply mb-[8px];
+  &>span {
+    @apply text-[11px];
+    @apply font-semibold;
+    @apply [color:#475569];
+    @apply min-w-[28px];
+    @apply text-right;
+  }
+}
+@utility project-progress {
+  @apply flex-1;
+  @apply h-[6px];
+  @apply [background:#e2e8f0];
+  @apply rounded-[3px];
+  @apply overflow-hidden;
+  & i {
+    @apply block;
+    @apply h-full;
+    @apply [background:var(--color-primary)];
+    @apply rounded-[3px];
+    @apply [transition:width_.3s];
+  }
+}
+@utility project-counts {
+  @apply flex;
+  @apply items-center;
+  @apply gap-[12px];
+  @apply text-[11px];
+  @apply [color:#64748b];
+  &>span {
+    @apply inline-flex;
+    @apply items-center;
+    @apply gap-[3px];
+  }
+  & .material-symbols-outlined {
+    @apply text-[13px];
+  }
+}
+@utility pm-details-card {
+  @apply [background:#fff];
+  @apply [border:1px_solid_#e2e8f0];
+  @apply rounded-[12px];
+  @apply p-[16px_24px];
+  @apply [box-shadow:0_1px_3px_#00000005];
+  & h2 {
+    @apply text-[14px];
+    @apply mb-[14px];
+  }
+  &>div {
+    @apply grid;
+    @apply grid-cols-[repeat(6,1fr)];
+    @apply gap-[16px];
+  }
+  & article {
+    @apply flex;
+    @apply flex-col;
+    @apply min-w-0;
+    @apply gap-[4px];
+  }
+  & article>span {
+    @apply text-[11px];
+    @apply font-medium;
+    @apply [color:#64748b];
+  }
+  & article>strong {
+    @apply text-[13px];
+    @apply font-bold;
+    @apply [color:#1e293b];
+  }
+  @media (max-width:900px) {
+    &>div {
+      @apply grid-cols-[repeat(3,1fr)];
+    }
+  }
+  @media (max-width:650px) {
+    &>div {
+      @apply grid-cols-[repeat(2,1fr)];
+    }
+  }
+}
+@utility pm-team {
+  &>div {
+    @apply flex;
+    @apply overflow-x-auto;
+    @apply gap-[12px];
+    @apply pb-[4px];
+  }
+  & article {
+    @apply min-w-[155px];
+    @apply [border:1px_solid_#e2e8f0];
+    @apply rounded-[12px];
+    @apply p-[14px_16px];
+    @apply flex;
+    @apply items-center;
+    @apply gap-[10px];
+    @apply shrink-0;
+  }
+  & strong {
+    @apply block;
+    @apply text-[12px];
+  }
+  & small {
+    @apply block;
+    @apply text-[10px];
+    @apply [color:#64748b];
+    @apply mt-[3px];
+  }
+}
+@utility project-member-avatar {
+  @apply w-[34px];
+  @apply h-[34px];
+  @apply rounded-[50%];
+  @apply [background:#eff6ff];
+  @apply [color:#1e40af];
+  @apply grid;
+  @apply [place-items:center];
+  @apply text-[12px];
+  @apply font-bold;
+}
+@utility pm-task-table-wrap {
+  @apply [border:1px_solid_#e2e8f0];
+  @apply rounded-[12px];
+  @apply p-[20px_24px];
+  @apply [background:#fff];
+  @apply [box-shadow:0_1px_3px_#00000005];
+}
+@utility pm-task-filters {
+  @apply flex;
+  @apply items-center;
+  @apply gap-[10px];
+  @apply flex-wrap;
+  @apply mb-[16px];
+  & input {
+    @apply h-[34px];
+    @apply p-[0_10px];
+    @apply [font:12px_Inter,sans-serif];
+    @apply [border:1px_solid_#e2e8f0];
+    @apply rounded-[6px];
+    @apply [background:#fff];
+    @apply [color:#1e293b];
+  }
+  & select {
+    @apply h-[34px];
+    @apply p-[0_10px];
+    @apply [font:12px_Inter,sans-serif];
+    @apply [border:1px_solid_#e2e8f0];
+    @apply rounded-[6px];
+    @apply [background:#fff];
+    @apply [color:#1e293b];
+  }
+  & input {
+    @apply w-full;
+    @apply pl-[32px];
+  }
+}
+@utility project-task-search {
+  @apply relative;
+  @apply [flex:1_1_280px];
+  @apply max-w-[380px];
+  & .material-symbols-outlined {
+    @apply absolute;
+    @apply left-[10px];
+    @apply top-[50%];
+    @apply [transform:translateY(-50%)];
+    @apply text-[16px];
+    @apply [color:#94a3b8];
+  }
+}
+@utility project-task-filter-selects {
+  @apply ml-auto;
+  @apply flex;
+  @apply items-center;
+  @apply gap-[8px];
+  @apply flex-wrap;
+  & button {
+    @apply [background:none];
+    @apply border-0;
+    @apply [color:var(--color-primary)];
+    @apply text-[12px];
+    @apply font-semibold;
+    @apply cursor-pointer;
+    @apply p-[4px_8px];
+  }
+}
+@utility live-project-table {
+  @apply overflow-auto;
+  & table {
+    @apply w-full;
+    @apply [border-collapse:collapse];
+    @apply text-[13px];
+  }
+  & th {
+    @apply text-[13px];
+    @apply font-bold;
+    @apply [color:#0f172a];
+    @apply [background:#eef2fe];
+    @apply text-left;
+    @apply whitespace-nowrap;
+    @apply p-[12px_16px];
+  }
+  & th:first-child {
+    @apply w-[24%];
+    @apply pl-[24px];
+  }
+  & th:nth-child(2) {
+    @apply w-[22%];
+  }
+  & th:nth-child(3) {
+    @apply w-[20%];
+  }
+  & th:nth-child(4) {
+    @apply w-[20%];
+  }
+  & th:last-child {
+    @apply w-[14%];
+    @apply text-center;
+  }
+  & td {
+    @apply p-[14px_16px];
+    @apply [border-top:1px_solid_#f1f5f9];
+    @apply [color:#0f172a];
+    @apply font-medium;
+  }
+  & td:first-child {
+    @apply pl-[24px];
+  }
+  & td:last-child {
+    @apply text-center;
+  }
+  & .project-feature-row td {
+    @apply text-left;
+    @apply p-[12px_24px];
+    @apply text-[13px];
+    @apply font-semibold;
+    @apply [color:#475569];
+    @apply [background:#eef2fe];
+    @apply [border-top:1px_solid_#e2e8f0];
+    @apply [border-bottom:1px_solid_#e2e8f0];
+  }
+  & tr:hover {
+    @apply [background:#f8fafc];
+  }
+}
+@utility project-table-assignee {
+  @apply flex;
+  @apply items-center;
+  @apply gap-[8px];
+  @apply text-[12px];
+  & .project-member-avatar {
+    @apply w-[26px];
+    @apply h-[26px];
+    @apply text-[10px];
+  }
+}
+@utility task-priority {
+  @apply p-[4px_9px];
+  @apply rounded-[7px];
+  @apply [background:#f1f5f9];
+  @apply [text-transform:capitalize];
+  &.high {
+    @apply [background:#fef2f2];
+    @apply [color:#b91c1c];
+  }
+  &.medium {
+    @apply [background:#eff6ff];
+    @apply [color:#1d4ed8];
+  }
+  &.low {
+    @apply [background:#f0fdf4];
+    @apply [color:#166534];
+  }
+}
+
+@utility page-content {
+  @apply p-[28px];
+  @apply max-[600px]:p-[16px];
+}
+
+@utility page-heading {
+  @apply [background:white];
+  @apply [border:1px_solid_#e5e6eb];
+  @apply rounded-[12px];
+  @apply p-[19px_22px_0];
+  @apply mb-[20px];
+  @apply [&_h1]:m-0;
+  @apply [&_h1]:text-[28px];
+  @apply [&_h1]:leading-[1.25];
+  @apply [&_h1]:tracking-[-.4px];
+  @apply [&_h1]:[color:#172033];
+  @apply [&_p]:m-[4px_0_0];
+  @apply [&_p]:text-[14px];
+  @apply [&_p]:[color:#737986];
+}
+
+@utility project-card {
+  @apply [background:#fff];
+  @apply [border:1px_solid_#e2e8f0];
+  @apply rounded-[16px];
+  @apply [box-shadow:0_2px_8px_#00000005];
+  @apply p-[28px];
+  @apply min-w-0;
+  @apply [&_>_.project-grid]:mb-[20px];
+  @apply [&_>_.project-field]:mb-[20px];
+  @apply max-[700px]:p-[18px];
+}
+
+@utility project-alert {
+  @apply p-[12px_16px];
+  @apply mb-[18px];
+  @apply [border:1px_solid_#c8daf9];
+  @apply rounded-[8px];
+  @apply [background:#eef5ff];
+  @apply [color:#264c91];
+  @apply text-[13px];
+  @apply [overflow-wrap:anywhere];
+}
+
+@utility project-primary {
+  @apply inline-flex;
+  @apply items-center;
+  @apply justify-center;
+  @apply min-h-[42px];
+  @apply box-border;
+  @apply rounded-[9px];
+  @apply p-[10px_20px];
+  @apply [font:inherit];
+  @apply text-[14px];
+  @apply [font-weight:650];
+  @apply no-underline;
+  @apply cursor-pointer;
+  @apply [border:1px_solid_#3b82f6];
+  @apply [color:#fff];
+  @apply [background:#3b82f6];
+  @apply [&:hover]:[background:#246bd9];
+  @apply [&:disabled]:opacity-[.55];
+  @apply [&:disabled]:[cursor:wait];
+}
+
+@utility project-list-grid {
+  @apply grid;
+  @apply grid-cols-[repeat(auto-fill,minmax(245px,1fr))];
+  @apply gap-[16px];
+  @apply [&_.project-card_h2]:text-[17px];
+  @apply [&_.project-card_h2]:m-[0_0_15px];
+  @apply [&_.project-card_a]:[color:#2169d4];
+  @apply [&_.project-card_a]:text-[13px];
+  @apply [&_.project-card_a]:font-bold;
+}

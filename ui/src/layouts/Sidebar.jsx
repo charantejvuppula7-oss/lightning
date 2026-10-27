@@ -1,13 +1,10 @@
 import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { logout } from '../features/auth/api/authApi.js'
-import { roleSlug } from '../utils/roles.js'
 import { sidebarItems, sidebarItemActive } from './sidebarNavigation.js'
-import Navbar from './Navbar.jsx'
-import useAppVersion from '../app/hooks/useAppVersion.js'
+import useAppVersion from '../shared/hooks/useAppVersion.js'
 import lightningLogoLight from '../assets/lightning-logo-light.png'
 import lightningIcon from '../assets/lightning-icon.png'
-import './sidebar.css'
 
 const iconPaths = {
   dashboard: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18M9 12h12" /></>,
@@ -116,119 +113,49 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
 
   return (
     <div
-      className={`app-sidebar ${effectiveRole}-sidebar`}
+      className={`app-sidebar ${effectiveRole}-sidebar` + " " + "[transition:width_0.25s_cubic-bezier(0.4,_0,_0.2,_1),_padding_0.25s_ease]! [background:var(--color-white)]! [border-right:1px_solid_var(--color-slate-200)]! flex! flex-col! shrink-0! box-border! h-dvh! max-h-[100dvh]! min-h-0! sticky! top-[0]! [align-self:flex-start]! overflow-hidden! z-[50]! [font-family:'Inter',_sans-serif]!"}
       style={{
-        width: sidebarWidth,
-        minWidth: sidebarWidth,
-        padding: sidebarPadding,
-        transition: "width 0.25s cubic-bezier(0.4, 0, 0.2, 1), padding 0.25s ease",
-        background: "var(--color-white)",
-        borderRight: "1px solid var(--color-slate-200)",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: 0,
-        boxSizing: "border-box",
-        height: "100dvh",
-        maxHeight: "100dvh",
-        minHeight: 0,
-        position: "sticky",
-        top: 0,
-        alignSelf: "flex-start",
-        overflow: "hidden",
-        zIndex: 50,
-        fontFamily: "'Inter', sans-serif",
-      }}
+  width: sidebarWidth,
+  minWidth: sidebarWidth,
+  padding: sidebarPadding
+}}
     >
-      <style>{`
-        .shared-sidebar-scrollable {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-        .shared-sidebar-scrollable::-webkit-scrollbar {
-          display: none;
-        }
-        .shared-sidebar-nav-btn:hover {
-          background-color: var(--color-slate-50) !important;
-          color: var(--color-slate-900) !important;
-        }
-        .shared-sidebar-nav-btn.active {
-          background-color: var(--color-primary-subtle) !important;
-          color: var(--color-primary) !important;
-        }
-        .shared-sidebar-nav-btn.active:hover {
-          background-color: var(--color-primary-subtle) !important;
-          color: var(--color-primary) !important;
-        }
-        .shared-sidebar-logout-btn-slate:hover {
-          background-color: var(--color-slate-300) !important;
-        }
-        .shared-sidebar-logout-btn-red:hover {
-          background-color: var(--color-danger-border) !important;
-        }
-      `}</style>
 
       {/* Top Header: Logo + Toggle Button */}
       <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: isCollapsed ? "center" : "space-between",
-          height: "40px",
-          padding: "0 2px",
-          width: "100%",
-          boxSizing: "border-box",
-          flexShrink: 0,
-          marginBottom: effectiveRole === "user" ? "20px" : "16px",
-        }}
+        className="flex! items-center! h-[40px]! p-[0_2px]! w-full! box-border! shrink-0!" style={{
+  justifyContent: isCollapsed ? "center" : "space-between",
+  marginBottom: effectiveRole === "user" ? "20px" : "16px"
+}}
       >
         <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            overflow: "hidden",
-            textDecoration: "none",
-          }}
+          className="flex! items-center! gap-[8px]! overflow-hidden! no-underline!"
         >
           {isCollapsed ? (
             <img
               src={lightningIcon}
               alt="Lightning PDPM"
-              style={{
-                width: effectiveRole === "admin" ? "30px" : "26px",
-                height: effectiveRole === "admin" ? "30px" : "26px",
-                borderRadius: effectiveRole === "admin" ? "6px" : "4px",
-                objectFit: "contain",
-                display: "block",
-                flexShrink: 0,
-              }}
+              className="object-contain! block! shrink-0!" style={{
+  width: effectiveRole === "admin" ? "30px" : "26px",
+  height: effectiveRole === "admin" ? "30px" : "26px",
+  borderRadius: effectiveRole === "admin" ? "6px" : "4px"
+}}
             />
           ) : (
             <>
               <img
                 src={lightningLogoLight}
                 alt="Lightning PDPM"
-                style={{
-                  height: effectiveRole === "admin" ? "30px" : "28px",
-                  width: "auto",
-                  maxWidth: effectiveRole === "admin" ? "150px" : "140px",
-                  objectFit: "contain",
-                  display: "block",
-                  flexShrink: 1,
-                }}
+                className="w-auto! object-contain! block! [flex-shrink:1]!" style={{
+  height: effectiveRole === "admin" ? "30px" : "28px",
+  maxWidth: effectiveRole === "admin" ? "150px" : "140px"
+}}
               />
               {(version || isLoadingVersion) && (
                 <span
                   aria-label={version ? `Version ${version}` : "Loading version"}
                   title={version ? `Version ${version}` : "Loading version"}
-                  style={{
-                    flexShrink: 0,
-                    fontSize: "9px",
-                    lineHeight: 1,
-                    fontWeight: "600",
-                    color: "var(--color-slate-500)",
-                    whiteSpace: "nowrap",
-                  }}
+                  className="shrink-0! text-[9px]! leading-[1]! font-semibold! [color:var(--color-slate-500)]! whitespace-nowrap!"
                 >
                   {version ? `v${version}` : "v..."}
                 </span>
@@ -242,22 +169,11 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
           onClick={handleToggle}
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"} aria-expanded={!isCollapsed}
           title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "var(--color-slate-500)",
-            padding: "4px",
-            borderRadius: "6px",
-            transition: "all 0.15s ease",
-            flexShrink: 0,
-            marginRight: isCollapsed ? 0 : "-6px",
-          }}
+          className="[background:none]! border-0! cursor-pointer! flex! items-center! justify-center! [color:var(--color-slate-500)]! p-[4px]! rounded-[6px]! [transition:all_0.15s_ease]! shrink-0!" style={{
+  marginRight: isCollapsed ? 0 : "-6px"
+}}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
+          <span className={"material-symbols-outlined" + " " + "text-[20px]!"} >
             {isCollapsed ? "chevron_right" : "chevron_left"}
           </span>
         </button>
@@ -265,29 +181,14 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
 
       {/* Navigation Menu (Scrollable between Logo and Logout) */}
       <div
-        className="shared-sidebar-scrollable"
+        className={"shared-sidebar-scrollable" + " " + "flex! flex-col! gap-[4px]! [flex:1_1_0%]! min-h-0! overflow-y-auto! overflow-x-hidden! [overscroll-behavior:contain]!"}
         style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "4px",
-          flex: "1 1 0%",
-          minHeight: 0,
-          overflowY: "auto",
-          overflowX: "hidden",
-          overscrollBehavior: "contain",
-          paddingRight: isCollapsed ? "0px" : "4px",
-        }}
+  paddingRight: isCollapsed ? "0px" : "4px"
+}}
       >
         {effectiveRole === "admin" && !isCollapsed && (
           <div
-            style={{
-              fontSize: "10px",
-              fontWeight: "700",
-              color: "var(--color-slate-400)",
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              padding: "4px 10px 8px 10px",
-            }}
+            className="text-[10px]! font-bold! [color:var(--color-slate-400)]! [text-transform:uppercase]! tracking-[0.08em]! p-[4px_10px_8px_10px]!"
           >
             Administration
           </div>
@@ -300,31 +201,24 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
           return (
             <div
               key={itemKey}
-              className={`shared-sidebar-nav-btn ${active ? "active" : ""}`}
+              className={`shared-sidebar-nav-btn ${active ? "active" : ""}` + " " + "flex! items-center! gap-[12px]! rounded-[8px]! cursor-pointer! [transition:all_0.15s_ease]! select-none!"}
               role="link" tabIndex={0} aria-label={item.label} aria-current={active ? "page" : undefined}
               onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); navigate(item.path); } }}
               title={isCollapsed ? item.label : ""}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: isCollapsed ? "10px 0" : "10px 12px",
-                justifyContent: isCollapsed ? "center" : "flex-start",
-                borderRadius: "8px",
-                fontSize: effectiveRole === "admin" ? "13px" : "14px",
-                fontWeight: active ? "600" : "500",
-                color: active ? "var(--color-primary)" : "var(--color-slate-600)",
-                backgroundColor: active ? "var(--color-primary-subtle)" : "transparent",
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-                userSelect: "none",
-              }}
+  padding: isCollapsed ? "10px 0" : "10px 12px",
+  justifyContent: isCollapsed ? "center" : "flex-start",
+  fontSize: effectiveRole === "admin" ? "13px" : "14px",
+  fontWeight: active ? "600" : "500",
+  color: active ? "var(--color-primary)" : "var(--color-slate-600)",
+  backgroundColor: active ? "var(--color-primary-subtle)" : "transparent"
+}}
               onClick={() => navigate(item.path)}
             >
               <SidebarIcon name={item.icon} role={effectiveRole} />
               {!isCollapsed && (
                 <>
-                  <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1 }}>
+                  <span className="whitespace-nowrap! overflow-hidden! text-ellipsis! flex-1!">
                     {item.label}
                   </span>
 
@@ -338,49 +232,26 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
       {logoutError && <div role="alert">{logoutError}</div>}
       {/* Logout button (Pinned at Bottom) */}
       <div
-        style={{
-          marginTop: "auto",
-          flex: "0 0 auto",
-          position: "sticky",
-          bottom: 0,
-          zIndex: 1,
-          paddingTop: effectiveRole === "admin" ? "14px" : "12px",
-          paddingBottom: "max(8px, env(safe-area-inset-bottom))",
-          borderTop: "1px solid var(--color-slate-100)",
-          width: "100%",
-          backgroundColor: "var(--color-white)",
-        }}
+        className="mt-auto! [flex:0_0_auto]! sticky! bottom-[0]! z-[1]! pb-[max(8px,_env(safe-area-inset-bottom))]! [border-top:1px_solid_var(--color-slate-100)]! w-full! [background-color:var(--color-white)]!" style={{
+  paddingTop: effectiveRole === "admin" ? "14px" : "12px"
+}}
       >
         <button
           type="button"
-          className={effectiveRole === "admin" ? "shared-sidebar-logout-btn-red" : "shared-sidebar-logout-btn-slate"}
+          className={(effectiveRole === "admin" ? "shared-sidebar-logout-btn-red" : "shared-sidebar-logout-btn-slate") + " " + "flex! items-center! font-semibold! cursor-pointer! [transition:all_0.15s_ease]! select-none! w-full! border-0! [font-family:inherit]! text-left!"}
           title={isCollapsed ? (effectiveRole === "admin" ? "Sign Out" : "Logout") : ""}
           aria-label={effectiveRole === "admin" ? "Sign Out" : "Logout"}
           onClick={handleLogout}
           disabled={loggingOut}
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: effectiveRole === "admin" ? "12px" : "10px",
-            padding: isCollapsed
-              ? "10px 0"
-              : effectiveRole === "admin"
-                ? "10px 12px"
-                : "10px 14px",
-            justifyContent: isCollapsed ? "center" : "flex-start",
-            borderRadius: effectiveRole === "admin" ? "8px" : "6px",
-            fontSize: effectiveRole === "admin" ? "13px" : "14px",
-            fontWeight: "600",
-            color: effectiveRole === "admin" ? "var(--color-danger-dark)" : "var(--color-slate-800)",
-            backgroundColor: effectiveRole === "admin" ? "var(--color-danger-bg)" : "var(--color-slate-200)",
-            cursor: "pointer",
-            transition: "all 0.15s ease",
-            userSelect: "none",
-            width: "100%",
-            border: "none",
-            fontFamily: "inherit",
-            textAlign: "left",
-          }}
+  gap: effectiveRole === "admin" ? "12px" : "10px",
+  padding: isCollapsed ? "10px 0" : effectiveRole === "admin" ? "10px 12px" : "10px 14px",
+  justifyContent: isCollapsed ? "center" : "flex-start",
+  borderRadius: effectiveRole === "admin" ? "8px" : "6px",
+  fontSize: effectiveRole === "admin" ? "13px" : "14px",
+  color: effectiveRole === "admin" ? "var(--color-danger-dark)" : "var(--color-slate-800)",
+  backgroundColor: effectiveRole === "admin" ? "var(--color-danger-bg)" : "var(--color-slate-200)"
+}}
         >
           <span
             className="material-symbols-outlined"
@@ -397,19 +268,4 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
       </div>
     </div>
   );
-}
-
-export function SidebarLayout({ user, children, searchQuery, onSearchChange, navbarProps }) {
-  const { pathname } = useLocation()
-  const effectiveRole = user ? roleSlug(user.role) : pathname.startsWith('/admin/') ? 'admin' : pathname.startsWith('/pm/') ? 'pm' : 'user'
-
-  return (
-    <div style={{ minHeight: '100dvh', display: 'flex', background: 'var(--color-slate-50)', color: 'var(--color-slate-900)' }}>
-      <Sidebar active={pathname.replace(/\/$/, '')} effectiveRole={effectiveRole} permissions={user?.permissions} canAccessChat={user?.can_access_chat} />
-      <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <Navbar user={user} searchQuery={searchQuery} onSearchChange={onSearchChange} {...navbarProps} />
-        <main style={{ minWidth: 0, flex: 1 }}>{children}</main>
-      </div>
-    </div>
-  )
 }

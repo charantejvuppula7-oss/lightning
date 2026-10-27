@@ -88,8 +88,8 @@ export function StatusIcon({ status = "assigned", size = 26, className = "" }) {
           height={size}
           viewBox="0 0 24 24"
           fill="none"
-          className={className}
-          style={{ display: "inline-block", flexShrink: 0 }}
+          className={className + " " + "inline-block! shrink-0!"}
+
         >
           <circle
             cx="12"
@@ -111,8 +111,8 @@ export function StatusIcon({ status = "assigned", size = 26, className = "" }) {
           height={size}
           viewBox="0 0 24 24"
           fill="none"
-          className={className}
-          style={{ display: "inline-block", flexShrink: 0 }}
+          className={className + " " + "inline-block! shrink-0!"}
+
         >
           {/* Top half dashed arc */}
           <path
@@ -141,8 +141,8 @@ export function StatusIcon({ status = "assigned", size = 26, className = "" }) {
           height={size}
           viewBox="0 0 24 24"
           fill="none"
-          className={className}
-          style={{ display: "inline-block", flexShrink: 0 }}
+          className={className + " " + "inline-block! shrink-0!"}
+
         >
           {/* 3/4 filled pie: Top-Left, Bottom-Left, Bottom-Right */}
           <path
@@ -171,8 +171,8 @@ export function StatusIcon({ status = "assigned", size = 26, className = "" }) {
           height={size}
           viewBox="0 0 24 24"
           fill="none"
-          className={className}
-          style={{ display: "inline-block", flexShrink: 0 }}
+          className={className + " " + "inline-block! shrink-0!"}
+
         >
           {/* 3/4 filled pie */}
           <path
@@ -201,8 +201,8 @@ export function StatusIcon({ status = "assigned", size = 26, className = "" }) {
           height={size}
           viewBox="0 0 24 24"
           fill="none"
-          className={className}
-          style={{ display: "inline-block", flexShrink: 0 }}
+          className={className + " " + "inline-block! shrink-0!"}
+
         >
           <circle
             cx="12"
@@ -223,8 +223,8 @@ export function StatusIcon({ status = "assigned", size = 26, className = "" }) {
           height={size}
           viewBox="0 0 24 24"
           fill="none"
-          className={className}
-          style={{ display: "inline-block", flexShrink: 0 }}
+          className={className + " " + "inline-block! shrink-0!"}
+
         >
           <circle
             cx="12"
@@ -241,87 +241,6 @@ export function StatusIcon({ status = "assigned", size = 26, className = "" }) {
       return null;
   }
 }
-
-const STATUS_BUTTON_STYLES = `
-  .status-btn {
-    display: inline-flex;
-    flex: 0 0 auto;
-    align-items: center;
-    gap: 12px;
-    background: transparent;
-    border: none;
-    outline: none;
-    border-radius: 8px;
-    cursor: pointer;
-    user-select: none;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-weight: 500;
-    line-height: 1.25;
-    text-align: left;
-    transition: background-color 0.16s ease, transform 0.12s ease;
-    padding: 6px 10px;
-    box-sizing: border-box;
-  }
-
-  .status-btn--static {
-    cursor: default;
-    padding: 4px 6px;
-  }
-
-  .status-btn:not(.status-btn--static):hover:not(:disabled) {
-    background-color: rgba(0, 0, 0, 0.04);
-  }
-
-  .status-btn:not(.status-btn--static):active:not(:disabled) {
-    transform: scale(0.985);
-  }
-
-  .status-btn:focus-visible {
-    box-shadow: 0 0 0 2px rgba(55, 85, 135, 0.3);
-  }
-
-  /* Pill badge style */
-  .status-btn--badge {
-    background-color: #F1F5F9;
-    border-radius: 9999px;
-    padding: 6px 14px;
-    border: 1px solid #E2E8F0;
-  }
-
-  .status-btn--badge:hover:not(:disabled) {
-    background-color: #E2E8F0;
-  }
-
-  /* Sizes */
-  .status-btn--sm {
-    gap: 8px;
-    font-size: 14px;
-    padding: 4px 8px;
-  }
-  .status-btn--md {
-    gap: 12px;
-    font-size: 18px;
-    padding: 6px 10px;
-  }
-  .status-btn--lg {
-    gap: 14px;
-    font-size: 20px;
-    padding: 8px 14px;
-  }
-
-  .status-btn-label {
-    flex: 0 0 auto;
-    letter-spacing: -0.01em;
-    color: #1E293B;
-    white-space: nowrap;
-  }
-
-  .status-btn:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-    pointer-events: none;
-  }
-`;
 
 /**
  * StatusButton Component
@@ -378,7 +297,7 @@ export default function StatusButton({
 
   return (
     <>
-      <style>{STATUS_BUTTON_STYLES}</style>
+
       <button
         type={type}
         className={`status-btn ${sizeClass} ${variantClass} ${staticClass} ${className}`.trim()}

@@ -1,5 +1,5 @@
 """Shared query and record operations for the Company monitoring screens."""
-from datetime import date, datetime
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from uuid import UUID
 from functools import lru_cache
@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError as ModelValidationError
 from django.db import transaction, connection
 from django.db.models import Q, ProtectedError
 from django.utils.dateparse import parse_date
+from django.utils import timezone
 from rest_framework.exceptions import NotFound, ValidationError
 
 from apps.audit.services import LogService
@@ -16,14 +17,15 @@ from .registry import DB_TABLE_REGISTRY
 HIDDEN_FIELDS = {'password', 'session_key'}
 
 
-def paginate(queryset, params, default=50, maximum=200):
+def paginate(queryset, params, default=50, maximum=200, total=None):
     def number(key, fallback):
         try:
             return max(1, int(params.get(key, fallback)))
         except (TypeError, ValueError):
             return fallback
     size = min(maximum, number('page_size', default))
-    total = queryset.count()
+    if total is None:
+        total = queryset.count()
     pages = max(1, (total + size - 1) // size)
     page = min(pages, number('page', 1))
     return queryset[(page - 1) * size:page * size], {
@@ -41,7 +43,12 @@ def filter_dates(queryset, params, field):
                 parsed = None
             if parsed is None:
                 raise ValidationError({name: 'Use YYYY-MM-DD.'})
-            queryset = queryset.filter(**{f'{field}__date__{lookup}': parsed})
+            if lookup == 'lte':
+                if parsed == date.max:
+                    continue
+                parsed += timedelta(days=1)
+            boundary = timezone.make_aware(datetime.combine(parsed, time.min))
+            queryset = queryset.filter(**{f'{field}__{"gte" if lookup == "gte" else "lt"}': boundary})
     return queryset
 
 

@@ -160,7 +160,7 @@ class UserData(models.Model):
             self.role_link = value
             self._role_name = value.name
         elif isinstance(value, str):
-            from api.views.shared import resolve_role_object
+            from apps.roles.permissions import resolve_role_object
             resolved = resolve_role_object(value)
             if resolved:
                 self.role_link = resolved
@@ -199,7 +199,7 @@ class UserData(models.Model):
                 self.role_link = role_name
                 self._role_name = None
             else:
-                from api.views.shared import resolve_role_object
+                from apps.roles.permissions import resolve_role_object
                 role_obj = resolve_role_object(role_name)
                 if role_obj is None:
                     role_obj = Role.objects.create(name=str(role_name).strip())

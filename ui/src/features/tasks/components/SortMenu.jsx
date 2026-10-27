@@ -18,7 +18,6 @@ import { useEffect, useRef } from "react";
  */
 import { DEFAULT_SORT_OPTIONS } from './sortOptions.js';
 
-
 export default function SortMenu({
   isOpen = true,
   onClose,
@@ -60,17 +59,12 @@ export default function SortMenu({
   return (
     <div
       ref={menuRef}
-      style={styles.menuCard}
+      className="absolute! top-[calc(100%_+_8px)]! right-[0]! z-[1050]! [background-color:#FFFFFF]! rounded-[12px]! [border:1px_solid_#E5E7EB]! [box-shadow:0_10px_25px_-5px_rgba(0,_0,_0,_0.1),_0_8px_10px_-6px_rgba(0,_0,_0,_0.05)]! min-w-[220px]! p-[6px]! box-border! [font-family:-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_Roboto,_'Inter',_sans-serif]! [animation:fadeInSortMenu_0.14s_ease-out_forwards]!"
       onClick={(e) => e.stopPropagation()}
       role="menu"
       aria-label="Sort options"
     >
-      <style>{`
-        @keyframes fadeInSortMenu {
-          from { opacity: 0; transform: translateY(-4px) scale(0.98); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
+
       {options.map((opt) => {
         const isSelected = value === opt.key;
         return (
@@ -80,21 +74,15 @@ export default function SortMenu({
               onChange?.(opt.key);
               onClose?.();
             }}
-            style={{
-              ...styles.menuItem,
-              backgroundColor: isSelected ? "#F3F4F6" : "transparent",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#E5E7EB";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = isSelected ? "#F3F4F6" : "transparent";
-            }}
+            className={"flex! items-center! justify-between! p-[9px_12px]! rounded-[8px]! cursor-pointer! select-none! [transition:background-color_0.12s_ease]!" + ' ' + "hover:[background-color:#E5E7EB]!"} style={{
+  backgroundColor: isSelected ? "#F3F4F6" : "transparent"
+}}
+
             role="menuitemradio"
             aria-checked={isSelected}
           >
             {/* Left side: Checkmark (if selected) + Label */}
-            <div style={styles.leftGroup}>
+            <div className="flex! items-center! gap-[8px]!">
               {isSelected ? (
                 <svg
                   width="16"
@@ -105,77 +93,21 @@ export default function SortMenu({
                   strokeWidth="2.8"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  style={styles.checkIcon}
+                  className="shrink-0!"
                 >
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               ) : (
-                <div style={styles.checkSpacer} />
+                <div className="w-[16px]! h-[16px]! shrink-0!" />
               )}
-              <span style={styles.itemLabel}>{opt.label}</span>
+              <span className="text-[15px]! font-semibold! [color:#111827]! leading-[1.25]!">{opt.label}</span>
             </div>
 
             {/* Right side: Detail text ("Newest", "Oldest", etc.) */}
-            <span style={styles.itemDetail}>{opt.detail}</span>
+            <span className="text-[15px]! font-normal! [color:#6B7280]! leading-[1.25]! ml-[18px]!">{opt.detail}</span>
           </div>
         );
       })}
     </div>
   );
 }
-
-const styles = {
-  menuCard: {
-    position: "absolute",
-    top: "calc(100% + 8px)",
-    right: 0,
-    zIndex: 1050,
-    backgroundColor: "#FFFFFF",
-    borderRadius: "12px",
-    border: "1px solid #E5E7EB",
-    boxShadow:
-      "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)",
-    minWidth: "220px",
-    padding: "6px",
-    boxSizing: "border-box",
-    fontFamily:
-      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif",
-    animation: "fadeInSortMenu 0.14s ease-out forwards",
-  },
-  menuItem: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "9px 12px",
-    borderRadius: "8px",
-    cursor: "pointer",
-    userSelect: "none",
-    transition: "background-color 0.12s ease",
-  },
-  leftGroup: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-  },
-  checkIcon: {
-    flexShrink: 0,
-  },
-  checkSpacer: {
-    width: "16px",
-    height: "16px",
-    flexShrink: 0,
-  },
-  itemLabel: {
-    fontSize: "15px",
-    fontWeight: "600",
-    color: "#111827",
-    lineHeight: "1.25",
-  },
-  itemDetail: {
-    fontSize: "15px",
-    fontWeight: "400",
-    color: "#6B7280",
-    lineHeight: "1.25",
-    marginLeft: "18px",
-  },
-};

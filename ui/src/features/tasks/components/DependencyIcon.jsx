@@ -115,58 +115,21 @@ export function DependencyDetailsPopover({
       ref={popoverRef}
       role="dialog"
       aria-label="Dependency Details"
-      style={{
-        position: "fixed",
-        top: `${position.top}px`,
-        left: `${position.left}px`,
-        width: "240px",
-        backgroundColor: "#FFFFFF",
-        border: "1px solid #E2E8F0",
-        borderRadius: "10px",
-        boxShadow:
-          "0 8px 24px -4px rgba(15, 23, 42, 0.14), 0 3px 8px -2px rgba(15, 23, 42, 0.06)",
-        padding: "12px 14px",
-        boxSizing: "border-box",
-        zIndex: 1300,
-        fontFamily:
-          "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        animation: "fadeInDepPopover 0.12s ease-out forwards",
-      }}
+      className="fixed! w-[240px]! [background-color:#FFFFFF]! [border:1px_solid_#E2E8F0]! rounded-[10px]! [box-shadow:0_8px_24px_-4px_rgba(15,_23,_42,_0.14),_0_3px_8px_-2px_rgba(15,_23,_42,_0.06)]! p-[12px_14px]! box-border! z-[1300]! [font-family:'Inter',_-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_Roboto,_sans-serif]! [animation:fadeInDepPopover_0.12s_ease-out_forwards]!" style={{
+  top: `${position.top}px`,
+  left: `${position.left}px`
+}}
       onClick={(e) => e.stopPropagation()}
     >
-      <style>{`
-        @keyframes fadeInDepPopover {
-          from { opacity: 0; transform: translateY(-4px) scale(0.98); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .dep-popover-view-btn:hover {
-          background-color: #3876E5 !important;
-        }
-        .dep-popover-add-btn:hover {
-          background-color: #F1F5F9 !important;
-          border-color: #CBD5E1 !important;
-        }
-      `}</style>
 
       {/* Top Row: Icon + "Dependency Details" + Count Pill */}
       <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "10px",
-        }}
+        className="flex! items-center! justify-between! mb-[10px]!"
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div className="flex! items-center! gap-[8px]!">
           <DependencyIcon size={17} color="#111827" strokeWidth={2.2} />
           <span
-            style={{
-              fontSize: "13.5px",
-              fontWeight: "600",
-              color: "#111827",
-              letterSpacing: "-0.01em",
-              lineHeight: 1.2,
-            }}
+            className="text-[13.5px]! font-semibold! [color:#111827]! tracking-[-0.01em]! leading-[1.2]!"
           >
             Dependency Details
           </span>
@@ -174,47 +137,22 @@ export function DependencyDetailsPopover({
 
         {/* Count Pill */}
         <div
-          style={{
-            backgroundColor: "#EEF2FF",
-            color: "#1E293B",
-            fontSize: "12px",
-            fontWeight: "600",
-            padding: "2px 10px",
-            borderRadius: "9999px",
-            lineHeight: 1.2,
-          }}
+          className="[background-color:#EEF2FF]! [color:#1E293B]! text-[12px]! font-semibold! p-[2px_10px]! rounded-[9999px]! leading-[1.2]!"
         >
           {count}
         </div>
       </div>
 
       {/* Bottom Row: "View Details →" + "+" */}
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <div className="flex! items-center! gap-[8px]!">
         <button
           type="button"
-          className="dep-popover-view-btn"
+          className={"dep-popover-view-btn" + " " + "flex-1! h-[32px]! [background-color:#1157CE]! [color:#FFFFFF]! border-0! rounded-[6px]! text-[12.5px]! font-semibold! cursor-pointer! inline-flex! items-center! justify-center! gap-[6px]! [transition:background-color_0.15s_ease]! outline-none! p-[0_10px]!"}
           onClick={() => {
             onClose?.();
             onViewDetails?.();
           }}
-          style={{
-            flex: 1,
-            height: "32px",
-            backgroundColor: "#1157CE",
-            color: "#FFFFFF",
-            border: "none",
-            borderRadius: "6px",
-            fontSize: "12.5px",
-            fontWeight: "600",
-            cursor: "pointer",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "6px",
-            transition: "background-color 0.15s ease",
-            outline: "none",
-            padding: "0 10px",
-          }}
+
         >
           <span>View Details</span>
           <svg
@@ -235,28 +173,14 @@ export function DependencyDetailsPopover({
 
         <button
           type="button"
-          className="dep-popover-add-btn"
+          className={"dep-popover-add-btn" + " " + "w-[32px]! h-[32px]! shrink-0! [background-color:#FFFFFF]! [border:1px_solid_#E2E8F0]! rounded-[6px]! [color:#111827]! cursor-pointer! inline-flex! items-center! justify-center! [transition:background-color_0.15s_ease,_border-color_0.15s_ease]! outline-none!"}
           title="Add Dependency"
           aria-label="Add Dependency"
           onClick={() => {
             onClose?.();
             onAddDependency?.();
           }}
-          style={{
-            width: "32px",
-            height: "32px",
-            flexShrink: 0,
-            backgroundColor: "#FFFFFF",
-            border: "1px solid #E2E8F0",
-            borderRadius: "6px",
-            color: "#111827",
-            cursor: "pointer",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transition: "background-color 0.15s ease, border-color 0.15s ease",
-            outline: "none",
-          }}
+
         >
           <svg
             width="14"
@@ -349,12 +273,7 @@ export const DependencyBadge = forwardRef(function DependencyBadge({
         <DependencyIcon size={iconSize} color="#1E293B" strokeWidth={2.2} />
         {showDependencyCount && (
           <span
-            style={{
-              fontSize: "14px",
-              fontWeight: "600",
-              color: "#5E636D",
-              lineHeight: 1,
-            }}
+            className="text-[14px]! font-semibold! [color:#5E636D]! leading-[1]!"
           >
             +{numericCount}
           </span>

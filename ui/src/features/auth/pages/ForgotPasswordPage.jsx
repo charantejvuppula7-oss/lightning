@@ -1,26 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
-import Input from '../../../components/ui/Input.jsx'
-import Button from '../../../components/ui/Button.jsx'
-import Icon from '../../../components/ui/Icon.jsx'
+import Input from '../../../shared/ui/Input.jsx'
+import Button from '../../../shared/ui/Button.jsx'
+import Icon from '../../../shared/ui/Icon.jsx'
 import { confirmReset, requestReset, verifyOtp } from '../api/authApi.js'
-import { authError } from '../../../utils/errors.js'
+import { authError } from '../../../shared/utils/errors.js'
 import logo from '../../../assets/lightning-logo-light.png'
-import styles from '../styles/forgotStyles.js'
 
-/* styling */
-const tailwindStyling = {
-  'code-input': [
-    '[&:focus]:[border-color:var(--color-primary)]!',
-    '[&:focus]:[background:white]!',
-    '[&:focus]:[box-shadow:0_0_0_3px_rgba(37,99,235,.1)]!',
-  ],
-  'text-link': ['[&:hover]:[color:var(--color-primary-hover)]!'],
-}
-const styling = value => {
-  const classes = typeof value === 'string' ? value : ''
-  return [...new Set([...classes.split(/\s+/), ...classes.split(/\s+/).flatMap(name => tailwindStyling[name] || [])])].filter(Boolean).join(' ')
-}
+import useRetryTimer from '../useRetryTimer.js'
 
 const titles = { forgot: 'Forgot your password?', verify: 'Verify your identity', reset: 'Create a new password' }
 
@@ -30,8 +17,6 @@ const passwordChecks = [
   ['number', 'One number'],
   ['special', 'One special character'],
 ]
-
-const errorStyle = { color: 'var(--color-danger)', fontSize: 13 }
 
 export default function ForgotPasswordPage({ mode }) {
   const navigate = useNavigate()
@@ -45,23 +30,27 @@ export default function ForgotPasswordPage({ mode }) {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [timeLeft, setTimeLeft] = useState(59)
-
-  useEffect(() => {
-    if (mode !== 'verify' || timeLeft <= 0) return undefined
-    const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000)
-    return () => clearTimeout(timer)
-  }, [mode, timeLeft])
+  const retry = useRetryTimer(`lighting_v2_password_${mode}_retry`)
+  const resendTimer = useRetryTimer('lighting_v2_otp_resend')
+  const timeLeft = resendTimer.remaining
+  const remaining = mode === 'forgot' ? Math.max(retry.remaining, timeLeft) : retry.remaining
 
   if (mode === 'verify' && !state?.identifier) return <Navigate to="/forgot-password" replace />
   if (mode === 'reset' && !state?.resetToken) return <Navigate to="/forgot-password" replace />
 
-  const perform = async (action) => {
-    if (pending.current) return
+  const perform = async (action, sendingCode = false) => {
+    const cooldown = sendingCode && mode !== 'forgot' ? timeLeft : remaining
+    if (pending.current || cooldown) return
     pending.current = true
     setLoading(true)
     setError('')
-    try { await action() } catch (err) { setError(authError(err, 'Please try again.')) }
+    try { await action() } catch (err) {
+      if (err.status === 429) {
+        if (sendingCode) resendTimer.start(err.retryAfter || 60)
+        else retry.start(err.retryAfter || 60)
+      }
+      setError(authError(err, 'Please try again.'))
+    }
     finally { pending.current = false; setLoading(false) }
   }
 
@@ -69,9 +58,10 @@ export default function ForgotPasswordPage({ mode }) {
     event.preventDefault()
     if (!identifier.trim()) { setError('Please enter your User ID or Email.'); return }
     perform(async () => {
-      await requestReset(identifier.trim())
+      const data = await requestReset(identifier.trim())
+      resendTimer.start(data.resend_after)
       navigate('/verify-identity', { state: { identifier: identifier.trim() } })
-    })
+    }, true)
   }
 
   const changeDigit = (index, value) => {
@@ -92,11 +82,11 @@ export default function ForgotPasswordPage({ mode }) {
   }
 
   const resend = () => perform(async () => {
-    await requestReset(state?.identifier)
+    const data = await requestReset(state?.identifier)
     setCode(['', '', '', '', '', ''])
-    setTimeLeft(59)
+    resendTimer.start(data.resend_after)
     codeRefs.current[0]?.focus()
-  })
+  }, true)
 
   const checks = {
     length: password.length >= 8,
@@ -118,32 +108,32 @@ export default function ForgotPasswordPage({ mode }) {
   }
 
   return (
-    <div style={styles.container}>
-      <div style={mode === 'forgot' ? styles.bgWatermarkForgot : styles.bgWatermarkRight} aria-hidden="true">
+    <div className="flex! flex-col! justify-center! items-center! min-h-screen! [background-color:var(--color-white)]! relative! p-[32px_24px]! [font-family:'Inter',_sans-serif]! overflow-hidden!">
+      <div className={mode === 'forgot' ? "absolute! left-[-40px]! top-[10%]! z-[1]! opacity-[0.8]! pointer-events-none!" : "absolute! right-[-40px]! top-[5%]! z-[1]! opacity-[0.8]! pointer-events-none!"} aria-hidden="true">
         <svg width="220" height="220" viewBox="0 0 24 24" fill="none">
           <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="var(--color-slate-100)" stroke="var(--color-slate-100)" />
         </svg>
       </div>
-      <div style={styles.logoHeader}>
-        <img src={logo} alt="Lightning PDPM" style={{ height: 30, width: 'auto', display: 'block' }} />
+      <div className="absolute! top-[24px]! left-[24px]! flex! items-center! gap-[6px]! z-[10]! select-none!">
+        <img src={logo} alt="Lightning PDPM" className="h-[30px]! w-auto! block!" />
       </div>
-      <div style={styles.card}>
+      <div className="[background-color:var(--color-white)]! rounded-[20px]! [border:1px_solid_var(--color-slate-200)]! p-[48px_40px]! w-full! max-w-[460px]! flex! flex-col! z-[5]! [box-shadow:0_1px_3px_rgba(0,0,0,0.01)]!">
         {mode === 'verify' && (
-          <div style={styles.iconContainer}>
-            <div style={styles.iconCircle}>
-              <Icon name="lock" size={22} style={{ color: 'var(--color-primary)' }} />
+          <div className="flex! justify-center! mb-[16px]!">
+            <div className="w-[44px]! h-[44px]! rounded-[50%]! [background-color:var(--color-primary-subtle)]! flex! items-center! justify-center!">
+              <Icon name="lock" size={22} className="[color:var(--color-primary)]!" />
             </div>
           </div>
         )}
-        <h2 style={mode === 'verify' ? styles.cardTitleVerify : styles.cardTitle}>{titles[mode]}</h2>
-        <p style={styles.cardSubtitle}>
+        <h2 className={mode === 'verify' ? "text-[22px]! font-bold! [color:var(--color-slate-900)]! text-center! tracking-[-0.01em]!" : "text-[24px]! font-bold! [color:var(--color-slate-900)]! text-center! tracking-[-0.01em]!"}>{titles[mode]}</h2>
+        <p className="text-[14.5px]! [color:var(--color-slate-600)]! leading-[1.5]! text-center! mt-[8px]! mb-[28px]!">
           {mode === 'forgot' && 'Enter your User ID or Email and we’ll send a verification code to reset your password.'}
           {mode === 'verify' && <>We’ve sent a 6-digit verification code to your registered email address.</>}
           {mode === 'reset' && 'Choose a strong password for your Lightning account.'}
         </p>
 
         {mode === 'forgot' && (
-          <form onSubmit={request} style={styles.form}>
+          <form onSubmit={request} className="flex! flex-col! gap-[20px]!">
             <Input
               label="User ID or Email"
               name="identifier"
@@ -154,14 +144,17 @@ export default function ForgotPasswordPage({ mode }) {
               required
               disabled={loading}
               autoComplete="username"
-              fieldStyle={styles.field}
-              labelStyle={styles.label}
-              wrapperStyle={styles.inputWrapper}
-              inputStyle={styles.inputWithLeftIcon}
-              leftIcon={{ name: 'person', style: styles.inputIcon }}
+              fieldClassName={"flex! flex-col! gap-[8px]!"}
+              labelClassName={"font-semibold! text-[13.5px]! [color:var(--color-slate-900)]!"}
+              wrapperClassName={"relative! flex! items-center! w-full!"}
+              inputClassName={"w-full! p-[12px_14px_12px_42px]! text-[14px]! [border:1px_solid_var(--color-slate-300)]! rounded-[8px]! [color:var(--color-slate-900)]! outline-none! [background-color:var(--color-white)]! [transition:border-color_0.2s,_box-shadow_0.2s]!"}
+              leftIcon={{
+  name: 'person',
+  className: "absolute! left-[14px]! [color:var(--color-slate-500)]!"
+}}
             />
-            <Button type="submit" loading={loading} loadingText="Sending..." style={styles.submitBtnForgot}>
-              <span>Send Verification Code</span>
+            <Button type="submit" loading={loading} disabled={remaining > 0} loadingText="Sending..." className="w-full! p-[14px]! [background-color:var(--color-primary)]! [color:var(--color-white)]! border-0! rounded-[8px]! text-[14px]! font-semibold! cursor-pointer! mt-[8px]! flex! items-center! justify-center! gap-[8px]! [transition:background-color_0.15s_ease]!">
+              <span>{remaining ? `Try again in ${remaining}s` : 'Send Verification Code'}</span>
               <Icon name="arrow_forward" size={18} />
             </Button>
           </form>
@@ -169,8 +162,8 @@ export default function ForgotPasswordPage({ mode }) {
 
         {mode === 'verify' && (
           <>
-            <form onSubmit={verify} style={styles.formVerify}>
-              <div style={styles.codeInputsRow} role="group" aria-label="Verification code">
+            <form onSubmit={verify} className="flex! flex-col! gap-[24px]!">
+              <div className="grid! grid-cols-[repeat(6,_1fr)]! gap-[10px]! justify-center!" role="group" aria-label="Verification code">
                 {code.map((digit, index) => (
                   <Input
                     key={index}
@@ -187,19 +180,19 @@ export default function ForgotPasswordPage({ mode }) {
                     maxLength={1}
                     inputMode="numeric"
                     placeholder="-"
-                    className={styling('code-input')}
-                    inputStyle={styles.codeInputBox}
+                    className={'code-input'}
+                    inputClassName={"h-[46px]! w-full! rounded-[8px]! [border:1px_solid_var(--color-slate-300)]! [background-color:var(--color-slate-50)]! text-center! text-[18px]! font-semibold! [color:var(--color-slate-900)]! outline-none! [transition:border-color_0.2s,_background-color_0.2s,_box-shadow_0.2s]!"}
                     disabled={loading}
                   />
                 ))}
               </div>
-              {error && <div role="alert" style={errorStyle}>{error}</div>}
-              <Button type="submit" loading={loading} loadingText="Verifying..." style={styles.submitBtnReset}>
-                Verify Code <Icon name="arrow_forward" size={18} />
+              {error && <div role="alert" className="[color:var(--color-danger)]! text-[13px]!">{error}</div>}
+              <Button type="submit" loading={loading} disabled={remaining > 0} loadingText="Verifying..." className="w-full! p-[14px]! [background-color:var(--color-primary)]! [color:var(--color-white)]! border-0! rounded-[8px]! text-[14.5px]! font-semibold! cursor-pointer! flex! items-center! justify-center! gap-[8px]! [transition:background-color_0.15s_ease]!">
+                {remaining ? `Try again in ${remaining}s` : 'Verify Code'} <Icon name="arrow_forward" size={18} />
               </Button>
             </form>
-            <div style={styles.resendSection}>
-              <div style={styles.resendText}>
+            <div className="flex! flex-col! items-center! gap-[8px]! mt-[20px]!">
+              <div className="text-[13.5px]! [color:var(--color-slate-600)]!">
                 Didn't receive the code?{' '}
                 <Button
                   onClick={resend}
@@ -217,17 +210,17 @@ export default function ForgotPasswordPage({ mode }) {
                 </Button>
               </div>
               {timeLeft > 0 && (
-                <div style={styles.timerDisplay}>
-                  <Icon name="schedule" size={16} /> Resend code in 00:{String(timeLeft).padStart(2, '0')}
+                <div className="flex! items-center! gap-[4px]! text-[12.5px]! [color:var(--color-slate-500)]!">
+                  <Icon name="schedule" size={16} /> Resend code in {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
                 </div>
               )}
             </div>
-            <Link to="/forgot-password" style={{ ...styles.backLinkRowVerify, ...styles.backLinkTextVerify, textDecoration: 'none' }}>
+            <Link to="/forgot-password" className="flex! items-center! justify-center! gap-[6px]! mt-[20px]! cursor-pointer! select-none! text-[13.5px]! font-semibold! [color:var(--color-slate-500)]! no-underline!">
               <Icon name="arrow_back" size={18} /> Back
             </Link>
-            <div style={styles.alertBox}>
-              <Icon name="security" size={18} style={styles.alertIcon} />
-              <span style={styles.alertText}>
+            <div className="flex! gap-[10px]! items-start! [background-color:var(--color-primary-subtle)]! p-[12px_14px]! rounded-[8px]! [border:1px_solid_var(--color-primary-border-mid)]! mt-[28px]!">
+              <Icon name="security" size={18} className="[color:var(--color-primary)]! text-[18px]! shrink-0! mt-[2px]!" />
+              <span className="text-[11.5px]! [color:var(--color-primary-active)]! leading-[1.4]!">
                 Never share your verification code with anyone. Our support team will never ask for it.
               </span>
             </div>
@@ -235,7 +228,7 @@ export default function ForgotPasswordPage({ mode }) {
         )}
 
         {mode === 'reset' && (
-          <form onSubmit={reset} style={styles.form}>
+          <form onSubmit={reset} className="flex! flex-col! gap-[20px]!">
             <Input
               label="New password"
               name="new-password"
@@ -246,13 +239,13 @@ export default function ForgotPasswordPage({ mode }) {
               required
               disabled={loading}
               autoComplete="new-password"
-              fieldStyle={styles.field}
-              labelStyle={styles.label}
-              wrapperStyle={styles.inputWrapper}
-              inputStyle={styles.inputWithRightIcon}
+              fieldClassName={"flex! flex-col! gap-[8px]!"}
+              labelClassName={"font-semibold! text-[13.5px]! [color:var(--color-slate-900)]!"}
+              wrapperClassName={"relative! flex! items-center! w-full!"}
+              inputClassName={"w-full! p-[12px_42px_12px_14px]! text-[14px]! [border:1px_solid_var(--color-slate-300)]! rounded-[8px]! [color:var(--color-slate-900)]! outline-none! [background-color:var(--color-white)]! [transition:border-color_0.2s,_box-shadow_0.2s]!"}
               showVisibility
               visibilityIcon
-              visibilityStyle={styles.eyeIcon}
+              visibilityClassName={"absolute! right-[14px]! [color:var(--color-slate-500)]! cursor-pointer! select-none!"}
             />
             <Input
               label="Confirm new password"
@@ -264,92 +257,82 @@ export default function ForgotPasswordPage({ mode }) {
               required
               disabled={loading}
               autoComplete="new-password"
-              fieldStyle={styles.field}
-              labelStyle={styles.label}
-              wrapperStyle={styles.inputWrapper}
-              inputStyle={styles.inputWithRightIcon}
+              fieldClassName={"flex! flex-col! gap-[8px]!"}
+              labelClassName={"font-semibold! text-[13.5px]! [color:var(--color-slate-900)]!"}
+              wrapperClassName={"relative! flex! items-center! w-full!"}
+              inputClassName={"w-full! p-[12px_42px_12px_14px]! text-[14px]! [border:1px_solid_var(--color-slate-300)]! rounded-[8px]! [color:var(--color-slate-900)]! outline-none! [background-color:var(--color-white)]! [transition:border-color_0.2s,_box-shadow_0.2s]!"}
               showVisibility
               visibilityIcon
-              visibilityStyle={styles.eyeIcon}
+              visibilityClassName={"absolute! right-[14px]! [color:var(--color-slate-500)]! cursor-pointer! select-none!"}
             />
-            <div style={styles.strengthMeter}>
-              <div style={styles.strengthLabelRow}>
-                <span style={styles.strengthLabel}>Password strength</span>
+            <div className="flex! flex-col! gap-[6px]! mt-[4px]!">
+              <div className="flex! justify-between! items-center!">
+                <span className="text-[12.5px]! [color:var(--color-slate-500)]! font-medium!">Password strength</span>
                 <span
-                  style={{
-                    ...styles.strengthStatus,
-                    color: strength === 'Weak' ? 'var(--color-danger)' : strength === 'Strong' ? 'var(--color-success-alt)' : 'var(--color-primary)',
-                  }}
+                  className="text-[12.5px]! font-semibold!" style={{
+  color: strength === 'Weak' ? 'var(--color-danger)' : strength === 'Strong' ? 'var(--color-success-alt)' : 'var(--color-primary)'
+}}
                 >
                   {strength}
                 </span>
               </div>
-              <div style={styles.strengthSegments}>
+              <div className="grid! grid-cols-[repeat(3,_1fr)]! gap-[8px]! h-[6px]! mt-[2px]!">
                 {[1, 2, 3].map((part) => (
                   <div
                     key={part}
-                    style={{
-                      ...styles.segment,
-                      backgroundColor:
-                        password && count >= (part === 1 ? 1 : part === 2 ? 2 : 4)
-                          ? strength === 'Weak'
-                            ? 'var(--color-danger)'
-                            : strength === 'Medium'
-                            ? 'var(--color-primary)'
-                            : 'var(--color-success-alt)'
-                          : 'var(--color-slate-300)',
-                    }}
+                    className="rounded-[2px]! [transition:background-color_0.25s_ease]!" style={{
+  backgroundColor: password && count >= (part === 1 ? 1 : part === 2 ? 2 : 4) ? strength === 'Weak' ? 'var(--color-danger)' : strength === 'Medium' ? 'var(--color-primary)' : 'var(--color-success-alt)' : 'var(--color-slate-300)'
+}}
                   />
                 ))}
               </div>
             </div>
-            <div style={styles.checklistCard}>
+            <div className="[border:1px_solid_var(--color-slate-200)]! rounded-[8px]! [background-color:var(--color-white)]! p-[16px]! flex! flex-col! gap-[10px]!">
               {passwordChecks.map(([key, label]) => (
-                <div key={key} style={styles.checkRow}>
+                <div key={key} className="flex! items-center! gap-[10px]!">
                   <Icon
                     name={checks[key] ? 'check_circle' : 'radio_button_unchecked'}
                     size={18}
+                    className="shrink-0 text-[18px] transition-colors duration-200"
                     style={{
-                      ...styles.checkIcon,
                       color: checks[key] ? 'var(--color-primary)' : 'var(--color-slate-300)',
                     }}
                   />
                   <span
-                    style={{
-                      ...styles.checkText,
-                      color: checks[key] ? 'var(--color-slate-900)' : 'var(--color-slate-500)',
-                    }}
+                    className="text-[13px]! font-medium! [transition:color_0.2s]!" style={{
+  color: checks[key] ? 'var(--color-slate-900)' : 'var(--color-slate-500)'
+}}
                   >
                     {label}
                   </span>
                 </div>
               ))}
             </div>
-            {error && <div role="alert" style={errorStyle}>{error}</div>}
-            <Button type="submit" loading={loading} loadingText="Updating..." style={styles.submitBtnReset}>
-              Update Password <Icon name="arrow_forward" size={18} />
+            {error && <div role="alert" className="[color:var(--color-danger)]! text-[13px]!">{error}</div>}
+            <Button type="submit" loading={loading} disabled={remaining > 0} loadingText="Updating..." className="w-full! p-[14px]! [background-color:var(--color-primary)]! [color:var(--color-white)]! border-0! rounded-[8px]! text-[14.5px]! font-semibold! cursor-pointer! flex! items-center! justify-center! gap-[8px]! [transition:background-color_0.15s_ease]!">
+              {remaining ? `Try again in ${remaining}s` : 'Update Password'} <Icon name="arrow_forward" size={18} />
             </Button>
           </form>
         )}
 
         {mode === 'forgot' && (
-          <Link to="/login" style={{ ...styles.backLinkRow, ...styles.backLinkText, textDecoration: 'none' }}>
+          <Link to="/login" className="flex! items-center! justify-center! gap-[6px]! mt-[24px]! cursor-pointer! select-none! text-[13.5px]! font-semibold! [color:var(--color-primary)]! no-underline!">
             <Icon name="arrow_back" size={18} />Back to Log In
           </Link>
         )}
       </div>
-      <div style={styles.helpText}>
+      <div className="text-[13px]! [color:var(--color-slate-600)]! mt-[32px]! z-[5]!">
         Need help signing in?{' '}
-        <a href="mailto:admin@lightning.com" className={styling('text-link')} style={styles.adminLink}>
+        <a href="mailto:admin@lightning.com" className={'text-link' + " " + "[color:var(--color-primary)]! font-semibold! cursor-pointer! no-underline!"} >
           Contact your administrator
         </a>
       </div>
       {mode !== 'reset' && (
-        <div style={styles.footerCopyright}>
-          <div style={{ marginBottom: 8 }}>© 2024 Lightning SaaS. All rights reserved.</div>
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
-            <span style={styles.footerLink}>Privacy Policy</span>
-            <span style={styles.footerLink}>Terms of Service</span>
+        <div className="text-[12px]! [color:var(--color-slate-500)]! text-center! mt-[48px]! z-[5]!">
+          <div className="mb-[8px]!">© 2024 Lightning SaaS. All rights reserved.</div>
+          <div className="flex! gap-[16px]! justify-center!">
+            <span className="underline! cursor-pointer! font-medium!">Privacy Policy</span>
+            <span className="underline! cursor-pointer! font-medium!">Terms of Service</span>
           </div>
         </div>
       )}

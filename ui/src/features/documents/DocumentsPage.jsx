@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useRef, useCallback, useContext } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
-import { SearchInput } from '../../components/common/SearchControls.jsx';
-import { useFeedback } from '../../components/common/Feedback.jsx';
-import { apiRequest, apiUpload, errorMessage } from '../../services/api/apiClient.js';
+import { SearchInput } from '../../shared/components/SearchControls.jsx';
+import { useFeedback } from '../../shared/components/Feedback.jsx';
+import { apiRequest, apiUpload, errorMessage } from '../../shared/api/apiClient.js';
 import { ProjectSelectionContext } from '../projects/projectSelectionContext.js';
 import { hasSidebarPermission } from '../../layouts/sidebarNavigation.js';
 import DocumentActionModals from './DocumentActionModals.jsx';
@@ -170,8 +170,6 @@ export default function DocumentsPage({ user }) {
 
   const totalPages = Math.max(1, Math.ceil(filteredDocs.length / itemsPerPage));
 
-
-
   // ── Selection Handlers ───────────────────────────────────────────────
   const isAllPageSelected = useMemo(() => {
     if (paginatedDocs.length === 0) return false;
@@ -227,14 +225,10 @@ export default function DocumentsPage({ user }) {
   // ── Render Content (Table, Filters, Modals) ──────────────────────────
   const renderDocumentContent = () => (
     <div
-      style={{
-        width: "100%",
-        boxSizing: "border-box",
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      }}
+      className="w-full! box-border! [font-family:'Inter',_-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_Roboto,_sans-serif]!"
     >
       {feedback}
-      {canUpload && selectedProjectId && <label style={{float:'right',cursor:'pointer',color:'var(--color-primary)',fontWeight:600}}>
+      {canUpload && selectedProjectId && <label className="[float:right]! cursor-pointer! [color:var(--color-primary)]! font-semibold!">
         {uploading ? 'Uploading…' : '+ Upload document'}
         <input type="file" hidden disabled={uploading} onChange={async event => {
           const file = event.target.files[0]; if (!file) return;
@@ -247,25 +241,14 @@ export default function DocumentsPage({ user }) {
       </label>}
       {/* ── Page Header ── */}
       {showHeader && (
-        <div style={{ marginBottom: "20px" }}>
+        <div className="mb-[20px]!">
           <h1
-            style={{
-              fontSize: "24px",
-              fontWeight: "800",
-              color: "var(--color-slate-900)",
-              margin: "0 0 6px 0",
-              letterSpacing: "-0.3px",
-            }}
+            className="text-[24px]! font-extrabold! [color:var(--color-slate-900)]! m-[0_0_6px_0]! tracking-[-0.3px]!"
           >
             Documents
           </h1>
           <p
-            style={{
-              fontSize: "13px",
-              color: "var(--color-slate-500)",
-              margin: 0,
-              fontWeight: "400",
-            }}
+            className="text-[13px]! [color:var(--color-slate-500)]! m-0! font-normal!"
           >
             Access all project documents in one place.
           </p>
@@ -274,33 +257,15 @@ export default function DocumentsPage({ user }) {
 
       {/* ── Filter Controls Row ── */}
       <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: "12px",
-          marginBottom: "16px",
-        }}
+        className="flex! items-center! justify-between! flex-wrap! gap-[12px]! mb-[16px]!"
       >
         {/* Left Search Bar */}
         <div
-          style={{
-            position: "relative",
-            width: "300px",
-            maxWidth: "100%",
-          }}
+          className="relative! w-[300px]! max-w-[100%]!"
         >
           <span
-            className="material-symbols-outlined"
-            style={{
-              position: "absolute",
-              left: "10px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              fontSize: "18px",
-              color: "var(--color-slate-400)",
-            }}
+            className={"material-symbols-outlined" + " " + "absolute! left-[10px]! top-[50%]! [transform:translateY(-50%)]! text-[18px]! [color:var(--color-slate-400)]!"}
+
           >
             search
           </span>
@@ -311,47 +276,23 @@ export default function DocumentsPage({ user }) {
               setInternalSearchQuery(e.target.value); setCurrentPage(1);
               setCurrentPage(1);
             }}
-            style={{
-              width: "100%",
-              padding: "8px 12px 8px 34px",
-              borderRadius: "8px",
-              border: "1px solid var(--color-slate-200)",
-              backgroundColor: "var(--color-white)",
-              fontSize: "13px",
-              color: "var(--color-slate-900)",
-              outline: "none",
-              boxSizing: "border-box",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
-            }}
+            controlClassName="[width:100%]! [padding:8px_12px_8px_34px]! [border-radius:8px]! [border:1px_solid_var(--color-slate-200)]! [background-color:var(--color-white)]! [font-size:13px]! [color:var(--color-slate-900)]! [outline:none]! [box-sizing:border-box]! [box-shadow:0_1px_2px_rgba(0,0,0,0.02)]!"
           />
         </div>
 
         {/* Right Filters: Uploader + Access + Clear */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+        <div className="flex! items-center! gap-[10px]! flex-wrap!">
           {/* Uploader Filter Dropdown */}
-          <div style={{ position: "relative" }} ref={uploaderDropdownRef}>
+          <div className="relative!" ref={uploaderDropdownRef}>
             <button
               type="button"
               onClick={() => setIsUploaderDropdownOpen(!isUploaderDropdownOpen)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "7px 14px",
-                backgroundColor: "var(--color-white)",
-                border: "1px solid var(--color-slate-200)",
-                borderRadius: "8px",
-                fontSize: "13px",
-                fontWeight: "500",
-                color: "var(--color-slate-700)",
-                cursor: "pointer",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
-              }}
+              className="flex! items-center! gap-[6px]! p-[7px_14px]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-200)]! rounded-[8px]! text-[13px]! font-medium! [color:var(--color-slate-700)]! cursor-pointer! [box-shadow:0_1px_2px_rgba(0,0,0,0.02)]!"
             >
               <span>{uploaderFilter}</span>
               <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "16px", color: "var(--color-slate-500)" }}
+                className={"material-symbols-outlined" + " " + "text-[16px]! [color:var(--color-slate-500)]!"}
+
               >
                 keyboard_arrow_down
               </span>
@@ -359,20 +300,7 @@ export default function DocumentsPage({ user }) {
 
             {isUploaderDropdownOpen && (
               <div
-                style={{
-                  position: "absolute",
-                  top: "calc(100% + 4px)",
-                  right: 0,
-                  width: "180px",
-                  backgroundColor: "var(--color-white)",
-                  border: "1px solid var(--color-slate-200)",
-                  borderRadius: "8px",
-                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-                  padding: "4px",
-                  zIndex: 50,
-                  maxHeight: "200px",
-                  overflowY: "auto",
-                }}
+                className="absolute! top-[calc(100%_+_4px)]! right-[0]! w-[180px]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-200)]! rounded-[8px]! [box-shadow:0_10px_25px_-5px_rgba(0,_0,_0,_0.1)]! p-[4px]! z-[50]! max-h-[200px]! overflow-y-auto!"
               >
                 {uploaders.map((up) => (
                   <div
@@ -382,15 +310,11 @@ export default function DocumentsPage({ user }) {
                       setIsUploaderDropdownOpen(false);
                       setCurrentPage(1);
                     }}
-                    style={{
-                      padding: "7px 10px",
-                      fontSize: "13px",
-                      color: uploaderFilter === up ? "var(--color-primary)" : "var(--color-slate-700)",
-                      fontWeight: uploaderFilter === up ? "600" : "400",
-                      backgroundColor: uploaderFilter === up ? "var(--color-primary-subtle)" : "transparent",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                    }}
+                    className="p-[7px_10px]! text-[13px]! rounded-[6px]! cursor-pointer!" style={{
+  color: uploaderFilter === up ? "var(--color-primary)" : "var(--color-slate-700)",
+  fontWeight: uploaderFilter === up ? "600" : "400",
+  backgroundColor: uploaderFilter === up ? "var(--color-primary-subtle)" : "transparent"
+}}
                   >
                     {up}
                   </div>
@@ -400,29 +324,16 @@ export default function DocumentsPage({ user }) {
           </div>
 
           {/* Access Filter Dropdown */}
-          <div style={{ position: "relative" }} ref={accessDropdownRef}>
+          <div className="relative!" ref={accessDropdownRef}>
             <button
               type="button"
               onClick={() => setIsAccessDropdownOpen(!isAccessDropdownOpen)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "7px 14px",
-                backgroundColor: "var(--color-white)",
-                border: "1px solid var(--color-slate-200)",
-                borderRadius: "8px",
-                fontSize: "13px",
-                fontWeight: "500",
-                color: "var(--color-slate-700)",
-                cursor: "pointer",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
-              }}
+              className="flex! items-center! gap-[6px]! p-[7px_14px]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-200)]! rounded-[8px]! text-[13px]! font-medium! [color:var(--color-slate-700)]! cursor-pointer! [box-shadow:0_1px_2px_rgba(0,0,0,0.02)]!"
             >
               <span>{accessFilter}</span>
               <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "16px", color: "var(--color-slate-500)" }}
+                className={"material-symbols-outlined" + " " + "text-[16px]! [color:var(--color-slate-500)]!"}
+
               >
                 keyboard_arrow_down
               </span>
@@ -430,18 +341,7 @@ export default function DocumentsPage({ user }) {
 
             {isAccessDropdownOpen && (
               <div
-                style={{
-                  position: "absolute",
-                  top: "calc(100% + 4px)",
-                  right: 0,
-                  width: "150px",
-                  backgroundColor: "var(--color-white)",
-                  border: "1px solid var(--color-slate-200)",
-                  borderRadius: "8px",
-                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-                  padding: "4px",
-                  zIndex: 50,
-                }}
+                className="absolute! top-[calc(100%_+_4px)]! right-[0]! w-[150px]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-200)]! rounded-[8px]! [box-shadow:0_10px_25px_-5px_rgba(0,_0,_0,_0.1)]! p-[4px]! z-[50]!"
               >
                 {["Access", "Can edit", "View Only"].map((acc) => (
                   <div
@@ -451,15 +351,11 @@ export default function DocumentsPage({ user }) {
                       setIsAccessDropdownOpen(false);
                       setCurrentPage(1);
                     }}
-                    style={{
-                      padding: "7px 10px",
-                      fontSize: "13px",
-                      color: accessFilter === acc ? "var(--color-primary)" : "var(--color-slate-700)",
-                      fontWeight: accessFilter === acc ? "600" : "400",
-                      backgroundColor: accessFilter === acc ? "var(--color-primary-subtle)" : "transparent",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                    }}
+                    className="p-[7px_10px]! text-[13px]! rounded-[6px]! cursor-pointer!" style={{
+  color: accessFilter === acc ? "var(--color-primary)" : "var(--color-slate-700)",
+  fontWeight: accessFilter === acc ? "600" : "400",
+  backgroundColor: accessFilter === acc ? "var(--color-primary-subtle)" : "transparent"
+}}
                   >
                     {acc}
                   </div>
@@ -472,15 +368,7 @@ export default function DocumentsPage({ user }) {
           <button
             type="button"
             onClick={handleClearFilters}
-            style={{
-              background: "none",
-              border: "none",
-              color: "var(--color-primary)",
-              fontSize: "13px",
-              fontWeight: "600",
-              cursor: "pointer",
-              padding: "6px 8px",
-            }}
+            className="[background:none]! border-0! [color:var(--color-primary)]! text-[13px]! font-semibold! cursor-pointer! p-[6px_8px]!"
           >
             clear
           </button>
@@ -489,34 +377,18 @@ export default function DocumentsPage({ user }) {
 
       {/* ── Selection Action Toolbar ── */}
       <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "12px",
-          minHeight: "36px",
-        }}
+        className="flex! items-center! justify-between! mb-[12px]! min-h-[36px]!"
       >
-        <div style={{ fontSize: "14px", fontWeight: "700", color: "var(--color-slate-900)" }}>
+        <div className="text-[14px]! font-bold! [color:var(--color-slate-900)]!">
           {selectedIds.length > 0 ? `${selectedIds.length} Selected` : ""}
         </div>
 
         {selectedIds.length > 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div className="flex! items-center! gap-[8px]!">
             <button
               type="button"
               onClick={handleDownloadSelected}
-              style={{
-                padding: "6px 14px",
-                backgroundColor: "var(--color-white)",
-                border: "1px solid var(--color-slate-200)",
-                borderRadius: "8px",
-                fontSize: "13px",
-                fontWeight: "600",
-                color: "var(--color-slate-900)",
-                cursor: "pointer",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
-              }}
+              className="p-[6px_14px]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-200)]! rounded-[8px]! text-[13px]! font-semibold! [color:var(--color-slate-900)]! cursor-pointer! [box-shadow:0_1px_2px_rgba(0,0,0,0.02)]!"
             >
               Download
             </button>
@@ -529,22 +401,9 @@ export default function DocumentsPage({ user }) {
                   const toDelete = documents.filter((d) => selectedIds.includes(d.id));
                   if (toDelete.length > 0) setDeleteModalDoc(toDelete);
                 }}
-                style={{
-                  padding: "6px 14px",
-                  backgroundColor: "var(--color-danger-bg)",
-                  border: "1px solid #FECACA",
-                  borderRadius: "8px",
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  color: "var(--color-danger-dark)",
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
-                }}
+                className="p-[6px_14px]! [background-color:var(--color-danger-bg)]! [border:1px_solid_#FECACA]! rounded-[8px]! text-[13px]! font-semibold! [color:var(--color-danger-dark)]! cursor-pointer! inline-flex! items-center! gap-[4px]! [box-shadow:0_1px_2px_rgba(0,0,0,0.02)]!"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                <span className={"material-symbols-outlined" + " " + "text-[16px]!"} >
                   delete
                 </span>
                 Delete ({selectedIds.length})
@@ -554,17 +413,7 @@ export default function DocumentsPage({ user }) {
             <button
               type="button"
               onClick={handleClearSelection}
-              style={{
-                padding: "6px 14px",
-                backgroundColor: "var(--color-white)",
-                border: "1px solid var(--color-slate-200)",
-                borderRadius: "8px",
-                fontSize: "13px",
-                fontWeight: "600",
-                color: "var(--color-slate-900)",
-                cursor: "pointer",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
-              }}
+              className="p-[6px_14px]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-200)]! rounded-[8px]! text-[13px]! font-semibold! [color:var(--color-slate-900)]! cursor-pointer! [box-shadow:0_1px_2px_rgba(0,0,0,0.02)]!"
             >
               Clear
             </button>
@@ -574,31 +423,12 @@ export default function DocumentsPage({ user }) {
 
       {/* ── Documents Table Card ── */}
       <div
-        style={{
-          backgroundColor: "var(--color-white)",
-          borderRadius: "12px",
-          border: "1px solid var(--color-slate-200)",
-          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.02)",
-          overflowX: "auto",
-          width: "100%",
-        }}
+        className="[background-color:var(--color-white)]! rounded-[12px]! [border:1px_solid_var(--color-slate-200)]! [box-shadow:0_1px_3px_rgba(0,_0,_0,_0.02)]! overflow-x-auto! w-full!"
       >
-        <div style={{ minWidth: "760px" }}>
+        <div className="min-w-[760px]!">
           {/* Table Header */}
           <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "48px minmax(200px, 2.5fr) minmax(70px, 0.9fr) minmax(130px, 1.4fr) minmax(100px, 1.1fr) minmax(95px, 1fr) 70px",
-              backgroundColor: "#EEF2FF",
-              padding: "12px 16px",
-              borderBottom: "1px solid var(--color-slate-200)",
-              alignItems: "center",
-              fontSize: "13px",
-              fontWeight: "600",
-              color: "var(--color-slate-600)",
-              borderTopLeftRadius: "12px",
-              borderTopRightRadius: "12px",
-            }}
+            className="grid! grid-cols-[48px_minmax(200px,_2.5fr)_minmax(70px,_0.9fr)_minmax(130px,_1.4fr)_minmax(100px,_1.1fr)_minmax(95px,_1fr)_70px]! [background-color:#EEF2FF]! p-[12px_16px]! [border-bottom:1px_solid_var(--color-slate-200)]! items-center! text-[13px]! font-semibold! [color:var(--color-slate-600)]! [border-top-left-radius:12px]! [border-top-right-radius:12px]!"
           >
             <div>
               <input
@@ -609,43 +439,30 @@ export default function DocumentsPage({ user }) {
                 aria-label="Select all on this page"
               />
             </div>
-            <div style={{ minWidth: 0 }}>Document name</div>
-            <div style={{ minWidth: 0 }}>Type</div>
-            <div style={{ minWidth: 0 }}>Uploaded by</div>
-            <div style={{ minWidth: 0 }}>Date</div>
-            <div style={{ minWidth: 0 }}>Access</div>
-            <div style={{ textAlign: "right", paddingRight: "8px", minWidth: 0 }}>Action</div>
+            <div className="min-w-0!">Document name</div>
+            <div className="min-w-0!">Type</div>
+            <div className="min-w-0!">Uploaded by</div>
+            <div className="min-w-0!">Date</div>
+            <div className="min-w-0!">Access</div>
+            <div className="text-right! pr-[8px]! min-w-0!">Action</div>
           </div>
 
           {/* Table Body */}
           {loading ? (
             <div
-              style={{
-                padding: "48px 24px",
-                textAlign: "center",
-                color: "var(--color-slate-400)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "10px",
-              }}
+              className="p-[48px_24px]! text-center! [color:var(--color-slate-400)]! flex! flex-col! items-center! gap-[10px]!"
             >
               <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "32px", animation: "spin 1s linear infinite" }}
+                className={"material-symbols-outlined" + " " + "text-[32px]! [animation:spin_1s_linear_infinite]!"}
+
               >
                 progress_activity
               </span>
-              <span style={{ fontSize: "13px" }}>Loading project documents...</span>
+              <span className="text-[13px]!">Loading project documents...</span>
             </div>
           ) : paginatedDocs.length === 0 ? (
             <div
-              style={{
-                padding: "48px 24px",
-                textAlign: "center",
-                color: "var(--color-slate-400)",
-                fontSize: "14px",
-              }}
+              className="p-[48px_24px]! text-center! [color:var(--color-slate-400)]! text-[14px]!"
             >
               No documents found matching your criteria.
             </div>
@@ -657,19 +474,11 @@ export default function DocumentsPage({ user }) {
               return (
                 <div
                   key={doc.id || idx}
-                  className="pm-doc-row"
+                  className={"pm-doc-row" + " " + "grid! grid-cols-[48px_minmax(200px,_2.5fr)_minmax(70px,_0.9fr)_minmax(130px,_1.4fr)_minmax(100px,_1.1fr)_minmax(95px,_1fr)_70px]! p-[14px_16px]! items-center! text-[13px]! [color:var(--color-slate-700)]! cursor-pointer!"}
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "48px minmax(200px, 2.5fr) minmax(70px, 0.9fr) minmax(130px, 1.4fr) minmax(100px, 1.1fr) minmax(95px, 1fr) 70px",
-                    padding: "14px 16px",
-                    borderBottom:
-                      idx === paginatedDocs.length - 1 ? "none" : "1px solid var(--color-slate-100)",
-                    alignItems: "center",
-                    fontSize: "13px",
-                    color: "var(--color-slate-700)",
-                    backgroundColor: isSelected ? "#F0F7FF" : "var(--color-white)",
-                    cursor: "pointer",
-                  }}
+  borderBottom: idx === paginatedDocs.length - 1 ? "none" : "1px solid var(--color-slate-100)",
+  backgroundColor: isSelected ? "#F0F7FF" : "var(--color-white)"
+}}
                   onClick={() => handleSelectToggle(doc.id)}
                 >
                   {/* Checkbox */}
@@ -685,56 +494,26 @@ export default function DocumentsPage({ user }) {
 
                   {/* Document Name */}
                   <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      overflow: "hidden",
-                      minWidth: 0,
-                    }}
+                    className="flex! items-center! gap-[10px]! overflow-hidden! min-w-0!"
                   >
                     <span
-                      className="material-symbols-outlined"
+                      className={"material-symbols-outlined" + " " + "text-[20px]! shrink-0!"}
                       style={{
-                        fontSize: "20px",
-                        flexShrink: 0,
-                        color:
-                          doc.type === "PDF"
-                            ? "var(--color-danger)"
-                            : doc.type === "DOCX" || doc.type === "DOC"
-                            ? "var(--color-primary)"
-                            : doc.type === "XLSX" || doc.type === "XLS"
-                            ? "var(--color-success)"
-                            : doc.type === "PNG" || doc.type === "JPG" || doc.type === "JPEG"
-                            ? "#8B5CF6"
-                            : "var(--color-slate-500)",
-                      }}
+  color: doc.type === "PDF" ? "var(--color-danger)" : doc.type === "DOCX" || doc.type === "DOC" ? "var(--color-primary)" : doc.type === "XLSX" || doc.type === "XLS" ? "var(--color-success)" : doc.type === "PNG" || doc.type === "JPG" || doc.type === "JPEG" ? "#8B5CF6" : "var(--color-slate-500)"
+}}
                     >
                       description
                     </span>
-                    <div style={{ overflow: "hidden", minWidth: 0 }}>
+                    <div className="overflow-hidden! min-w-0!">
                       <div
-                        style={{
-                          fontWeight: "600",
-                          color: "var(--color-slate-900)",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
+                        className="font-semibold! [color:var(--color-slate-900)]! whitespace-nowrap! overflow-hidden! text-ellipsis!"
                         title={doc.name}
                       >
                         {doc.name}
                       </div>
                       {doc.projectName && (
                         <div
-                          style={{
-                            fontSize: "11px",
-                            color: "var(--color-slate-400)",
-                            marginTop: "2px",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
+                          className="text-[11px]! [color:var(--color-slate-400)]! mt-[2px]! whitespace-nowrap! overflow-hidden! text-ellipsis!"
                         >
                           {doc.projectName}
                         </div>
@@ -743,48 +522,31 @@ export default function DocumentsPage({ user }) {
                   </div>
 
                   {/* Type */}
-                  <div style={{ color: "var(--color-slate-500)", fontWeight: "500", minWidth: 0 }}>
+                  <div className="[color:var(--color-slate-500)]! font-medium! min-w-0!">
                     {doc.type}
                   </div>
 
                   {/* Uploaded By */}
                   <div
-                    style={{
-                      color: "var(--color-slate-700)",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      minWidth: 0,
-                    }}
+                    className="[color:var(--color-slate-700)]! whitespace-nowrap! overflow-hidden! text-ellipsis! min-w-0!"
                     title={doc.uploadedBy}
                   >
                     {doc.uploadedBy}
                   </div>
 
                   {/* Date */}
-                  <div style={{ color: "var(--color-slate-500)", whiteSpace: "nowrap", minWidth: 0 }}>
+                  <div className="[color:var(--color-slate-500)]! whitespace-nowrap! min-w-0!">
                     {doc.date}
                   </div>
 
                   {/* Access */}
-                  <div style={{ minWidth: 0 }}>
+                  <div className="min-w-0!">
                     <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        padding: "3px 9px",
-                        borderRadius: "6px",
-                        fontSize: "11px",
-                        fontWeight: "600",
-                        letterSpacing: "0.2px",
-                        whiteSpace: "nowrap",
-                        backgroundColor: doc.access === "Can edit" ? "var(--color-success-bg)" : "var(--color-slate-100)",
-                        color: doc.access === "Can edit" ? "var(--color-success-dark)" : "var(--color-slate-600)",
-                        border: doc.access === "Can edit" ? "1px solid #BBF7D0" : "1px solid var(--color-slate-200)",
-                        boxSizing: "border-box",
-                        height: "22px",
-                      }}
+                      className="inline-flex! items-center! justify-center! p-[3px_9px]! rounded-[6px]! text-[11px]! font-semibold! tracking-[0.2px]! whitespace-nowrap! box-border! h-[22px]!" style={{
+  backgroundColor: doc.access === "Can edit" ? "var(--color-success-bg)" : "var(--color-slate-100)",
+  color: doc.access === "Can edit" ? "var(--color-success-dark)" : "var(--color-slate-600)",
+  border: doc.access === "Can edit" ? "1px solid #BBF7D0" : "1px solid var(--color-slate-200)"
+}}
                     >
                       {doc.access}
                     </span>
@@ -792,30 +554,20 @@ export default function DocumentsPage({ user }) {
 
                   {/* Action Menu Column */}
                   <div
-                    style={{ textAlign: "right", position: "relative", minWidth: 0 }}
+                    className="text-right! relative! min-w-0!"
                     onClick={(e) => e.stopPropagation()}
                   >
                   <button
                     type="button"
-                    className="doc-actions-menu-btn"
+                    className={"doc-actions-menu-btn" + " " + "[background:none]! border-0! [color:var(--color-slate-500)]! cursor-pointer! p-[4px]! rounded-[4px]! inline-flex! items-center! justify-center!"}
                     onClick={(e) => {
                       e.stopPropagation();
                       setActiveMenuDocId(isMenuOpen ? null : doc.id);
                     }}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: "var(--color-slate-500)",
-                      cursor: "pointer",
-                      padding: "4px",
-                      borderRadius: "4px",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
+
                     aria-label="Actions menu"
                   >
-                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+                    <span className={"material-symbols-outlined" + " " + "text-[18px]!"} >
                       more_horiz
                     </span>
                   </button>
@@ -823,19 +575,8 @@ export default function DocumentsPage({ user }) {
                   {/* Actions Dropdown */}
                   {isMenuOpen && (
                     <div
-                      className="doc-actions-dropdown"
-                      style={{
-                        position: "absolute",
-                        right: 0,
-                        top: "calc(100% + 2px)",
-                        backgroundColor: "var(--color-white)",
-                        border: "1px solid var(--color-slate-200)",
-                        borderRadius: "8px",
-                        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
-                        zIndex: 100,
-                        width: "130px",
-                        padding: "4px",
-                      }}
+                      className={"doc-actions-dropdown" + " " + "absolute! right-[0]! top-[calc(100%_+_2px)]! [background-color:var(--color-white)]! [border:1px_solid_var(--color-slate-200)]! rounded-[8px]! [box-shadow:0_10px_25px_-5px_rgba(0,_0,_0,_0.1)]! z-[100]! w-[130px]! p-[4px]!"}
+
                     >
                       {/* Download Option */}
                       <div
@@ -844,29 +585,12 @@ export default function DocumentsPage({ user }) {
                           handleDownloadSingle(doc);
                           setActiveMenuDocId(null);
                         }}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          padding: "8px 12px",
-                          fontSize: "13px",
-                          fontWeight: "500",
-                          color: "var(--color-slate-800)",
-                          cursor: "pointer",
-                          textAlign: "left",
-                          transition: "background-color 0.12s",
-                          borderRadius: "4px",
-                        }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.backgroundColor = "var(--color-slate-50)")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.backgroundColor = "transparent")
-                        }
+                        className={"flex! items-center! gap-[8px]! p-[8px_12px]! text-[13px]! font-medium! [color:var(--color-slate-800)]! cursor-pointer! text-left! [transition:background-color_0.12s]! rounded-[4px]!" + ' ' + "hover:[background-color:var(--color-slate-50)]!"}
+
                       >
                         <span
-                          className="material-symbols-outlined"
-                          style={{ fontSize: "16px", color: "var(--color-slate-500)" }}
+                          className={"material-symbols-outlined" + " " + "text-[16px]! [color:var(--color-slate-500)]!"}
+
                         >
                           download
                         </span>
@@ -881,29 +605,12 @@ export default function DocumentsPage({ user }) {
                             setRenameModalDoc(doc);
                             setActiveMenuDocId(null);
                           }}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            padding: "8px 12px",
-                            fontSize: "13px",
-                            fontWeight: "500",
-                            color: "var(--color-slate-800)",
-                            cursor: "pointer",
-                            textAlign: "left",
-                            transition: "background-color 0.12s",
-                            borderRadius: "4px",
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor = "var(--color-slate-50)")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor = "transparent")
-                          }
+                          className={"flex! items-center! gap-[8px]! p-[8px_12px]! text-[13px]! font-medium! [color:var(--color-slate-800)]! cursor-pointer! text-left! [transition:background-color_0.12s]! rounded-[4px]!" + ' ' + "hover:[background-color:var(--color-slate-50)]!"}
+
                         >
                           <span
-                            className="material-symbols-outlined"
-                            style={{ fontSize: "16px", color: "var(--color-slate-500)" }}
+                            className={"material-symbols-outlined" + " " + "text-[16px]! [color:var(--color-slate-500)]!"}
+
                           >
                             edit
                           </span>
@@ -919,30 +626,14 @@ export default function DocumentsPage({ user }) {
                             setDeleteModalDoc(doc);
                             setActiveMenuDocId(null);
                           }}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            padding: "8px 12px",
-                            fontSize: "13px",
-                            fontWeight: "500",
-                            color: "var(--color-danger)",
-                            cursor: "pointer",
-                            textAlign: "left",
-                            borderTop: canRename ? "1px solid var(--color-slate-100)" : "none",
-                            transition: "background-color 0.12s",
-                            borderRadius: "4px",
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor = "var(--color-danger-bg)")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor = "transparent")
-                          }
+                          className={"flex! items-center! gap-[8px]! p-[8px_12px]! text-[13px]! font-medium! [color:var(--color-danger)]! cursor-pointer! text-left! [transition:background-color_0.12s]! rounded-[4px]!" + ' ' + "hover:[background-color:var(--color-danger-bg)]!"} style={{
+  borderTop: canRename ? "1px solid var(--color-slate-100)" : "none"
+}}
+
                         >
                           <span
-                            className="material-symbols-outlined"
-                            style={{ fontSize: "16px", color: "var(--color-danger)" }}
+                            className={"material-symbols-outlined" + " " + "text-[16px]! [color:var(--color-danger)]!"}
+
                           >
                             delete
                           </span>
@@ -962,40 +653,26 @@ export default function DocumentsPage({ user }) {
       {/* ── Pagination Footer ── */}
       {!loading && filteredDocs.length > 0 && (
         <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginTop: "16px",
-            padding: "0 4px",
-          }}
+          className="flex! items-center! justify-between! mt-[16px]! p-[0_4px]!"
         >
-          <div style={{ fontSize: "12px", color: "var(--color-slate-400)" }}>
+          <div className="text-[12px]! [color:var(--color-slate-400)]!">
             Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
             {Math.min(currentPage * itemsPerPage, filteredDocs.length)} of{" "}
             {filteredDocs.length} documents
           </div>
 
           {/* Page Buttons */}
-          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <div className="flex! items-center! gap-[4px]!">
             <button
               type="button"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              style={{
-                width: "28px",
-                height: "28px",
-                borderRadius: "6px",
-                border: "1px solid var(--color-slate-200)",
-                backgroundColor: "var(--color-white)",
-                color: currentPage === 1 ? "var(--color-slate-300)" : "var(--color-slate-600)",
-                cursor: currentPage === 1 ? "not-allowed" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              className="w-[28px]! h-[28px]! rounded-[6px]! [border:1px_solid_var(--color-slate-200)]! [background-color:var(--color-white)]! flex! items-center! justify-center!" style={{
+  color: currentPage === 1 ? "var(--color-slate-300)" : "var(--color-slate-600)",
+  cursor: currentPage === 1 ? "not-allowed" : "pointer"
+}}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+              <span className={"material-symbols-outlined" + " " + "text-[16px]!"} >
                 chevron_left
               </span>
             </button>
@@ -1007,20 +684,12 @@ export default function DocumentsPage({ user }) {
                   key={pageNum}
                   type="button"
                   onClick={() => setCurrentPage(pageNum)}
-                  style={{
-                    width: "28px",
-                    height: "28px",
-                    borderRadius: "6px",
-                    border: isActive ? "none" : "1px solid var(--color-slate-200)",
-                    backgroundColor: isActive ? "var(--color-primary)" : "var(--color-white)",
-                    color: isActive ? "var(--color-white)" : "var(--color-slate-600)",
-                    fontSize: "12px",
-                    fontWeight: isActive ? "700" : "500",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
+                  className="w-[28px]! h-[28px]! rounded-[6px]! text-[12px]! cursor-pointer! flex! items-center! justify-center!" style={{
+  border: isActive ? "none" : "1px solid var(--color-slate-200)",
+  backgroundColor: isActive ? "var(--color-primary)" : "var(--color-white)",
+  color: isActive ? "var(--color-white)" : "var(--color-slate-600)",
+  fontWeight: isActive ? "700" : "500"
+}}
                 >
                   {pageNum}
                 </button>
@@ -1031,20 +700,12 @@ export default function DocumentsPage({ user }) {
               type="button"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              style={{
-                width: "28px",
-                height: "28px",
-                borderRadius: "6px",
-                border: "1px solid var(--color-slate-200)",
-                backgroundColor: "var(--color-white)",
-                color: currentPage === totalPages ? "var(--color-slate-300)" : "var(--color-slate-600)",
-                cursor: currentPage === totalPages ? "not-allowed" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              className="w-[28px]! h-[28px]! rounded-[6px]! [border:1px_solid_var(--color-slate-200)]! [background-color:var(--color-white)]! flex! items-center! justify-center!" style={{
+  color: currentPage === totalPages ? "var(--color-slate-300)" : "var(--color-slate-600)",
+  cursor: currentPage === totalPages ? "not-allowed" : "pointer"
+}}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+              <span className={"material-symbols-outlined" + " " + "text-[16px]!"} >
                 chevron_right
               </span>
             </button>
@@ -1080,5 +741,5 @@ export default function DocumentsPage({ user }) {
     </div>
   );
 
-  return <section style={{ padding: '24px 32px' }}>{renderDocumentContent()}</section>;
+  return <section className="p-[24px_32px]!">{renderDocumentContent()}</section>;
 }

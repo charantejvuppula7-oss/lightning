@@ -1,0 +1,10 @@
+@utility notif-row-hover {
+  &:hover {
+    @apply [background-color:var(--color-slate-50)]!;
+  }
+}
+@utility notif-row-highlighted {
+  &:hover {
+    @apply [background-color:#E8F0FE]!;
+  }
+}

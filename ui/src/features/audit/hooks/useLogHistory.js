@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { getLogs } from '../api/adminApi.js'
+import { getLogs } from '../api/monitoringApi.js'
 export default function useLogHistory(path, initialFilters) {
  const defaults = useRef(initialFilters)
  const [filters, setFilters] = useState(initialFilters)
