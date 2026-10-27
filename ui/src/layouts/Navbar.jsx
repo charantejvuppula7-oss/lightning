@@ -9,7 +9,7 @@ import { roleSlug } from '../utils/roles.js'
 
 const getPMInitials = user => `${(user.first_name || user.First_Name || '').trim()[0] || ''}${(user.last_name || user.Last_Name || '').trim()[0] || ''}`.toUpperCase()
 
-export default function Navbar({ role: roleProp, showProjectSelector, projects = [], projectOptions = [], selectedProjectId, selectedProjectName, selectedProject, activeProjectObj, onProjectSelect, title, subtitle, badge, icon, leftContent, showSearch = true, searchQuery, searchValue, onSearchChange, setSearchQuery, onSearchResult, localSearchData = {}, searchPlaceholder = 'Search tasks, docs, people....', searchStyle, showNotificationBell = true, onOpenNotifications, onOpenInbox, showAvatar = true, currentPM: propPM, currentUser: propUser, user: propGenericUser, avatarColor, avatarStyle, rightStyle, avatarInitials: propInitials, onAvatarClick, actions, rightContent, children, style, className }) {
+export default function Navbar({ role: roleProp, showProjectSelector, projects = [], projectOptions = [], selectedProjectId, selectedProjectName, selectedProject, activeProjectObj, onProjectSelect, title, subtitle, badge, icon, leftContent, showSearch = true, searchQuery, searchValue, onSearchChange, setSearchQuery, onSearchResult, localSearchData = {}, searchPlaceholder = 'Search tasks, docs, people....', searchStyle, showNotificationBell = true, onOpenNotifications, onOpenInbox, showAvatar = true, currentPM: propPM, currentUser: propUser, user: propGenericUser, avatarColor, avatarStyle, rightStyle, avatarInitials: propInitials, onAvatarClick, actions, rightContent, children, beforeAvatar, style, className }) {
  const navigate = useNavigate()
  const location = useLocation()
  const role = roleSlug(roleProp || propGenericUser?.role || propUser?.role || propPM?.role)
@@ -213,6 +213,8 @@ export default function Navbar({ role: roleProp, showProjectSelector, projects =
         {showNotificationBell && (
           <NotificationBell onOpenInbox={handleOpenInbox} />
         )}
+
+        {beforeAvatar}
 
         {/* User Profile Avatar */}
         {showAvatar && (

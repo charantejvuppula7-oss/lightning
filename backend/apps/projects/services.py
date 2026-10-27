@@ -1,3 +1,5 @@
+import json
+
 from api.models import Project, ProjectResourceLink
 from apps.dependencies.services import create_dependencies
 from apps.features.services import create_features
@@ -56,6 +58,17 @@ def create_project(validated_data, user):
     milestones = create_milestones(project, user, milestones_data)
     task_specs = [(data, None) for data in tasks_data]
     task_specs.extend(create_features(milestones))
+    milestone_refs = {data['client_id']: milestone for milestone, data in milestones if data.get('client_id')}
+    for data, _ in task_specs:
+        ref = data.pop('milestone_ref', None)
+        if ref:
+            try:
+                metadata = json.loads(data.get('Remarks') or '{}')
+            except (ValueError, TypeError):
+                metadata = {'notes': data.get('Remarks', '')}
+            if not isinstance(metadata, dict):
+                metadata = {'notes': data.get('Remarks', '')}
+            data['Remarks'] = json.dumps({**metadata, 'milestone_id': str(milestone_refs[ref].pk)})
     _, sprints = create_sprints(project, sprints_data)
     task_refs = create_tasks(project, user, task_specs, sprints, users)
     create_dependencies(task_refs, dependencies_data, users)

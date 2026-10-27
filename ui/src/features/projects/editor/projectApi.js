@@ -52,21 +52,33 @@ export function projectFields(form) {
   }
 }
 
-const taskFields = (task, sprintRef, featureId) => ({
+const taskRemarks = (task, milestoneId) => {
+  let metadata
+  try { metadata = JSON.parse(task.remarksRaw || '{}') } catch { metadata = { notes: task.remarksRaw } }
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) metadata = { notes: task.remarksRaw }
+  if (task.remarksRaw && task.priority === task.originalPriority && (milestoneId === undefined || (metadata.milestone_id || null) === milestoneId)) return task.remarksRaw
+  metadata.priority = task.priority
+  if (milestoneId) metadata.milestone_id = milestoneId
+  else if (milestoneId === null) delete metadata.milestone_id
+  return JSON.stringify(metadata)
+}
+
+const taskFields = (task, sprintRef, featureId, milestoneId) => ({
   Task_Name: task.name.trim(), description: task.description.trim(),
   assigned_to: task.assignee, review_by: task.reviewer || null,
   Due_Date: task.dueDate || null, planned_start_date: task.startDate || null,
-  Remarks: task.remarksRaw && task.priority === task.originalPriority ? task.remarksRaw : JSON.stringify({ priority: task.priority }),
+  Remarks: taskRemarks(task, milestoneId),
   ...(sprintRef ? { sprint_ref: sprintRef } : {}),
   ...(featureId ? { feature: featureId } : {}),
 })
 
 export function creationPayload(form) {
-  const tasks = form.tasks.map(task => ({ ...taskFields(task, task.sprintKey, null), temp_id: task.key }))
+  const tasks = form.tasks.map(task => ({ ...taskFields(task, task.sprintKey, null), temp_id: task.key,
+    ...(task.milestoneKey && !task.featureKey ? { milestone_ref: task.milestoneKey } : {}) }))
   return {
     ...projectFields(form),
     milestones: form.milestones.map(milestone => ({
-      name: milestone.name.trim(), description: milestone.description.trim(),
+      client_id: milestone.key, name: milestone.name.trim(), description: milestone.description.trim(),
       start_date: milestone.startDate || null, due_date: milestone.dueDate,
       features: milestone.features.map(feature => ({
         feature_name: feature.name.trim(), description: feature.description.trim(),
@@ -128,6 +140,7 @@ export async function updateProject(id, form, initial, originalFiles) {
   }
 
   const featureIds = {}
+  const milestoneIds = {}
   for (const milestone of form.milestones) {
     const payload = { project: id, name: milestone.name.trim(), description: milestone.description.trim(),
       start_date: milestone.startDate || null, due_date: milestone.dueDate }
@@ -138,6 +151,7 @@ export async function updateProject(id, form, initial, originalFiles) {
     }) ? { id: milestone.id } : await apiRequest(milestone.id ? `/milestones/${milestone.id}/` : '/milestones/', {
       method: milestone.id ? 'PATCH' : 'POST', body: payload,
     })
+    milestoneIds[milestone.key] = saved.id
     for (const feature of milestone.features) {
       const data = { Milestone: saved.id, feature_name: feature.name.trim(),
         description: feature.description.trim(), feature_status: feature.status,
@@ -176,10 +190,10 @@ export async function updateProject(id, form, initial, originalFiles) {
 
   const taskIds = {}
   for (const task of form.tasks) {
-    const data = { ...taskFields(task, null, null), project: id,
+    const data = { ...taskFields(task, null, null, !task.featureKey ? milestoneIds[task.milestoneKey] || null : null), project: id,
       sprint: sprintIds[task.sprintKey] || null, feature: featureIds[task.featureKey] || null }
     const old = initial.tasks.find(item => item.id === task.id)
-    const prior = old && { ...taskFields(old, null, null), project: id,
+    const prior = old && { ...taskFields(old, null, null, !old.featureKey ? initial.milestones.find(item => item.key === old.milestoneKey)?.id || null : null), project: id,
       sprint: initial.sprints.find(sprint => sprint.key === old.sprintKey)?.id || null,
       feature: initial.milestones.flatMap(m => m.features).find(feature => feature.key === old.featureKey)?.id || null }
     const saved = task.id && !changed(data, prior) ? { id: task.id } :

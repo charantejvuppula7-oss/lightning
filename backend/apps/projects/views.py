@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 
 from api.models import Project, Customer, Priority, ProjectType, Department, UserData, ResourceFile
 from apps.core.pagination import ResourcePagination
-from apps.projects.serializers import ProjectSerializer, ProjectCreateSerializer, ProjectCreationResponseSerializer
+from apps.projects.serializers import ProjectSerializer, ProjectCreateSerializer, ProjectCreationResponseSerializer, is_project_manager_role
 from apps.projects.services import create_project
 from apps.projects.filters import filter_projects
 from apps.core.views import ResourceAPIView
@@ -54,15 +54,16 @@ class ProjectSetupOptionsView(APIView):
             if project:
                 scope |= Q(assigned_projects=project) | Q(managed_projects=project) | Q(default_projects=project) | Q(pk=project.created_by_id)
             users = users.filter(scope).distinct()
+        people = list(users.order_by('first_name', 'last_name', 'pk').values(
+            'id', 'first_name', 'last_name', 'user_name', 'department_link_id',
+            'designation', 'role_link__name'))
         return Response({
             'customers': list(Customer.objects.order_by('name').values('id', 'name')),
             'priorities': list(Priority.objects.order_by('sort_order', 'name').values('id', 'name')),
             'project_types': list(ProjectType.objects.order_by('name').values('id', 'name')),
             'departments': list(Department.objects.order_by('name').values('id', 'name')),
-            'users': list(users.order_by(
-                'first_name', 'last_name', 'pk').values(
-                    'id', 'first_name', 'last_name', 'user_name', 'department_link_id',
-                    'designation', 'role_link__name')),
+            'users': people,
+            'project_managers': [person for person in people if is_project_manager_role(person['role_link__name'])],
         })
 
 

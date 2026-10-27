@@ -14,6 +14,7 @@ class DependencySerializer(serializers.ModelSerializer):
     """
     Serializer for TaskDependency entities enforcing project authorization and attribute validity.
     """
+    description = serializers.CharField(required=False, allow_blank=True, default='')
     task_name = serializers.CharField(source='task.Task_Name', read_only=True)
     project_id = serializers.UUIDField(source='task.project_id', read_only=True)
     project_name = serializers.CharField(source='task.project.project_name', read_only=True)

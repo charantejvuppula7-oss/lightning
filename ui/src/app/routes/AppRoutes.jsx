@@ -9,7 +9,7 @@ import WorkloadPage from '../../features/workload/WorkloadPage.jsx'
 import ApprovalsPage from '../../features/approvals/ApprovalsPage.jsx'
 import CalendarPage from '../../features/calendar/CalendarPage.jsx'
 import ProjectsPage from '../../features/projects/ProjectsPage.jsx'
-import ProjectEditorPage from '../../features/projects/editor/ProjectEditorPage.jsx'
+import ProjectEditorLayout from '../../features/projects/editor/ProjectEditorLayout.jsx'
 import PmProjects from '../../features/projects/pm_projects.jsx'
 import ProjectManagerDashboard from '../../modules/project-manager/dashboard.jsx'
 import UserDashboard from '../../modules/user/user_dashboard.jsx'
@@ -65,13 +65,13 @@ function ProjectsRoute() {
 
 function ProjectCreateRoute() {
   return <ProtectedRoute requiredPermission={{ module: 'Projects', action: 'Create' }}>
-    {(user) => <SidebarLayout user={user}><ProjectEditorPage user={user} /></SidebarLayout>}
+    {(user) => <ProjectEditorLayout user={user} />}
   </ProtectedRoute>
 }
 
 function ProjectEditRoute() {
   return <ProtectedRoute requiredPermission={{ module: 'Projects', action: 'Edit' }}>
-    {(user) => <SidebarLayout user={user}><ProjectEditorPage user={user} /></SidebarLayout>}
+    {(user) => <ProjectEditorLayout user={user} />}
   </ProtectedRoute>
 }
 

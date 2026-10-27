@@ -1,9 +1,14 @@
 from rest_framework import serializers
+from django.utils.text import slugify
 
 from api.models import Project, ProjectResourceLink, UserData, Milestone_Features, Task, TaskDependency
 from apps.roles.permissions import require_permission, require_project_members
 from apps.core.utils import validate_model_attributes
 from apps.sprints.serializers import SprintCreateItemSerializer
+
+
+def is_project_manager_role(name):
+    return slugify(str(name or '').replace('_', ' ')) in ('admin', 'administrator', 'pm', 'project-manager')
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -13,7 +18,10 @@ class ProjectSerializer(serializers.ModelSerializer):
     resource_links = serializers.ListField(child=serializers.URLField(max_length=500), required=False, write_only=True)
     customer_name = serializers.CharField(max_length=200, required=False, allow_blank=True, write_only=True)
     priority_name = serializers.ChoiceField(choices=('low', 'medium', 'high'), required=False, write_only=True)
-    project_type_name = serializers.ChoiceField(choices=('web', 'mobile', 'desktop', 'other'), required=False, write_only=True)
+    project_type_name = serializers.ChoiceField(choices=(
+        'product development', 'client project', 'internal tool', 'research', 'maintenance',
+        'web', 'mobile', 'desktop', 'other',
+    ), required=False, write_only=True)
 
     class Meta:
         model = Project
@@ -37,6 +45,9 @@ class ProjectSerializer(serializers.ModelSerializer):
         Raises:
             ValidationError: If project start/end dates conflict with existing sprints or milestones.
         """
+        if any(user.account_status != 'active' or not is_project_manager_role(user.role_link.name if user.role_link_id else '')
+               for user in attrs.get('project_managers', [])):
+            raise serializers.ValidationError({'project_managers': 'Select an active project manager or administrator.'})
         require_project_members(self.context['request'].user, attrs, self.instance)
         validate_model_attributes(Project, self.instance, {
             key: value for key, value in attrs.items()
@@ -98,13 +109,14 @@ class InitialTaskSerializer(serializers.ModelSerializer):
     description = serializers.CharField(required=False, allow_blank=True, default='')
     temp_id = serializers.CharField(max_length=100, required=False)
     sprint_ref = serializers.CharField(max_length=100, required=False)
+    milestone_ref = serializers.CharField(max_length=100, required=False)
     assigned_to = serializers.UUIDField()
     review_by = serializers.UUIDField(required=False, allow_null=True)
 
     class Meta:
         model = Task
         fields = ('Task_Name', 'description', 'assigned_to', 'review_by',
-                  'Due_Date', 'planned_start_date', 'Remarks', 'temp_id', 'sprint_ref')
+                  'Due_Date', 'planned_start_date', 'Remarks', 'temp_id', 'sprint_ref', 'milestone_ref')
 
 
 class InitialFeatureSerializer(serializers.ModelSerializer):
@@ -117,6 +129,7 @@ class InitialFeatureSerializer(serializers.ModelSerializer):
 
 
 class InitialMilestoneSerializer(serializers.Serializer):
+    client_id = serializers.CharField(max_length=100, required=False)
     name = serializers.CharField(max_length=100)
     description = serializers.CharField(required=False, allow_blank=True)
     start_date = serializers.DateField(required=False, allow_null=True)
@@ -125,6 +138,7 @@ class InitialMilestoneSerializer(serializers.Serializer):
 
 
 class InitialDependencySerializer(serializers.ModelSerializer):
+    description = serializers.CharField(required=False, allow_blank=True, default='')
     task_ref = serializers.CharField(max_length=100)
     depends_on_ref = serializers.CharField(max_length=100, required=False)
     assigned_to = serializers.UUIDField(required=False, allow_null=True)
@@ -193,7 +207,7 @@ class ProjectCreateSerializer(ProjectSerializer):
         referenced_users.update(dependency['assigned_to'] for dependency in attrs.get('dependencies', [])
                                 if dependency.get('assigned_to'))
         users = {actor.pk: actor}
-        users.update(UserData.objects.in_bulk(referenced_users - {actor.pk}))
+        users.update(UserData.objects.select_related('role_link').in_bulk(referenced_users - {actor.pk}))
         missing = referenced_users - users.keys()
         if missing:
             raise serializers.ValidationError({'users': 'One or more referenced users do not exist.'})
@@ -232,7 +246,13 @@ class ProjectCreateSerializer(ProjectSerializer):
             raise serializers.ValidationError({'sprints': sprint_errors})
 
         milestone_errors = {}
+        milestone_refs = set()
         for index, milestone in enumerate(attrs.get('milestones', [])):
+            ref = milestone.get('client_id')
+            if ref:
+                if ref in milestone_refs:
+                    milestone_errors[index] = {'client_id': 'Must be unique within this project.'}
+                milestone_refs.add(ref)
             due_date = milestone['due_date']
             if attrs.get('start_date') and due_date < attrs['start_date']:
                 milestone_errors[index] = {'due_date': 'Milestone is due before the project.'}
@@ -253,8 +273,12 @@ class ProjectCreateSerializer(ProjectSerializer):
             reviewer = task.get('review_by')
             if reviewer and (reviewer not in member_ids or users[reviewer].account_status != 'active'):
                 item_errors['review_by'] = 'Reviewer must be an active project member.'
-            if task.get('sprint_ref') and task['sprint_ref'] not in sprint_refs:
+            if not task.get('sprint_ref'):
+                item_errors['sprint_ref'] = 'Generate sprints and assign this task to a sprint.'
+            elif task['sprint_ref'] not in sprint_refs:
                 item_errors['sprint_ref'] = 'Sprint reference does not exist.'
+            if task.get('milestone_ref') and task['milestone_ref'] not in milestone_refs:
+                item_errors['milestone_ref'] = 'Milestone reference does not exist.'
             ref = task.get('temp_id')
             if ref:
                 if ref in task_refs:

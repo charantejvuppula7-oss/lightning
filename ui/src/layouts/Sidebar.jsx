@@ -399,7 +399,7 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
   );
 }
 
-export function SidebarLayout({ user, children, searchQuery, onSearchChange }) {
+export function SidebarLayout({ user, children, searchQuery, onSearchChange, navbarProps }) {
   const { pathname } = useLocation()
   const effectiveRole = user ? roleSlug(user.role) : pathname.startsWith('/admin/') ? 'admin' : pathname.startsWith('/pm/') ? 'pm' : 'user'
 
@@ -407,7 +407,7 @@ export function SidebarLayout({ user, children, searchQuery, onSearchChange }) {
     <div style={{ minHeight: '100dvh', display: 'flex', background: 'var(--color-slate-50)', color: 'var(--color-slate-900)' }}>
       <Sidebar active={pathname.replace(/\/$/, '')} effectiveRole={effectiveRole} permissions={user?.permissions} canAccessChat={user?.can_access_chat} />
       <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <Navbar user={user} searchQuery={searchQuery} onSearchChange={onSearchChange} />
+        <Navbar user={user} searchQuery={searchQuery} onSearchChange={onSearchChange} {...navbarProps} />
         <main style={{ minWidth: 0, flex: 1 }}>{children}</main>
       </div>
     </div>
