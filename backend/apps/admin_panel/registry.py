@@ -3,6 +3,12 @@ from api.models import (UserData, Project, Task, TaskDependency, Sprint, Milesto
     Milestone_Features, ResourceFile, Skills, Department, Role, Skill, AuditLog,
     ApiRequestLog, ProjectChatMessage)
 
+TABLE_RESOURCES = {
+    'users': 'user', 'projects': 'project', 'tasks': 'task', 'dependencies': 'dependency',
+    'sprints': 'sprint', 'milestones': 'milestone', 'milestone_features': 'feature',
+    'roles': 'role', 'departments': 'department', 'resources': 'document', 'user_skills': 'user',
+}
+
 DB_TABLE_REGISTRY = {
     'users': {
         'model': UserData,

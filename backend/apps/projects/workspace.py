@@ -17,7 +17,7 @@ class WorkspaceView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        require_permission(request.user, 'Projects', 'View')
+        require_permission(request.user, 'Dashboard', 'View')
         project_id = serializers.UUIDField().run_validation(request.query_params.get('project'))
         project = get_object_or_404(PROJECT_QUERYSET.filter(pk__in=allowed_projects(request.user))
             .prefetch_related('milestones_set__features'), pk=project_id)

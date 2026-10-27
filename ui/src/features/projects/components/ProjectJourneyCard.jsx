@@ -28,6 +28,7 @@ export default function ProjectJourneyCard({
   onDeleteProject,
   isProjectPaused = false,
   showCard = true,
+  showTimeline = true,
   style = {},
   className = "",
 }) {
@@ -81,7 +82,7 @@ export default function ProjectJourneyCard({
       <div className="[border-top:1px_solid_#E5E7EB]! m-[11px_0_12px]!" />
       <div className="text-[11px]! font-bold! [color:#202938]! mb-[19px]!">Project journey</div>
 
-      <ProjectMilestoneTimeline project={project} />
+      {showTimeline && <ProjectMilestoneTimeline project={project} />}
     </div>
   );
 }

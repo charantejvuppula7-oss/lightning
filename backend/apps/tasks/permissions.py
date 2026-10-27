@@ -7,5 +7,5 @@ def manages_tasks(user, project):
 
 
 def can_review_task(user, task):
-    return has_permission(user, 'Tasks', 'View') and (
+    return has_permission(user, 'Tasks', 'View') and has_permission(user, 'Tasks', 'Edit') and (
         task.review_by_id == user.pk or manages_tasks(user, task.project))

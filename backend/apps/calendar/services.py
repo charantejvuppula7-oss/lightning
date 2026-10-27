@@ -5,7 +5,7 @@ from django.db.models import Q
 from rest_framework.exceptions import PermissionDenied
 
 from api.models import Task, TaskDependency, Milestones, Sprint
-from apps.roles.permissions import allowed_projects, scope_queryset
+from apps.roles.permissions import allowed_projects, has_permission, require_permission, scope_queryset
 
 
 class CalendarService:
@@ -48,11 +48,13 @@ class CalendarService:
             PermissionDenied: If project_id is outside the user's allowed projects.
         """
 
+        require_permission(user, 'Calendar', 'View')
         if project_id and project_id != "all":
             if not allowed_projects(user).filter(pk=project_id).exists():
                 raise PermissionDenied("Project outside your scope or not found.")
 
         included_types = set(types) if types else {"task", "dependency", "milestone", "sprint"}
+        included_types = {resource for resource in included_types if has_permission(user, resource, 'View')}
         included_categories = set(categories) if categories else None
 
         events = []

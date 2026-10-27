@@ -319,8 +319,8 @@ function TaskCard({
                   onToggle={handleTimerToggle}
                   disabled={!isAssignedUser || status === "in_review" || status === "completed" || status === "rejected"}
                 />
-                {(canEditTask || canDeleteTask || isAssignedUser) && (
-                  <TaskMoreOption onEdit={onMenuClick} onDelete={handleDeleteTask} />
+                {(canEditTask || canDeleteTask) && (
+                  <TaskMoreOption onEdit={canEditTask ? onMenuClick : undefined} onDelete={canDeleteTask ? handleDeleteTask : undefined} />
                 )}
               </>
             )}

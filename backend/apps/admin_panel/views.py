@@ -1,18 +1,18 @@
-"""Monitoring endpoints; database mutations remain administrator-only."""
+"""Monitoring endpoints; database records retain their resource permissions and scope."""
 from django.db.models import Avg, Count, Q
-from django.db import connection
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from api.models import ApiRequestLog, AuditLog
-from .permissions import IsAdminUser, CanReadAuditLogs
+from .permissions import CanAccessMonitoring, CanReadAuditLogs
 from .serializers import ApiLogSerializer, AuditLogSerializer
-from .services import (paginate, filter_dates, columns_for, table_records, table_info,
-                       get_record, record_data, change_record)
-from .registry import DB_TABLE_REGISTRY
+from .services import (paginate, filter_dates, columns_for, table_records,
+                       get_record, record_data, change_record, table_queryset)
+from .registry import DB_TABLE_REGISTRY, TABLE_RESOURCES
+from apps.roles.permissions import has_permission
 
 class AdminView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated, CanAccessMonitoring]
 
 class ApiLogsView(AdminView):
     def get(self, request):
@@ -56,31 +56,25 @@ class AuditLogsView(AdminView):
 
 class DbTablesView(AdminView):
     def get(self, request):
-        # One statement keeps exact counts fresh without one round trip per table.
-        counts_sql = ' UNION ALL '.join(
-            f'SELECT %s AS table_key, COUNT(*) AS row_count FROM {connection.ops.quote_name(info["model"]._meta.db_table)}'
-            for info in DB_TABLE_REGISTRY.values()
-        )
-        with connection.cursor() as cursor:
-            cursor.execute(counts_sql, list(DB_TABLE_REGISTRY))
-            counts = dict(cursor.fetchall())
         result = []
         for key, info in DB_TABLE_REGISTRY.items():
+            if not has_permission(request.user, TABLE_RESOURCES.get(key, 'Database Explorer'), 'View'):
+                continue
             model = info['model']
             columns = columns_for(model)
             names = {column['name'] for column in columns}
             result.append(dict(table_key=key, display_name=info['display_name'], category=info['category'],
-                icon=info['icon'], row_count=counts[key], columns=columns,
+                icon=info['icon'], row_count=table_queryset(key, request.user).count(), columns=columns,
                 default_fields=[name for name in info['default_fields'] if name in names]))
         return Response(result)
 
 class DbTableDetailView(AdminView):
     def get(self, request, table_name):
-        return Response(table_records(table_name, request.query_params))
+        return Response(table_records(table_name, request.query_params, request.user))
 
 class DbRecordView(AdminView):
     def get(self, request, table_name, record_id):
-        return Response(dict(table_key=table_name, record_id=record_id, data=record_data(get_record(table_name, record_id), deep=True)))
+        return Response(dict(table_key=table_name, record_id=record_id, data=record_data(get_record(table_name, record_id, request.user), deep=True)))
     def put(self, request, table_name, record_id):
         return Response(change_record(request, table_name, record_id))
     patch = put

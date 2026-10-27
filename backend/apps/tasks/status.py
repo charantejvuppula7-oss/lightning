@@ -29,6 +29,7 @@ class TaskStatusView(APIView):
 
     def patch(self, request, task_id):
         require_permission(request.user, 'Tasks', 'View')
+        require_permission(request.user, 'Tasks', 'Edit')
         values = request.data.copy()
         if 'links' in values and isinstance(values['links'], str):
             try:

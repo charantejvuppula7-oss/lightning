@@ -1,33 +1,14 @@
-"""
-Admin Panel Permissions
-~~~~~~~~~~~~~~~~~~~~~~~
-
-Reusable DRF permission class that gates every admin endpoint exclusively
-to authenticated, active Administrator accounts.
-"""
+"""Unlisted monitoring features are available to active authenticated users."""
 
 from rest_framework.permissions import BasePermission
-from apps.roles.permissions import is_admin, has_permission
-from django.utils.text import slugify
+from apps.roles.permissions import has_permission
 
 
-class IsAdminUser(BasePermission):
-    """
-    Allow access only to active Administrator users.
-
-    Any other authenticated user (Project Manager, Regular User, etc.)
-    or unauthenticated request is rejected with 403 Forbidden.
-    """
-
-    message = 'Administrator access required.'
-
+class CanAccessMonitoring(BasePermission):
     def has_permission(self, request, view):
-        return bool(request.user and is_admin(request.user))
+        return has_permission(request.user, 'Monitoring', 'View')
 
 
 class CanReadAuditLogs(BasePermission):
     def has_permission(self, request, view):
-        user = request.user
-        return bool(user and user.is_authenticated and user.account_status == 'active' and (
-            is_admin(user) or slugify(user.role) in ('pm', 'project-manager') or
-            has_permission(user, 'Audit Logs', 'View')))
+        return has_permission(request.user, 'Audit Logs', 'View')

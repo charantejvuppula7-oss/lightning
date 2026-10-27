@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from api.models import Role
-from apps.roles.permissions import MODULE_ACTIONS, is_admin, require_role_grant
+from apps.roles.permissions import MODULE_ACTIONS, canonical_permissions, is_admin, require_role_grant
 
 
 class RoleSerializer(serializers.ModelSerializer):
@@ -78,7 +78,7 @@ class RoleSerializer(serializers.ModelSerializer):
         if errors:
             raise serializers.ValidationError(errors)
         require_role_grant(self.context['request'].user, value)
-        return value
+        return canonical_permissions(value)
 
     def validate(self, attrs):
         """
@@ -95,5 +95,12 @@ class RoleSerializer(serializers.ModelSerializer):
         """
         if attrs.get('is_locked') and not is_admin(self.context['request'].user):
             raise PermissionDenied('Only an administrator can lock roles.')
+        if self.instance is None and 'permissions' not in attrs:
+            attrs['permissions'] = canonical_permissions({})
         return attrs
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['permissions'] = canonical_permissions(instance.permissions)
+        return data
 

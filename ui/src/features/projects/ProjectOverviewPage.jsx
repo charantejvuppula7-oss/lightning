@@ -67,7 +67,8 @@ export default function ProjectOverviewPage({ user }) {
       </button>)}</div>
       {!projects.length && <p>No matching projects.</p>}
       {project ? <>
-        <section><h2>Project Overview</h2><ProjectJourneyCard project={project}
+        {(role === 'admin' || hasSidebarPermission(user.permissions, 'ProjectJourney')) && <section><h2>Project Overview</h2><ProjectJourneyCard project={project}
+          showTimeline={role === 'admin' || hasSidebarPermission(user.permissions, 'MilestoneMap')}
           onAddFeature={(role === 'admin' || hasSidebarPermission(user?.permissions || {}, 'Features', 'Create')) ? () => setDialog('feature') : undefined}
           onAddMilestone={(role === 'admin' || hasSidebarPermission(user?.permissions || {}, 'Milestones', 'Create')) ? () => setDialog('milestone') : undefined}
           onAssignTask={(role === 'admin' || hasSidebarPermission(user?.permissions || {}, 'Tasks', 'Create')) ? assignTask : undefined}
@@ -75,7 +76,7 @@ export default function ProjectOverviewPage({ user }) {
           onExportProject={exportProject}
           onPauseResume={allowed('Edit') ? togglePause : undefined} isProjectPaused={project.status === 'Paused'}
           onDeleteProject={allowed('Delete') ? remove : undefined}
-        /></section>
+        /></section>}
         {dialog === 'task' && <CreateTaskDialog key={project.id} project={project} projects={projects} onClose={() => setDialog(null)} onCreated={refresh} />}
         {dialog === 'feature' && <AddFeatureModal isOpen user={user} milestones={project.milestones} onClose={() => setDialog(null)} onCreated={refresh} />}
         {dialog === 'milestone' && <AddMilestoneModal isOpen user={user} projectId={project.id} onClose={() => setDialog(null)} onCreated={refresh} />}
@@ -83,9 +84,9 @@ export default function ProjectOverviewPage({ user }) {
           ['Project manager', project.managers.map(person => person.name).join(', ')], ['Planned window', `${formatDate(project.start_date)} – ${formatDate(project.end_date)}`],
           ['Current Milestone', project.milestones[0]?.name || '—'], ['Client', project.customer || '—'], ['Blockers', project.blocker_count], ['Dependencies', project.dependency_count],
         ].map(([label, value]) => <article key={label}><span>{label}</span><strong>{value}</strong></article>)}</div></section>
-        <section className="pm-team"><h2>Team Member</h2><div>{project.members.map(person => <article key={person.id}>
+        {(role === 'admin' || hasSidebarPermission(user.permissions, 'TeamStatus')) && <section className="pm-team"><h2>Team Member</h2><div>{project.members.map(person => <article key={person.id}>
           <div className="project-member-avatar">{person.name.split(' ').map(part => part[0]).slice(0, 2).join('')}</div><div><strong>{person.name}</strong><small>{person.role || 'Team Member'}</small><small>{person.task_count} tasks</small></div>
-        </article>)}</div></section>
+        </article>)}</div></section>}
         <ProjectTasks key={`${project.id}-${taskRevision}`} project={project} />
       </> : <p>No projects available. Create a project to get started.</p>}
     </>}

@@ -169,7 +169,7 @@ export default function OverviewDashboard({ user }) {
                   className={"overview-charts" + " " + "grid! grid-cols-[repeat(2,_minmax(0,_1fr))]! gap-[18px]! mb-[18px]!"}
 
                 >
-                  <ProjectStatus projects={data.projects} />
+                  {can('ProjectPerformanceGraph', 'View') && <ProjectStatus projects={data.projects} />}
                   {can('TeamWorLoad', 'View') && <TeamWorkload projects={data.projects} />}
                 </div>
 

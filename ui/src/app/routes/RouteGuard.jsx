@@ -14,9 +14,7 @@ export default function ProtectedRoute({ children, allowedRoles, requiredPermiss
   const home = getRoleDashboard(user.role)
   const role = roleSlug(user.role)
   const modules = [requiredPermission?.module].flat().filter(Boolean)
-  const permitted = modules.some(module => module === 'Chat'
-    ? user.can_access_chat || hasSidebarPermission(user.permissions || {}, 'Projects', 'View')
-    : hasSidebarPermission(user.permissions || {}, module, requiredPermission.action))
+  const permitted = modules.some(module => hasSidebarPermission(user.permissions || {}, module, requiredPermission.action))
   const wrongDashboard = ['/admin/dashboard', '/pm/dashboard', '/user/dashboard'].includes(location.pathname) && location.pathname !== home
   const forbidden = !role || wrongDashboard ||
     (allowedRoles?.length && !allowedRoles.some((allowed) => roleSlug(allowed) === role)) ||

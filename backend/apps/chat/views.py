@@ -172,7 +172,7 @@ class ChatStreamView(APIView):
             """Fetch newly arrived chat messages after the active cursor position."""
             user = UserData.objects.select_related('role_link').filter(
                 pk=user_id, account_status='active').first()
-            if user is None or not has_permission(user, 'project', 'read') or not room.is_member(user):
+            if user is None or not has_permission(user, 'Chat', 'View') or not room.is_member(user):
                 raise PermissionDenied('Chat access denied.')
             messages = list(after_cursor(
                 ProjectChatMessage.objects.filter(room_id=room_id).select_related('sender__role_link', 'attachment').prefetch_related('reactions').annotate(reply_count=Count('replies')),

@@ -67,7 +67,7 @@ export default function DatabaseExplorerPage({ user }) {
       if (res.ok) {
         const data = await res.json();
         setTables(data);
-        if (data.length > 0 && !activeTableKey) {
+        if (data.length > 0 && !data.some(table => table.table_key === activeTableKey)) {
           setActiveTableKey(data[0].table_key);
         }
       }
@@ -474,7 +474,7 @@ export default function DatabaseExplorerPage({ user }) {
                                     visibility
                                   </span>
                                 </button>
-                                <button
+                                {tableData.can_edit !== false && <button
                                   type="button"
                                   onClick={() => handleOpenEdit(row)}
                                   className="[background:none]! border-0! [color:var(--color-primary)]! cursor-pointer! p-[4px]! rounded-[4px]! inline-flex! items-center! justify-center! [transition:color_0.15s_ease]!"
@@ -483,8 +483,8 @@ export default function DatabaseExplorerPage({ user }) {
                                   <span className={"material-symbols-outlined" + " " + "text-[16px]!"} >
                                     edit
                                   </span>
-                                </button>
-                                <button
+                                </button>}
+                                {tableData.can_delete !== false && <button
                                   type="button"
                                   onClick={() => handleOpenDelete(row)}
                                   className="[background:none]! border-0! [color:var(--color-danger)]! cursor-pointer! p-[4px]! rounded-[4px]! inline-flex! items-center! justify-center! [transition:color_0.15s_ease]!"
@@ -493,7 +493,7 @@ export default function DatabaseExplorerPage({ user }) {
                                   <span className={"material-symbols-outlined" + " " + "text-[16px]!"} >
                                     delete
                                   </span>
-                                </button>
+                                </button>}
                               </div>
                             </td>
                           </tr>

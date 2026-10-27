@@ -15,7 +15,7 @@ def get_chat_room(project_id, user, *, create=False):
     """
     Retrieve or initialize the ProjectChatRoom associated with a project.
 
-    Verifies user membership and project read permission.
+    Verifies an active account and project room membership.
 
     Args:
         project_id (UUID): Target project identifier.
@@ -29,7 +29,7 @@ def get_chat_room(project_id, user, *, create=False):
         NotFound: If project does not exist.
         PermissionDenied: If user is not an authorized member of the project.
     """
-    require_permission(user, 'project', 'read')
+    require_permission(user, 'Chat', 'View')
     project = Project.objects.filter(pk=project_id).first()
     if project is None:
         raise NotFound('Project not found.')

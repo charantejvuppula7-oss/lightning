@@ -98,11 +98,11 @@ const sidebarRoutes = [
     { path: `/${role}/dependencies`, module: 'Dependencies', page: user => <DependenciesPage user={user} /> },
     { path: `/${role}/chat`, module: 'Chat', page: user => <ChatPage user={user} /> },
     { path: `/${role}/roles-permissions`, module: 'Roles & permissions', page: user => <RolesPermissionsPage user={user} /> },
-    { path: `/${role}/approvals`, module: ['Tasks','Dependencies'], page: user => <ApprovalsPage user={user} /> },
+    { path: `/${role}/approvals`, module: 'Approvals', page: user => <ApprovalsPage user={user} /> },
   ]),
   { path: '/admin/all-projects', module: 'Projects', page: user => <ProjectOverviewPage user={user} /> },
   { path: '/user/projects', module: 'Projects', page: user => <ProjectsPage user={user} /> },
-  ...['pm', 'user'].map(role => ({ path: `/${role}/calendar`, module: 'Milestones', page: () => <CalendarPage /> })),
+  ...['pm', 'user'].map(role => ({ path: `/${role}/calendar`, module: 'Calendar', page: () => <CalendarPage /> })),
 ]
 const searchablePages = { Chat:ChatPage, Dependencies:DependenciesPage, 'Roles & permissions':RolesPermissionsPage }
 function SearchableFeatureRoute({ module }) {
@@ -134,33 +134,33 @@ export default function AppRoutes() {
       <Route path="/admin/notifications" element={<NotificationsRoute allowedRoles={['Administrator']} />} />
       <Route path="/tasks" element={<PermissionPageRoute module="Tasks">{(user) => <TasksPage user={user} />}</PermissionPageRoute>} />
       <Route path="/projects" element={<ProjectsRoute />} />
-      <Route path="/pm/projects" element={<ProtectedRoute allowedRoles={['Project Manager']}>
+      <Route path="/pm/projects" element={<ProtectedRoute allowedRoles={['Project Manager']} requiredPermission={{ module: 'Projects', action: 'View' }}>
         {(user) => <AppLayout user={user}><ProjectOverviewPage user={user} /></AppLayout>}
       </ProtectedRoute>} />
       <Route path="/projects/new" element={<ProjectCreateRoute />} />
       <Route path="/projects/:projectId/edit" element={<ProjectEditRoute />} />
       <Route path="/dependencies" element={<SearchableFeatureRoute module="Dependencies" />} />
-      <Route path="/calendar" element={<PermissionPageRoute module="Tasks"><CalendarPage /></PermissionPageRoute>} />
+      <Route path="/calendar" element={<PermissionPageRoute module="Calendar"><CalendarPage /></PermissionPageRoute>} />
       <Route path="/chat" element={<SearchableFeatureRoute module="Chat" />} />
-      <Route path="/pm/audit-logs" element={<ProtectedRoute allowedRoles={['Project Manager']}>{user => <AuditLogsPage user={user} />}</ProtectedRoute>} />
+      <Route path="/pm/audit-logs" element={<ProtectedRoute>{user => <AuditLogsPage user={user} />}</ProtectedRoute>} />
       <Route path="/user/audit-logs" element={<ProtectedRoute requiredPermission={{ module: 'Audit Logs', action: 'View' }}>{user => <AuditLogsPage user={user} />}</ProtectedRoute>} />
       <Route path="/admin/api-logs" element={
-        <ProtectedRoute allowedRoles={['Administrator']}>
+        <ProtectedRoute>
           {(user) => <ApiLogsPage user={user} />}
         </ProtectedRoute>
       } />
       <Route path="/admin/audit-logs" element={
-        <ProtectedRoute allowedRoles={['Administrator']}>
+        <ProtectedRoute>
           {(user) => <AuditLogsPage user={user} />}
         </ProtectedRoute>
       } />
       <Route path="/admin/db-explorer" element={
-        <ProtectedRoute allowedRoles={['Administrator']}>
+        <ProtectedRoute>
           {(user) => <DatabaseExplorerPage user={user} />}
         </ProtectedRoute>
       } />
       {sidebarRoutes.map(({ path, module, page }) => <Route key={path} path={path} element={searchablePages[module] ? <SearchableFeatureRoute module={module} /> : <PermissionPageRoute module={module}>{page}</PermissionPageRoute>} />)}
-      <Route path="/admin/database" element={<ProtectedRoute allowedRoles={['Administrator']}>{user => <DatabaseExplorerPage user={user} />}</ProtectedRoute>} />
+      <Route path="/admin/database" element={<ProtectedRoute>{user => <DatabaseExplorerPage user={user} />}</ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
     </Suspense>

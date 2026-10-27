@@ -65,12 +65,12 @@ export default function TaskMoreOption({ onEdit, onDelete, disabled = false, cla
       </div>
       {open && position && createPortal(
         <div ref={menuRef} className="task-more-option__menu" role="menu" style={position}>
-          <button type="button" className="task-more-option__item" role="menuitem" onClick={select(onEdit)}>
+          {onEdit && <button type="button" className="task-more-option__item" role="menuitem" onClick={select(onEdit)}>
             <span className="task-more-option__icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m16 4 4 4L8 20l-5 1 1-5L16 4Z" /><path d="M14 6l4 4M3 21h18" /></svg></span> Edit
-          </button>
-          <button type="button" className="task-more-option__item" role="menuitem" onClick={select(onDelete)}>
+          </button>}
+          {onDelete && <button type="button" className="task-more-option__item" role="menuitem" onClick={select(onDelete)}>
             <span className="task-more-option__icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v6m4-6v6" /></svg></span> Delete
-          </button>
+          </button>}
         </div>, document.body
       )}
     </>

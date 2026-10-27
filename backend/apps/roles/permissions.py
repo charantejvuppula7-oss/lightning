@@ -11,8 +11,6 @@ from api.models import Project, Role, UserData
 
 
 MODULE_ACTIONS = {
-    'Dashboard': ('View', 'Create', 'Edit', 'Delete'),
-    'Audit Logs': ('View', 'Create', 'Edit', 'Delete'),
     'Tasks': ('View', 'Create', 'Edit', 'Delete'),
     'Features': ('View', 'Create', 'Edit', 'Delete'),
     'Milestones': ('View', 'Create', 'Edit', 'Delete'),
@@ -34,6 +32,7 @@ RESOURCE_MODULES = {
     'task': 'Tasks', 'feature': 'Features', 'milestone': 'Milestones',
     'project': 'Projects', 'sprint': 'Projects', 'dependency': 'Dependencies',
     'user': 'User Management', 'role': 'Roles & permissions',
+    'document': 'Documents', 'department': 'Department Managment',
 }
 ACTION_NAMES = {'read': 'View', 'create': 'Create', 'update': 'Edit', 'delete': 'Delete'}
 
@@ -83,14 +82,25 @@ def permission_value(permissions, resource, action):
         action (str): The canonical action ('read', 'create', 'update', 'delete').
 
     Returns:
-        bool: True if explicitly granted with True, otherwise False.
+        bool: Unlisted modules are open; listed actions require an explicit True grant.
     """
     module = RESOURCE_MODULES.get(resource, resource)
+    normalize = lambda value: ''.join(character for character in str(value).lower() if character.isalnum()).replace('teamworload', 'teamworkload')
+    module = next((name for name in MODULE_ACTIONS if normalize(name) == normalize(module)), module)
     label = ACTION_NAMES.get(action, action)
-    if module not in MODULE_ACTIONS or label not in MODULE_ACTIONS[module]:
+    if module not in MODULE_ACTIONS:
+        return True
+    label = next((name for name in MODULE_ACTIONS[module] if name.lower() == str(label).lower()), label)
+    if label not in MODULE_ACTIONS[module]:
         return False
     values = permissions.get(module) if isinstance(permissions, dict) else None
     return isinstance(values, dict) and values.get(label) is True
+
+
+def canonical_permissions(permissions):
+    """Keep only the configured modules/actions, defaulting missing grants to false."""
+    return {module: {action: permission_value(permissions, module, action) for action in actions}
+            for module, actions in MODULE_ACTIONS.items()}
 
 
 def has_permission(user, resource, action):
@@ -108,11 +118,11 @@ def has_permission(user, resource, action):
         bool: True if authorized, False otherwise.
     """
     if (not user or not getattr(user, 'is_authenticated', False) or
-            getattr(user, 'account_status', None) != 'active' or not user.role_link_id):
+            getattr(user, 'account_status', None) != 'active'):
         return False
     if is_admin(user):
         return True
-    return permission_value(user.role_link.permissions, resource, action)
+    return permission_value(user.role_link.permissions if user.role_link_id else {}, resource, action)
 
 
 def effective_permissions(user):
@@ -131,9 +141,7 @@ def effective_permissions(user):
     if is_admin(user):
         return {module: {action: True for action in actions}
                 for module, actions in MODULE_ACTIONS.items()}
-    return {module: {action: permission_value(assigned, module, action)
-                     for action in actions}
-            for module, actions in MODULE_ACTIONS.items()}
+    return canonical_permissions(assigned)
 
 
 def require_permission(user, resource, action, project=None):

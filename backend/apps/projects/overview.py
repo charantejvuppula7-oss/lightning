@@ -81,8 +81,8 @@ class DashboardOverviewView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        require_permission(request.user, 'Projects', 'View')
-        projects = project_overview(request.user)
+        require_permission(request.user, 'Dashboard', 'View')
+        projects = project_overview(request.user) if has_permission(request.user, 'Projects', 'View') else []
         selected = None
         if request.query_params.get('project'):
             project_id = serializers.UUIDField().run_validation(request.query_params['project'])

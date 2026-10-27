@@ -80,7 +80,7 @@ function TaskList({
             onTaskDelete={onTaskDelete}
             canEditTask={canEditTask}
             canDeleteTask={canDeleteTask}
-            isAssignedUser={Boolean(task.assignedTo?.some((assignee) =>
+            isAssignedUser={canEditTask && Boolean(task.assignedTo?.some((assignee) =>
               (currentUserId && assignee.id && String(assignee.id) === String(currentUserId)) ||
               currentUserNames.some((name) => String(name).toLowerCase() === String(assignee.name || "").toLowerCase())
             ))}

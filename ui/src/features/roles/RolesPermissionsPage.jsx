@@ -4,9 +4,10 @@ import { apiList, apiRequest, errorMessage } from '../../shared/api/apiClient.js
 import { hasSidebarPermission } from '../../layouts/sidebarNavigation.js'
 import { roleSlug } from '../../shared/utils/roles.js'
 import { useFeedback } from '../../shared/components/Feedback.jsx'
+import { permissionSchema } from '../../shared/utils/permissions.js'
 
-const modules = ['Dashboard','Tasks','Features','Milestones','Reports','Projects','Documents','Dependencies','Audit Logs','User Management','Roles & permissions','Department Managment','TeamWorLoad','ProjectJourney','ProjectPerformanceGraph','recentActvities']
-const labels = { 'Roles & permissions':'Roles & Permissions', 'Department Managment':'Department Management', TeamWorLoad:'Team Workload', ProjectJourney:'Project Journey', ProjectPerformanceGraph:'Project Performance Graph', recentActvities:'Recent Activities' }
+const modules = Object.keys(permissionSchema)
+const labels = { 'Roles & permissions':'Roles & Permissions', 'Department Managment':'Department Management', TeamWorLoad:'Team Workload', ProjectJourney:'Project Journey', ProjectPerformanceGraph:'Project Performance Graph', MilestoneMap:'Milestone Map', TeamStatus:'Team Status', recentActvities:'Recent Activities' }
 const actions = ['View','Create','Edit','Delete']
 
 export default function RolesPermissionsPage({ user, searchQuery = '' }) {

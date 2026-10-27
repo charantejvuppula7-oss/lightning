@@ -3,16 +3,19 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from uuid import UUID
 from functools import lru_cache
+from copy import copy
 
 from django.core.exceptions import ValidationError as ModelValidationError
 from django.db import transaction, connection
 from django.db.models import Q, ProtectedError
 from django.utils.dateparse import parse_date
 from django.utils import timezone
-from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
 from apps.audit.services import LogService
-from .registry import DB_TABLE_REGISTRY
+from .registry import DB_TABLE_REGISTRY, TABLE_RESOURCES
+from apps.roles.permissions import (allowed_projects, has_permission, is_admin, require_permission,
+    require_object_access, require_project_scope, require_user_relationships, scope_queryset)
 
 HIDDEN_FIELDS = {'password', 'session_key'}
 
@@ -120,10 +123,27 @@ def record_data(obj, deep=False):
     return data
 
 
-def table_records(key, params):
+def table_queryset(key, user):
+    model = table_info(key)['model']
+    resource = TABLE_RESOURCES.get(key, 'Database Explorer')
+    require_permission(user, resource, 'View')
+    queryset = compatible_queryset(model)
+    if is_admin(user):
+        return queryset
+    if key == 'user_skills':
+        from api.models import UserData
+        return queryset.filter(person__in=scope_queryset(user, 'user', UserData.objects.all()))
+    if key == 'chat_messages':
+        return queryset.filter(room__project__in=allowed_projects(user))
+    if resource in ('role', 'department', 'Database Explorer'):
+        return queryset
+    return scope_queryset(user, resource, queryset)
+
+
+def table_records(key, params, user):
     info = table_info(key)
     model = info['model']
-    queryset = compatible_queryset(model)
+    queryset = table_queryset(key, user)
     valid = {f.name for f in fields_for(model)}
     search = params.get('search', '').strip()
     if search:
@@ -142,21 +162,29 @@ def table_records(key, params):
     direction = '-' if params.get('sort_dir', 'asc') == 'desc' else ''
     queryset = queryset.order_by(direction + sort, model._meta.pk.name)
     records, pagination = paginate(queryset, params, default=25, maximum=100)
+    resource = TABLE_RESOURCES.get(key, 'Database Explorer')
     return dict(table_key=key, display_name=info['display_name'], columns=columns_for(model),
+                can_edit=has_permission(user, resource, 'Edit'), can_delete=has_permission(user, resource, 'Delete'),
                 rows=[record_data(obj) for obj in records], pagination=pagination)
 
 
-def get_record(key, record_id):
+def get_record(key, record_id, user):
     model = table_info(key)['model']
     try:
-        return compatible_queryset(model).get(pk=record_id)
+        return table_queryset(key, user).get(pk=record_id)
     except (model.DoesNotExist, ModelValidationError, ValueError):
         raise NotFound('Record not found.')
 
 
 @transaction.atomic
 def change_record(request, key, record_id, deleting=False):
-    obj = get_record(key, record_id)
+    resource = TABLE_RESOURCES.get(key, 'Database Explorer')
+    action = 'delete' if deleting else 'update'
+    require_permission(request.user, resource, action)
+    obj = get_record(key, record_id, request.user)
+    if key != 'user_skills':
+        require_object_access(request.user, resource, action, obj, request.data)
+    original = copy(obj)
     if key == 'users' and obj.pk == request.user.pk and deleting:
         raise ValidationError('Cannot delete your own active administrator account.')
     before = record_data(obj)
@@ -165,6 +193,13 @@ def change_record(request, key, record_id, deleting=False):
             LogService.log_audit_event(actor=request.user, action='deleted', entity_type=key,
                                        entity=obj, request=request, old_values=before)
             obj.delete()
+        elif key == 'roles':
+            from apps.roles.serializers import RoleSerializer
+            serializer = RoleSerializer(obj, data=request.data, partial=True, context={'request': request})
+            serializer.is_valid(raise_exception=True)
+            obj = serializer.save()
+            LogService.log_audit_event(actor=request.user, action='updated', entity_type=key,
+                                       entity=obj, request=request, old_values=before, new_values=record_data(obj))
         else:
             missing = missing_fields(type(obj))
             allowed = {f.name: f for f in obj._meta.fields if not f.primary_key and not f.auto_created
@@ -191,6 +226,8 @@ def change_record(request, key, record_id, deleting=False):
                     continue
                 if name not in allowed:
                     raise ValidationError({name: 'Field cannot be edited.'})
+                if not is_admin(request.user) and name in ('created_by', 'updated_by', 'uploaded_by', 'sender', 'room'):
+                    raise PermissionDenied('Record ownership cannot be changed here.')
                 field = allowed[name]
                 if name == 'password':
                     if value:
@@ -200,6 +237,22 @@ def change_record(request, key, record_id, deleting=False):
                 else:
                     setattr(obj, name, field.to_python(None if value == '' and field.null else value))
                 changed.append(name)
+            if key == 'users':
+                require_user_relationships(request.user, {name: getattr(obj, name) for name in changed}, original)
+            if key == 'dependencies':
+                from apps.dependencies.serializers import can_manage_dependency
+                if not can_manage_dependency(request.user, obj.task):
+                    raise PermissionDenied('Only the task owner or project manager can edit dependency assignments.')
+            if key == 'user_skills':
+                from api.models import UserData
+                if not scope_queryset(request.user, 'user', UserData.objects.all()).filter(pk=obj.person_id).exists():
+                    raise PermissionDenied('User outside your scope.')
+            if not is_admin(request.user) and resource in ('task', 'sprint', 'milestone', 'document'):
+                require_project_scope(request.user, obj.project)
+            elif not is_admin(request.user) and resource == 'feature':
+                require_project_scope(request.user, obj.Milestone.project)
+            elif not is_admin(request.user) and resource == 'dependency':
+                require_project_scope(request.user, obj.task.project)
             obj.full_clean(exclude=missing)
             if hasattr(obj, 'updated_at'):
                 changed.append('updated_at')

@@ -101,8 +101,7 @@ class ApprovalListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not (has_permission(request.user, 'Tasks', 'View') or has_permission(request.user, 'Dependencies', 'View')):
-            raise PermissionDenied('Access denied.')
+        require_permission(request.user, 'Approvals', 'View')
         project = None
         if request.query_params.get('project'):
             project_id = serializers.UUIDField().run_validation(request.query_params['project'])
