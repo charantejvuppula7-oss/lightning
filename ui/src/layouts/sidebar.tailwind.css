@@ -1,12 +1,12 @@
 @utility app-sidebar {
   & .material-symbols-outlined {
-    @apply text-[20px];
+    @apply text-[18px];
     @apply leading-[1];
   }
   & .sidebar-icon {
-    @apply w-[20px];
-    @apply h-[20px];
-    @apply [flex:0_0_20px];
+    @apply w-[18px];
+    @apply h-[18px];
+    @apply [flex:0_0_18px];
     @apply [color:var(--color-slate-500)];
   }
   & .active .sidebar-icon {

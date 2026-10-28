@@ -2,14 +2,14 @@ import { hasPermission } from '../shared/utils/permissions.js'
 
 const ADMIN_MENU_ITEMS = [
   { icon: "space_dashboard", label: "Overview", path: "/admin/dashboard" },
-  { icon: "folder_open", label: "All Projects & PMs", path: "/admin/all-projects", permission: "Projects" },
+  { icon: "folder_open", label: "Projects", path: "/admin/all-projects", permission: "Projects" },
   { icon: "assignment_turned_in", label: "Tasks", path: "/admin/tasks", permission: "Tasks" },
   { icon: "account_tree", label: "Dependencies", path: "/admin/dependencies", permission: "Dependencies" },
   { icon: "chat", label: "Project Chat", path: "/admin/chat", permission: "Chat" },
   { icon: "fact_check", label: "Approvals", path: "/admin/approvals" },
   { icon: "monitoring", label: "Workload", path: "/admin/workload", permission: "TeamWorLoad" },
   { icon: "description", label: "Documents", path: "/admin/documents", permission: "Documents" },
-  { icon: "group", label: "Users & Accounts", path: "/admin/users", permission: "User Management" },
+  { icon: "group", label: "Users", path: "/admin/users", permission: "User Management" },
   { icon: "admin_panel_settings", label: "Roles & Permissions", path: "/admin/roles-permissions", permission: "Roles & permissions" },
   { icon: "database", label: "Database Explorer", path: "/admin/database" },
   { icon: "history", label: "Audit Logs", path: "/admin/audit-logs" },

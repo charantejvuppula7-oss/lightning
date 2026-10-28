@@ -44,7 +44,7 @@ function SidebarIcon({ name, role }) {
 
   if (!useCustomIcon) {
     return (
-      <span className="material-symbols-outlined sidebar-icon" aria-hidden="true">
+      <span className="material-symbols-outlined sidebar-icon" style={{ fontSize: '18px' }} aria-hidden="true">
         {materialIcons[name] || name}
       </span>
     )
@@ -102,7 +102,7 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
       setLoggingOut(false)
     }
   }
-  const sidebarWidth = isCollapsed ? "68px" : effectiveRole === "admin" ? "240px" : "220px";
+  const sidebarWidth = isCollapsed ? "68px" : "220px";
   const sidebarPadding = isCollapsed
     ? effectiveRole === "admin"
       ? "20px 8px"
@@ -110,15 +110,25 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
     : effectiveRole === "admin"
       ? "20px 16px"
       : "16px 14px";
+  const sidebarStyle = {
+    width: sidebarWidth,
+    minWidth: sidebarWidth,
+    maxWidth: sidebarWidth,
+    height: '100dvh',
+    minHeight: '100dvh',
+    maxHeight: '100dvh',
+    padding: sidebarPadding,
+    boxSizing: 'border-box',
+    flexShrink: 0,
+    fontFamily: 'Inter, sans-serif',
+    fontSize: effectiveRole === 'admin' ? '13px' : '14px',
+    lineHeight: 1.5,
+  };
 
   return (
     <div
       className={`app-sidebar ${effectiveRole}-sidebar` + " " + "[transition:width_0.25s_cubic-bezier(0.4,_0,_0.2,_1),_padding_0.25s_ease]! [background:var(--color-white)]! [border-right:1px_solid_var(--color-slate-200)]! flex! flex-col! shrink-0! box-border! h-dvh! max-h-[100dvh]! min-h-0! sticky! top-[0]! [align-self:flex-start]! overflow-hidden! z-[50]! [font-family:'Inter',_sans-serif]!"}
-      style={{
-  width: sidebarWidth,
-  minWidth: sidebarWidth,
-  padding: sidebarPadding
-}}
+      style={sidebarStyle}
     >
 
       {/* Top Header: Logo + Toggle Button */}
@@ -136,8 +146,8 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
               src={lightningIcon}
               alt="Lightning PDPM"
               className="object-contain! block! shrink-0!" style={{
-  width: effectiveRole === "admin" ? "30px" : "26px",
-  height: effectiveRole === "admin" ? "30px" : "26px",
+  width: "20px",
+  height: "20px",
   borderRadius: effectiveRole === "admin" ? "6px" : "4px"
 }}
             />
@@ -173,7 +183,7 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
   marginRight: isCollapsed ? 0 : "-6px"
 }}
         >
-          <span className={"material-symbols-outlined" + " " + "text-[20px]!"} >
+          <span className={"material-symbols-outlined" + " " + "text-[18px]!"} >
             {isCollapsed ? "chevron_right" : "chevron_left"}
           </span>
         </button>
@@ -207,6 +217,8 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
               title={isCollapsed ? item.label : ""}
               style={{
   padding: isCollapsed ? "10px 0" : "10px 12px",
+  lineHeight: "20px",
+  fontFamily: "inherit",
   justifyContent: isCollapsed ? "center" : "flex-start",
   fontSize: effectiveRole === "admin" ? "13px" : "14px",
   fontWeight: active ? "600" : "500",
@@ -256,7 +268,7 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
           <span
             className="material-symbols-outlined"
             style={{
-              fontSize: `${effectiveRole === "admin" ? 19 : 20}px`,
+              fontSize: "18px",
               color: effectiveRole === "admin" ? "var(--color-danger-dark)" : "var(--color-slate-800)",
             }}
             aria-hidden="true"
