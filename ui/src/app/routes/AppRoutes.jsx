@@ -139,25 +139,25 @@ export default function AppRoutes() {
       <Route path="/dependencies" element={<SearchableFeatureRoute module="Dependencies" />} />
       <Route path="/calendar" element={<PermissionPageRoute module="Calendar"><CalendarPage /></PermissionPageRoute>} />
       <Route path="/chat" element={<SearchableFeatureRoute module="Chat" />} />
-      <Route path="/pm/audit-logs" element={<ProtectedRoute>{user => <AuditLogsPage user={user} />}</ProtectedRoute>} />
-      <Route path="/user/audit-logs" element={<ProtectedRoute requiredPermission={{ module: 'Audit Logs', action: 'View' }}>{user => <AuditLogsPage user={user} />}</ProtectedRoute>} />
+      <Route path="/pm/audit-logs" element={<ProtectedRoute allowedRoles={['Administrator', 'Project Manager']}>{user => <AuditLogsPage user={user} />}</ProtectedRoute>} />
+      <Route path="/user/audit-logs" element={<ProtectedRoute allowedRoles={['Administrator', 'Project Manager']}>{user => <AuditLogsPage user={user} />}</ProtectedRoute>} />
       <Route path="/admin/api-logs" element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={['Administrator']}>
           {(user) => <ApiLogsPage user={user} />}
         </ProtectedRoute>
       } />
       <Route path="/admin/audit-logs" element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={['Administrator', 'Project Manager']}>
           {(user) => <AuditLogsPage user={user} />}
         </ProtectedRoute>
       } />
       <Route path="/admin/db-explorer" element={
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={['Administrator']}>
           {(user) => <DatabaseExplorerPage user={user} />}
         </ProtectedRoute>
       } />
       {sidebarRoutes.map(({ path, module, page }) => <Route key={path} path={path} element={searchablePages[module] ? <SearchableFeatureRoute module={module} /> : <PermissionPageRoute module={module}>{page}</PermissionPageRoute>} />)}
-      <Route path="/admin/database" element={<ProtectedRoute>{user => <DatabaseExplorerPage user={user} />}</ProtectedRoute>} />
+      <Route path="/admin/database" element={<ProtectedRoute allowedRoles={['Administrator']}>{user => <DatabaseExplorerPage user={user} />}</ProtectedRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>

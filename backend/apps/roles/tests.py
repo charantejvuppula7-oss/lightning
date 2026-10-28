@@ -7,7 +7,7 @@ from django.db import connection
 from django.test import SimpleTestCase, TestCase
 from rest_framework.test import APIClient
 
-from api.models import Project, Role, Skill, Task, UserData
+from api.models import Project, Role, Task, UserData
 from apps.roles.permissions import MODULE_ACTIONS, canonical_permissions, has_permission, permission_value
 
 
@@ -54,7 +54,7 @@ class RoleAccessTests(TestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_unlisted_features_are_accessible_but_listed_resources_remain_denied(self):
-        for path in ('/api/api-logs/', '/api/audit-logs/', '/api/approvals/', '/api/overview/',
+        for path in ('/api/approvals/', '/api/overview/',
                      f'/api/projects/{self.project.pk}/chat/messages/'):
             response = self.client.get(path)
             self.assertEqual(response.status_code, 200, (path, response.data))
@@ -65,19 +65,34 @@ class RoleAccessTests(TestCase):
         role = self.client.get(f'/api/roles/{self.role.pk}/')
         self.assertEqual(set(role.data['permissions']), set(MODULE_ACTIONS))
 
-    def test_database_explorer_cannot_bypass_listed_permissions_or_grant_new_privileges(self):
-        tables = self.client.get('/api/admin/database/tables/')
-        self.assertEqual(tables.status_code, 200, tables.data)
-        self.assertNotIn('tasks', {row['table_key'] for row in tables.data})
-        self.assertEqual(self.client.get('/api/admin/database/table/tasks/').status_code, 403)
-        blocked = self.client.delete('/api/admin/database/table/resources/00000000-0000-0000-0000-000000000001/')
-        self.assertEqual(blocked.status_code, 403, blocked.data)
-        escalation = self.client.patch(f'/api/admin/database/table/roles/{self.role.pk}/',
-            {'permissions': {'Tasks': {'Delete': True}}}, format='json')
-        self.assertEqual(escalation.status_code, 403, escalation.data)
-        skill = Skill.objects.create(name='Original skill')
-        changed = self.client.patch(f'/api/admin/database/table/skills/{skill.pk}/', {'name': 'Updated skill'}, format='json')
-        self.assertEqual(changed.status_code, 200, changed.data)
+    def test_monitoring_pages_follow_role_limits_even_with_full_permission_grants(self):
+        from apps.admin_panel.permissions import CanAccessMonitoring, CanReadAuditLogs
+
+        admin_only = ('/api/api-logs/', '/api/admin/logs/api/', '/api/admin/database/tables/',
+            '/api/admin/db/tables/', '/api/admin/database/table/skills/', '/api/admin/db/tables/skills/')
+        audit = ('/api/audit-logs/', '/api/admin/logs/audit/')
+        self.role.permissions = {module: {action: True for action in actions} for module, actions in MODULE_ACTIONS.items()}
+        self.role.permissions['Audit Logs'] = {'View': True}
+        for name, admin, pm in [('Custom role', False, False), ('Developer', False, False),
+                                ('PM', False, True), ('Project Manager', False, True),
+                                ('Project_Manager', False, True), ('Admin', True, False), ('Administrator', True, False)]:
+            self.role.name = name
+            self.role.save(update_fields=['name', 'permissions'])
+            for path in admin_only + audit:
+                with self.subTest(role=name, path=path):
+                    expected = 200 if admin or (pm and path in audit) else 403
+                    response = self.client.get(path)
+                    self.assertEqual(response.status_code, expected, response.data)
+            if not admin:
+                path = f'/api/admin/database/table/roles/{self.role.pk}/'
+                self.assertEqual(self.client.patch(path, {'description': 'No access'}, format='json').status_code, 403)
+                self.assertEqual(self.client.delete(path).status_code, 403)
+        self.user.account_status = 'inactive'
+        request = SimpleNamespace(user=self.user)
+        self.assertFalse(CanAccessMonitoring().has_permission(request, None))
+        self.assertFalse(CanReadAuditLogs().has_permission(request, None))
+        self.client.force_authenticate(user=None)
+        self.assertEqual(self.client.get('/api/api-logs/').status_code, 401)
 
     def test_project_membership_still_limits_database_records(self):
         self.role.permissions['Tasks'] = {'View': True}
@@ -87,8 +102,10 @@ class RoleAccessTests(TestCase):
             email='other-policy@example.com', password='unused', date_of_joining=date(2025, 1, 1), role_link=other_role)
         private = Project.objects.create(project_name='Private project', created_by=owner)
         task = Task.objects.create(project=private, assigned_to=owner, Task_Name='Private task', description='')
-        response = self.client.get(f'/api/admin/database/table/tasks/{task.pk}/')
-        self.assertEqual(response.status_code, 404, response.data)
+        from rest_framework.exceptions import NotFound
+        from apps.admin_panel.services import get_record
+        with self.assertRaises(NotFound):
+            get_record('tasks', task.pk, self.user)
 
     def test_calendar_stays_accessible_without_exposing_denied_resources(self):
         Task.objects.create(project=self.project, assigned_to=self.user, Task_Name='Hidden task', description='', Due_Date=date(2026, 11, 5))

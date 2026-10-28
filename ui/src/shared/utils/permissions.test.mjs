@@ -41,9 +41,16 @@ test('all non-admin menus enforce listed modules while exposing unlisted pages',
     const denied = sidebarItems(role, {})
     for (const suffix of ['/tasks', '/dependencies', '/documents', '/workload', '/roles-permissions'])
       assert.ok(!denied.some(item => item.path.endsWith(suffix)), `${role}: ${suffix}`)
-    for (const suffix of ['/chat', '/approvals', '/calendar', '/audit-logs', '/api-logs', '/database'])
+    for (const suffix of ['/chat', '/approvals', '/calendar'])
       assert.ok(denied.some(item => item.path.endsWith(suffix)), `${role}: ${suffix}`)
+    for (const suffix of ['/api-logs', '/database']) assert.ok(!denied.some(item => item.path.endsWith(suffix)))
+    assert.equal(denied.some(item => item.path.endsWith('/audit-logs')), role === 'pm')
     const allowed = sidebarItems(role, { Tasks: { View: true }, Dependencies: { View: true }, Documents: { View: true } })
     for (const suffix of ['/tasks', '/dependencies', '/documents']) assert.ok(allowed.some(item => item.path.endsWith(suffix)))
   }
+})
+
+test('administrators retain all monitoring navigation entries', () => {
+  for (const suffix of ['/api-logs', '/database', '/audit-logs'])
+    assert.ok(sidebarItems('admin').some(item => item.path.endsWith(suffix)))
 })

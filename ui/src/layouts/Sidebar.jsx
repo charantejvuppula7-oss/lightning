@@ -9,7 +9,6 @@ import lightningIcon from '../assets/lightning-icon.png'
 // Navigation behavior is colocated with the sidebar so role access stays easy to review.
 /* eslint-disable react-refresh/only-export-components */
 
-const ADMIN_TOOL_PATHS = new Set(['/admin/database', '/admin/api-logs'])
 const ROLE_PREFIXES = { admin: 'admin', pm: 'pm', user: 'user' }
 const BASE_ROUTE_ALIASES = new Set(['/admin', '/pm', '/dashboard'])
 
@@ -17,9 +16,7 @@ export const hasSidebarPermission = hasPermission
 
 export function sidebarItems(role, permissions = {}) {
   const roleItems = role === 'admin' ? ADMIN_MENU_ITEMS : role === 'pm' ? PM_MENU_ITEMS : USER_MENU_ITEMS
-  const adminTools = role === 'admin' ? [] : ADMIN_MENU_ITEMS.filter(item => ADMIN_TOOL_PATHS.has(item.path))
-
-  return [...roleItems, ...adminTools].filter(item => (
+  return roleItems.filter(item => (
     role === 'admin' || !item.permission || hasSidebarPermission(permissions, item.permission)
   ))
 }
@@ -91,7 +88,6 @@ const USER_MENU_ITEMS = [
   { id: 'approvals', label: 'Approvals', path: '/user/approvals', icon: 'fact_check', permission: 'Approvals' },
   { id: 'calendar', label: 'Calendar', path: '/user/calendar', icon: 'calendar' },
   { id: 'documents', label: 'Document', path: '/user/documents', icon: 'document', permission: 'Documents' },
-  { id: 'audit-logs', label: 'Audit Logs', path: '/user/audit-logs', icon: 'history', permission: 'Audit Logs' },
   { id: 'users', label: 'Users', path: '/user/users', icon: 'group', permission: 'User Management' },
   { id: 'roles-permissions', label: 'Roles & Permissions', path: '/user/roles-permissions', icon: 'admin_panel_settings', permission: 'Roles & permissions' },
   { id: 'workload', label: 'Workload', path: '/user/workload', icon: 'monitoring', permission: 'TeamWorLoad' },
