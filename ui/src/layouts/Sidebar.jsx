@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { logout } from '../features/auth/api/authApi.js'
 import { hasPermission } from '../shared/utils/permissions.js'
 import useAppVersion from '../shared/hooks/useAppVersion.js'
 import lightningLogoLight from '../assets/lightning-logo-light.png'
 import lightningIcon from '../assets/lightning-icon.png'
+import { notificationService } from '../features/notifications/notificationService.js'
+import { useProjectSelection } from '../features/projects/useProjectSelection.js'
 
 // Navigation behavior is colocated with the sidebar so role access stays easy to review.
 /* eslint-disable react-refresh/only-export-components */
@@ -165,6 +167,21 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
   const version = useAppVersion()
   const isLoadingVersion = false
   const menuItems = sidebarItems(effectiveRole, permissions, canAccessChat)
+  const { selectedProjectId } = useProjectSelection()
+  const [projectCounts, setProjectCounts] = useState({})
+  useEffect(() => {
+    let active = true
+    const update = page => { if (active) setProjectCounts(page.sidebar_counts || {}) }
+    const unsubscribe = notificationService.subscribe(update)
+    notificationService.getSnapshot().then(update).catch(() => {})
+    return () => { active = false; unsubscribe() }
+  }, [])
+  const counts = selectedProjectId && selectedProjectId !== 'all'
+    ? projectCounts[selectedProjectId] || {}
+    : Object.values(projectCounts).reduce((total, project) => {
+      for (const [key, count] of Object.entries(project)) total[key] = (total[key] || 0) + count
+      return total
+    }, {})
   const handleToggle = () => {
     if (onToggle) return onToggle()
     setInternalCollapsed(previous => {
@@ -320,7 +337,7 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
                   <span className="whitespace-nowrap! overflow-hidden! text-ellipsis! flex-1!">
                     {item.label}
                   </span>
-
+                  {counts[item.permission || item.label] > 0 && <span aria-label={`${counts[item.permission || item.label]} pending ${item.label}`} className="inline-flex h-[20px] min-w-[20px] shrink-0 items-center justify-center rounded-full bg-[#fef2f2] px-[5px] text-[11px] font-semibold text-red-600">{counts[item.permission || item.label]}</span>}
                 </>
               )}
             </div>

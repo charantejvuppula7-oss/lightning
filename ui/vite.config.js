@@ -10,5 +10,8 @@ const buildOutput = resolve(tmpdir(), 'company_2-ui-build')
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: { outDir: buildOutput, emptyOutDir: true },
-  server: { proxy: { '/api': 'http://localhost:8000' } },
+  server: { proxy: {
+    '/api/socket.io': { target: 'http://localhost:8000', ws: true },
+    '/api': 'http://localhost:8000',
+  } },
 })

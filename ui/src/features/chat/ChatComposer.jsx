@@ -1,5 +1,6 @@
 import { useImperativeHandle, useRef, useState } from 'react'
-import { apiRequest, apiUpload, errorMessage } from '../../shared/api/apiClient.js'
+import { apiUpload, errorMessage } from '../../shared/api/apiClient.js'
+import { chatRequest } from './chatConnection.js'
 import { Avatar, FileIcon } from './ChatElements.jsx'
 
 async function compressImage(file) {
@@ -17,7 +18,7 @@ async function compressImage(file) {
 
 const emojiChoices = [0x1f642,0x1f44d,0x1f389,0x2705,0x1f64f,0x1f44f,0x1f680,0x2764].map(value => String.fromCodePoint(value))
 
-export default function ChatComposer({ projectId, parentId, onSent, canUpload, members, ref, disabled = false }) {
+export default function ChatComposer({ projectId, parentId, onSent, canUpload, members, socket, ref, disabled = false }) {
   const [text,setText] = useState('')
   const [attachment,setAttachment] = useState(null)
   const [saving,setSaving] = useState(false)
@@ -51,9 +52,9 @@ export default function ChatComposer({ projectId, parentId, onSent, canUpload, m
         const document=await apiUpload('/documents/',form); documentId=document.id
         setAttachment(previous => previous && {...previous,documentId})
       }
-      const message=await apiRequest(`/projects/${projectId}/chat/messages/`,{method:'POST',body:{content:text.trim(),client_id:pendingId.current.id,...(parentId ? {parent_message_id:parentId}:{}),...(documentId ? {attachment_id:documentId}:{})}})
+      const {message}=await chatRequest(socket,'send_message',{projectId,content:text.trim(),client_id:pendingId.current.id,...(parentId ? {parent_message_id:parentId}:{}),...(documentId ? {attachment_id:documentId}:{})})
       onSent(message); setText(''); setAttachment(null); setMention(null); pendingId.current=null
-      apiRequest(`/projects/${projectId}/chat/typing/`,{method:'POST',body:{active:false}}).catch(() => {})
+      socket.emit('typing',{projectId,active:false})
       requestAnimationFrame(resize)
     } catch (error) { setError(errorMessage(error)) }
     finally { setSaving(false) }
@@ -65,7 +66,7 @@ export default function ChatComposer({ projectId, parentId, onSent, canUpload, m
     setMention(match ? {start:prefix.lastIndexOf('@'),end:caret,query:match[1]} : null)
     if (Date.now()-lastTyping.current > 1500 || !value) {
       lastTyping.current=Date.now()
-      apiRequest(`/projects/${projectId}/chat/typing/`,{method:'POST',body:{active:Boolean(value)}}).catch(() => {})
+      if (socket.connected) socket.emit('typing',{projectId,active:Boolean(value)})
     }
   }
   const keyDown = event => {

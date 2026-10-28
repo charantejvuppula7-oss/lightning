@@ -7,6 +7,7 @@ import { Avatar, PeopleIcon, PushPinIcon } from './ChatElements.jsx'
 import ChatMessage from './ChatMessage.jsx'
 import ChatComposer from './ChatComposer.jsx'
 import ChatSidebar from './ChatSidebar.jsx'
+import { createChatConnection, chatRequest } from './chatConnection.js'
 
 function dateLabel(value) {
   const date=new Date(value); const today=new Date(); const yesterday=new Date(); yesterday.setDate(today.getDate()-1)
@@ -14,13 +15,25 @@ function dateLabel(value) {
 }
 
 export default function ChatPage({ user,searchQuery = '' }) {
+  const [socket] = useState(createChatConnection)
+  useEffect(() => {
+    const reconnect = () => { if (!socket.connected) socket.connect() }
+    socket.connect()
+    window.addEventListener('online', reconnect)
+    window.addEventListener('focus', reconnect)
+    return () => {
+      window.removeEventListener('online', reconnect)
+      window.removeEventListener('focus', reconnect)
+      socket.disconnect()
+    }
+  }, [socket])
   const {projects,selectedProjectId} = useProjectSelection()
   const project=projects.find(project => project.id === selectedProjectId)
   if (!project) return <section className="p-[28px]!"><h1>Project Chat</h1><p>Select a project to open its conversation.</p></section>
-  return <ProjectChat key={project.id} project={project} user={user} searchQuery={searchQuery}/>
+  return <ProjectChat key={project.id} project={project} user={user} socket={socket} searchQuery={searchQuery}/>
 }
 
-function ProjectChat({ project,user,searchQuery }) {
+function ProjectChat({ project,user,socket,searchQuery }) {
   const {data:history,loading,error,reload} = useApiData(`/projects/${project.id}/chat/messages/?page_size=100&search=${encodeURIComponent(searchQuery)}`,{results:[],count:0})
   const {data:members} = useApiData(`/projects/${project.id}/chat/members/`,[])
   const [live,setLive] = useState([])
@@ -42,7 +55,7 @@ function ProjectChat({ project,user,searchQuery }) {
   const atBottom=useRef(true)
   const composer=useRef(null)
   const canUpload=['Admin','Administrator'].includes(user.role) || hasSidebarPermission(user.permissions || {},'Documents','Create')
-  const denied=Boolean(error) || connection === 'Chat access revoked.'
+  const denied=Boolean(error) || connection !== 'Live'
   const onlineIds=online || members.filter(person => person.online).map(person => person.id)
   const onlineCount=members.filter(person => onlineIds.includes(person.id)).length
   const messages=useMemo(() => {
@@ -51,24 +64,49 @@ function ProjectChat({ project,user,searchQuery }) {
     return [...unique.values()].filter(message => !searchQuery || `${message.content} ${message.sender_name} ${message.sender_display_name}`.toLowerCase().includes(searchQuery.toLowerCase())).sort((a,b) => new Date(a.created_at)-new Date(b.created_at))
   },[history.results,older,live,searchQuery])
   useEffect(() => {
-    const base=(import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/,'')
-    const stream=new EventSource(`${base}/projects/${project.id}/chat/stream/`,{withCredentials:true})
-    stream.onopen=() => { setConnection('Live'); reload() }
-    stream.onerror=() => setConnection('Reconnecting...')
-    stream.addEventListener('new_message',event => {
-      try { const message=JSON.parse(event.data); setLive(previous => [...previous,message]); if(message.parent_message) reload(); if(!atBottom.current) setNewBelow(true) }
-      catch { setConnection('Unable to read a live update. Refresh the conversation.') }
+    let active = true
+    const join = async () => {
+      setConnection('Connecting...')
+      try {
+        await chatRequest(socket, 'join_project', { projectId: project.id })
+        if (active) { setConnection('Live'); setLive([]); setReactions(null); reload() }
+      } catch (error) { if (active) setConnection(error.message) }
+    }
+    const created = ({ message, parent }) => {
+      setLive(previous => [...previous.filter(item => item.id !== message.id && item.id !== parent?.id), message, ...(parent ? [parent] : [])])
+      if (!atBottom.current) setNewBelow(true)
+    }
+    const presence = data => setOnline(data.online_ids)
+    const typingChanged = data => setTyping(previous => {
+      const remaining = previous.filter(person => person.user_id !== data.user_id)
+      return data.active && data.user_id !== String(user.id) ? [...remaining, data] : remaining
     })
-    stream.addEventListener('typing_changed',event => {
-      try { const data=JSON.parse(event.data); setTyping(data.users || []); setOnline(data.online_ids || []); setReactions(Object.fromEntries((data.reactions || []).map(item => [item.message_id,{count:item.count,reacted:item.reacted}]))) }
-      catch { setTyping([]) }
-    })
-    stream.addEventListener('access_revoked',() => { setConnection('Chat access revoked.'); stream.close() })
-    stream.addEventListener('stream_error',() => { setConnection('Connection interrupted. Refresh to reconnect.'); stream.close() })
-    const heartbeat=() => apiRequest(`/projects/${project.id}/chat/presence/`,{method:'POST',body:{}}).catch(() => {})
-    heartbeat(); const timer=setInterval(heartbeat,25000)
-    return () => { stream.close(); clearInterval(timer); apiRequest(`/projects/${project.id}/chat/presence/`,{method:'DELETE'}).catch(() => {}) }
-  },[project.id,reload])
+    const reactionChanged = data => setReactions(previous => ({ ...previous, [data.message_id]: { count: data.user_ids.length, reacted: data.user_ids.includes(String(user.id)) } }))
+    const disconnected = () => { setConnection('Reconnecting...'); setOnline([]); setTyping([]) }
+    const failed = error => setConnection(error.data?.message || 'Unable to connect. Please refresh to retry.')
+    const revoked = () => { setConnection('Chat access revoked.'); setLive([]); setOnline([]); setTyping([]) }
+    socket.on('connect', join)
+    socket.on('disconnect', disconnected)
+    socket.on('connect_error', failed)
+    socket.on('message_created', created)
+    socket.on('presence_changed', presence)
+    socket.on('typing_changed', typingChanged)
+    socket.on('reaction_changed', reactionChanged)
+    socket.on('access_revoked', revoked)
+    if (socket.connected) join()
+    return () => {
+      active = false
+      socket.off('connect', join)
+      socket.off('disconnect', disconnected)
+      socket.off('connect_error', failed)
+      socket.off('message_created', created)
+      socket.off('presence_changed', presence)
+      socket.off('typing_changed', typingChanged)
+      socket.off('reaction_changed', reactionChanged)
+      socket.off('access_revoked', revoked)
+      if (socket.connected) socket.emit('leave_project')
+    }
+  },[project.id,reload,socket,user.id])
   useEffect(() => { if(atBottom.current) bottom.current?.scrollIntoView({block:'nearest'}) },[messages.length])
   useLayoutEffect(() => {
     const previous=pendingScroll.current
@@ -110,12 +148,12 @@ function ProjectChat({ project,user,searchQuery }) {
         {(older.query === searchQuery ? older.next ?? history.next : history.next) && <button className="chat-load-older" onClick={loadOlder} disabled={loadingOlder}>{loadingOlder ? 'Loading...' : 'Scroll up for more'}</button>}
         {loading && <p role="status">Loading messages...</p>}{error && <p role="alert">{error} <button onClick={reload}>Retry</button></p>}
         {!loading && !messages.length && <div className="chat-empty"><span className="material-symbols-outlined">forum</span><p>{searchQuery ? 'No messages match your search.' : 'No messages yet - start the conversation!'}</p></div>}
-        {messages.map((message,index) => <div key={message.id}>{(!index || new Date(messages[index-1].created_at).toDateString() !== new Date(message.created_at).toDateString()) && <div className="chat-date-divider"><span>{dateLabel(message.created_at)}</span></div>}<ChatMessage message={message} user={user} members={members} projectId={project.id} reaction={reactions && (reactions[message.id] || {count:0,reacted:false})} onReactionUpdate={(id,result) => setReactions(previous => ({...previous,[id]:result}))} onReply={reply} onlineIds={onlineIds}/></div>)}<div ref={bottom}/>
+        {messages.map((message,index) => <div key={message.id}>{(!index || new Date(messages[index-1].created_at).toDateString() !== new Date(message.created_at).toDateString()) && <div className="chat-date-divider"><span>{dateLabel(message.created_at)}</span></div>}<ChatMessage message={message} user={user} members={members} projectId={project.id} socket={socket} reaction={reactions?.[message.id]} onReactionUpdate={(id,result) => setReactions(previous => ({...previous,[id]:result}))} onReply={reply} onlineIds={onlineIds}/></div>)}<div ref={bottom}/>
       </div>{newBelow && <button className="chat-jump-down" onClick={jumpDown}><span className="material-symbols-outlined">arrow_downward</span>New messages</button>}</div>
       <div className="chat-composer-area">{connection !== 'Live' && <small className="chat-connection" role="status">{connection}</small>}{typing.length > 0 && <small className="chat-typing">{typing.map(person => person.name).join(', ')} is typing...</small>}
-        <ChatComposer ref={composer} projectId={project.id} members={members} canUpload={canUpload} disabled={denied} onSent={message => { atBottom.current=true; setLive(previous => [...previous,message]) }}/>
+        <ChatComposer socket={socket} ref={composer} projectId={project.id} members={members} canUpload={canUpload} disabled={denied} onSent={message => { atBottom.current=true; setLive(previous => [...previous,message]) }}/>
       </div>
     </div>
-    {panelOpen && <ChatSidebar tab={activeTab} setTab={setActiveTab} onClose={() => {setPanelOpen(false);setParent(null)}} {...{project,parent,setParent,members,files,pinnedFiles,onlineIds,user,canUpload}} messagesCount={history.count} togglePin={id => setPinnedFiles(previous => previous.includes(id) ? previous.filter(value => value !== id) : [...previous,id])} onMention={mention} revision={live.length} disabled={denied}/>}
+    {panelOpen && <ChatSidebar tab={activeTab} setTab={setActiveTab} onClose={() => {setPanelOpen(false);setParent(null)}} {...{project,parent,setParent,members,files,pinnedFiles,onlineIds,user,canUpload,socket}} messagesCount={history.count} togglePin={id => setPinnedFiles(previous => previous.includes(id) ? previous.filter(value => value !== id) : [...previous,id])} onMention={mention} revision={live.length} disabled={denied}/>}
   </section>
 }

@@ -5,7 +5,7 @@ import { useProjectSelection } from '../projects/useProjectSelection.js'
 import ProjectJourneyCard from '../projects/ProjectJourneyCard.jsx'
 import { hasSidebarPermission } from '../../layouts/Sidebar.jsx'
 import totalTasksIcon from '../../assets/total_tasks.png'
-import dependencyIcon from '../../assets/in_progress.png'
+import inProgressIcon from '../../assets/in_progress.png'
 import dueTodayIcon from '../../assets/due_today.png'
 
 const date = value => value ? new Date(value).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : 'Not scheduled'
@@ -23,8 +23,7 @@ function TaskGroup({ group, tasks, expanded, onToggle }) {
   return <article className="workspace-milestone">
     <button className="workspace-milestone-heading" onClick={onToggle} aria-expanded={expanded}>
       <span className="material-symbols-outlined">{expanded ? 'expand_more' : 'chevron_right'}</span>
-      <span className="workspace-group-title"><strong>{group.name}</strong><small>{date(group.start_date)} - {date(group.due_date)}</small></span>
-      <span className={`workspace-badge ${percent === 100 ? 'complete' : ''}`}>{percent === 100 ? 'Complete' : percent > 0 ? 'In Progress' : 'Upcoming'}</span>
+      <span className="workspace-group-title"><span className="flex items-center gap-[8px]"><strong>{group.name}</strong><span className={`workspace-badge ${percent === 100 ? 'complete' : ''}`}>{percent === 100 ? 'Complete' : percent > 0 ? 'In Progress' : 'Upcoming'}</span></span><small>Due {date(group.due_date)}</small></span>
       <span className="workspace-meter"><i style={{width:`${percent}%`}} /></span><span>{percent}% · {tasks.filter(task => task.status === 'completed').length}/{tasks.length}</span>
     </button>
     {expanded && <div className="workspace-features">{features.filter(feature => byFeature.has(feature.id)).map(feature => {
@@ -37,7 +36,7 @@ function TaskGroup({ group, tasks, expanded, onToggle }) {
 }
 
 function WorkspaceTasks({ project,tasks,user }) {
-  const [expanded,setExpanded] = useState(project.milestones.map(item => item.id))
+  const [expanded,setExpanded] = useState([])
   const [mine,setMine] = useState(false)
   const [query,setQuery] = useState('')
   const visible = tasks.filter(task => (!mine || String(task.assigned_to) === String(user.id)) && `${task.name} ${task.description} ${task.assignee_name}`.toLowerCase().includes(query.toLowerCase()))
@@ -60,8 +59,8 @@ export default function WorkspaceDashboard({ user }) {
   return <main className="user-workspace"><header><h1>Workspace</h1><p>Access project journey and your today's task</p></header>
     {error && <p role="alert">{error} <button onClick={reload}>Retry</button></p>}
     {!selectedProjectId || selectedProjectId === 'all' ? <p>Select a project to view your workspace.</p> : loading ? <p role="status">Loading workspace...</p> : data && <>
-      {hasSidebarPermission(user.permissions || {},'ProjectJourney','View') && <section><h2>Project Journey</h2><ProjectJourneyCard project={data.project} showTimeline={hasSidebarPermission(user.permissions || {}, 'MilestoneMap')} /></section>}
-      {showTasks && <><div className="workspace-metrics">{[[totalTasksIcon,'Total Tasks',data.stats.tasks],[dependencyIcon,'Dependency',data.stats.dependencies],[dueTodayIcon,'Blockers',data.stats.blockers],[dueTodayIcon,'Due today',data.stats.due_today]].map(([icon,label,count]) => <article key={label}><img src={icon} alt=""/><div><strong>{label}</strong><b className={label === 'Due today' ? 'due' : ''}>{count}</b></div></article>)}</div><WorkspaceTasks key={data.project.id} project={data.project} tasks={data.tasks} user={user} /></>}
+      {hasSidebarPermission(user.permissions || {},'ProjectJourney','View') && <section><h2>Project Journey</h2><ProjectJourneyCard project={data.project} /></section>}
+      {showTasks && <><div className="workspace-metrics-panel"><div className="workspace-metrics">{[[totalTasksIcon,'Total Tasks',data.stats.tasks],[inProgressIcon,'In progress',data.tasks.filter(task => task.status === 'in_progress').length],[null,'Blockers',data.stats.blockers],[dueTodayIcon,'Due today',data.stats.due_today]].map(([icon,label,count]) => <article key={label}>{icon ? <img src={icon} alt=""/> : <span className="material-symbols-outlined inline-flex! h-[40px] w-[40px] items-center justify-center rounded-[8px] bg-[#9bbfff] text-[#1e4788]">block</span>}<div><strong>{label}</strong><b className={label === 'Due today' ? 'due' : ''}>{count}</b></div></article>)}</div></div><WorkspaceTasks key={data.project.id} project={data.project} tasks={data.tasks} user={user} /></>}
       {hasSidebarPermission(user.permissions || {}, 'recentActvities') && <section><h2>Recent Activities</h2><div className="workspace-activities">{data.activities.length ? data.activities.slice(0,5).map(activity => <article key={activity.id}><span className="material-symbols-outlined">history</span><strong>{activity.actor} {activity.action}<small>{activity.name}</small></strong><time>{date(activity.timestamp)}</time></article>) : <p className="workspace-empty">No recent activity recorded for this project.</p>}</div></section>}
     </>}
   </main>

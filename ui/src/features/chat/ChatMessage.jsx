@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { apiRequest, errorMessage } from '../../shared/api/apiClient.js'
+import { errorMessage } from '../../shared/api/apiClient.js'
+import { chatRequest } from './chatConnection.js'
 import { Avatar, FileCard, MessageText } from './ChatElements.jsx'
 
-export default function ChatMessage({ message, user, onReply, members = [], projectId, reaction, onReactionUpdate, onlineIds = [] }) {
+export default function ChatMessage({ message, user, onReply, members = [], projectId, socket, reaction, onReactionUpdate, onlineIds = [] }) {
   const sender = members.find(person => String(person.id) === String(message.sender))
   const [busy,setBusy] = useState(false)
   const [error,setError] = useState('')
@@ -12,7 +13,7 @@ export default function ChatMessage({ message, user, onReply, members = [], proj
   const toggle = async () => {
     if (busy) return
     setBusy(true); setError('')
-    try { onReactionUpdate(message.id,await apiRequest(`/projects/${projectId}/chat/messages/${message.id}/reaction/`,{method:current.reacted ? 'DELETE' : 'PUT'})) }
+    try { onReactionUpdate(message.id,await chatRequest(socket,'reaction',{projectId,messageId:message.id,active:!current.reacted})) }
     catch (error) { setError(errorMessage(error)) }
     finally { setBusy(false) }
   }

@@ -3315,7 +3315,8 @@
 
 /* Styling: ui/src/features/dashboard/workspaceDashboard.tailwind.css */
 @utility user-workspace {
-  @apply max-w-[1440px];
+  @apply w-full;
+  @apply max-w-[1541px];
   @apply m-[0_auto];
   @apply p-[24px_32px_60px];
   @apply flex;
@@ -3349,7 +3350,7 @@
 @utility workspace-metrics {
   @apply grid;
   @apply grid-cols-[repeat(4,minmax(0,1fr))];
-  @apply gap-[16px];
+  @apply gap-[12px];
   & article {
     @apply flex;
     @apply items-center;
@@ -3376,6 +3377,7 @@
     @apply text-[18px];
     @apply font-extrabold;
     @apply mt-[2px];
+    @apply text-[#1157ce];
   }
   & .due {
     @apply [color:var(--color-danger,#dc2626)];
@@ -3395,6 +3397,9 @@
       @apply h-[32px];
     }
   }
+}
+@utility workspace-metrics-panel {
+  @apply mb-[24px] rounded-[12px] border border-[#e5ebf2] bg-white p-[24px_12px];
 }
 @utility workspace-toolbar {
   @apply flex;
@@ -3437,9 +3442,9 @@
     @apply cursor-pointer;
   }
   & button.selected {
-    @apply [background:#eff6ff];
-    @apply [color:#2563eb];
-    @apply [border-color:#bfdbfe];
+    @apply [background:white];
+    @apply [color:#0f172a];
+    @apply [border-color:#0f172a];
   }
   &>span {
     @apply [color:#64748b];
@@ -3469,6 +3474,9 @@
   @apply [font:inherit];
   @apply text-[11px];
   @apply cursor-pointer;
+  &[aria-expanded=true] {
+    @apply bg-[#f0f5ff];
+  }
   @media (max-width:600px) {
     @apply p-[14px_12px];
   }
@@ -3491,10 +3499,10 @@
 @utility workspace-badge {
   @apply text-[11px];
   @apply font-semibold;
-  @apply [background:#eff6ff];
-  @apply [color:#2563eb];
-  @apply rounded-[4px];
-  @apply p-[3px_7px];
+  @apply [background:#1157ce];
+  @apply [color:white];
+  @apply rounded-[8px];
+  @apply p-[3px_10px];
   &.complete {
     @apply [background:#7cb96f];
     @apply [color:#172033];
@@ -3502,8 +3510,8 @@
 }
 @utility workspace-meter {
   @apply inline-block;
-  @apply w-[70px];
-  @apply h-[5px];
+  @apply w-[120px];
+  @apply h-[6px];
   @apply [background:#e5ebf2];
   @apply rounded-[4px];
   @apply overflow-hidden;

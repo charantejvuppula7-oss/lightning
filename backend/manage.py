@@ -32,7 +32,7 @@ and auditability:
       * `core`        : Shared utilities, base views (`ResourceAPIView`), middleware,
                         pagination, exception handlers, and SSE streaming.
   - `api/`            : Core database models, legacy lookup tables, and schemas.
-  - `services/`       : Infrastructure-level shared services (e.g. SMTP email engine).
+  - `services/`       : Infrastructure-level shared services (Microsoft Graph email).
 
 ----------------------------------------------------------------------------------------
 2. STEP-BY-STEP GUIDE: HOW TO ADD A NEW FEATURE TO THE BACKEND

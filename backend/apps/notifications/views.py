@@ -9,6 +9,7 @@ Provides endpoints for:
 """
 
 from django.shortcuts import get_object_or_404
+from django.db.models import Count
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -21,6 +22,29 @@ from rest_framework.renderers import JSONRenderer
 from apps.notifications.models import Notification
 from apps.notifications.serializers import NotificationSerializer
 from api.models import ProjectChatMessage, Task, TaskDependency, UserData
+from apps.roles.permissions import has_permission, scope_queryset
+from apps.approvals.views import review_tasks, managed_dependencies
+
+
+def sidebar_counts(user):
+    counts = {}
+
+    def add(rows, project_field, label):
+        for row in rows.values(project_field).annotate(total=Count('pk', distinct=True)).order_by():
+            project = str(row[project_field])
+            bucket = counts.setdefault(project, {'Tasks': 0, 'Dependencies': 0, 'Approvals': 0})
+            bucket[label] += row['total']
+
+    if has_permission(user, 'Tasks', 'View'):
+        add(scope_queryset(user, 'task', Task.objects.filter(assigned_to=user, status='open')), 'project_id', 'Tasks')
+        if has_permission(user, 'Approvals', 'View'):
+            add(review_tasks(user), 'project_id', 'Approvals')
+    if has_permission(user, 'Dependencies', 'View'):
+        add(scope_queryset(user, 'dependency', TaskDependency.objects.filter(status='started')),
+            'task__project_id', 'Dependencies')
+        if has_permission(user, 'Approvals', 'View'):
+            add(managed_dependencies(user), 'task__project_id', 'Approvals')
+    return counts
 
 
 class NotificationListView(APIView):
@@ -65,6 +89,7 @@ class NotificationListView(APIView):
         response = paginator.get_paginated_response(NotificationSerializer(
             page, many=True, context={'project_names': project_names}).data)
         response.data['unread_count'] = Notification.objects.filter(user=request.user, is_read=False).count()
+        response.data['sidebar_counts'] = sidebar_counts(request.user)
         return response
 
 

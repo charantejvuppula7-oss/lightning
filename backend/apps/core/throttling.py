@@ -9,8 +9,7 @@ from rest_framework.throttling import SimpleRateThrottle
 ENDPOINT_SCOPES = {
     'LoginView': 'login', 'CsrfView': 'session', 'SessionView': 'session',
     'LogoutView': 'session', 'AppVersionView': 'version', 'GlobalSearchView': 'search',
-    'ChatStreamView': 'stream', 'NotificationStreamView': 'stream',
-    'ChatTypingView': 'typing', 'ChatPresenceView': 'presence',
+    'NotificationStreamView': 'stream',
     'TaskStatusView': 'task_status', 'DashboardOverviewView': 'analytics',
     'WorkspaceView': 'analytics', 'ProjectOverviewView': 'analytics',
     'ProjectUserWorkloadView': 'analytics', 'CalendarEventsView': 'analytics',

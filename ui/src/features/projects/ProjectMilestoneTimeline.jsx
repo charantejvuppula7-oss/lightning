@@ -3,7 +3,7 @@ import ProjectJourneyStatusCard from './ProjectJourneyStatusCard.jsx'
 
 const shortDate = value => value ? new Date(`${value.slice(0,10)}T00:00:00`).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : 'Not scheduled'
 
-export default function ProjectMilestoneTimeline({ project, compact = true }) {
+export default function ProjectMilestoneTimeline({ project, compact = false }) {
   const [hover,setHover] = useState(null)
   const milestones = [...(project?.milestones || [])].sort((a,b) => (a.due_date || '').localeCompare(b.due_date || '') || a.name.localeCompare(b.name))
   if (!milestones.length) return <p className="[color:#727272]! text-[13px]!">No milestones scheduled.</p>

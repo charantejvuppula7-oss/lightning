@@ -15,10 +15,6 @@ class ChatSendSerializer(serializers.Serializer):
         return attrs
 
 
-class ChatTypingSerializer(serializers.Serializer):
-    active = serializers.BooleanField()
-
-
 class ChatMessageSerializer(serializers.ModelSerializer):
     sender_name = serializers.CharField(source='sender.user_name', read_only=True)
     sender_display_name = serializers.SerializerMethodField()

@@ -1,4 +1,4 @@
-"""Small ASGI event stream used by notifications and project chat."""
+"""Small ASGI event stream used by notifications."""
 
 import asyncio
 import json

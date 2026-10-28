@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-import { apiRequest, apiUpload } from '../../shared/api/apiClient.js';
+import { apiRequest, apiUpload, errorMessage } from '../../shared/api/apiClient.js';
 import ReviewButton from "./ReviewButton";
 import MarkAsCompletedButton from "./MarkAsCompletedButton";
 import TaskMoreOption from "./TaskMoreOption";
@@ -125,9 +125,8 @@ function TaskCard({
         timerStatus: nextTimerStatus,
         timerSeconds: currentSeconds !== undefined ? currentSeconds : timerSeconds,
       });
-      toast.success(nextTimerStatus === "paused" ? "Timer paused" : "Task in progress");
     } catch (error) {
-      toast.error(error.message || "Error communicating with server");
+      toast.error(errorMessage(error));
     }
   };
 
@@ -136,7 +135,6 @@ function TaskCard({
     try {
       const updated = await sendStatusUpdate("completed");
       updateTask({ raw: updated, status: "completed", timerStatus: "completed" });
-      toast.success("Task marked as completed");
     } catch (error) {
       toast.error(error.message);
     }
@@ -148,7 +146,6 @@ function TaskCard({
       const nextReopenCount = Math.max(0, Number(reopenCount) || 0) + 1;
       setIsReopened(true);
       updateTask({ raw: updated, status: "assigned", isReopened: true, reopenCount: nextReopenCount, timerStatus: "default", timerSeconds: 0 });
-      toast.success("Task reopened");
     } catch (error) {
       toast.error(error.message);
     }
@@ -170,7 +167,6 @@ function TaskCard({
       setIsReopened(false);
       setResentForReview(isResubmission);
       updateTask({ raw: updated, status: "in_review", isReopened: false, resentForReview: isResubmission });
-      toast.success(isResubmission ? "Task resent for review!" : "Task sent for review!");
       setIsReviewOpen(false);
     } catch (error) {
       toast.error(error.message || "Network error while submitting task for review");
@@ -181,7 +177,6 @@ function TaskCard({
   const handleAddDependency = () => {
     if (status === "completed") return;
     if (onAddDependency) return onAddDependency(task.raw || task);
-    toast.info("Opening dependency settings for task #" + String(taskId).slice(0, 6));
   };
 
   const handleViewDependencyDetails = () => {
@@ -215,7 +210,6 @@ function TaskCard({
     try {
       await apiRequest(`/tasks/${taskId}/`, { method: "DELETE" });
       onTaskDelete?.(taskId);
-      toast.success("Task deleted");
     } catch (error) {
       toast.error(error.message || "Network error deleting task");
     }

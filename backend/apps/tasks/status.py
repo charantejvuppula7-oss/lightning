@@ -29,7 +29,6 @@ class TaskStatusView(APIView):
 
     def patch(self, request, task_id):
         require_permission(request.user, 'Tasks', 'View')
-        require_permission(request.user, 'Tasks', 'Edit')
         values = request.data.copy()
         if 'links' in values and isinstance(values['links'], str):
             try:
@@ -50,6 +49,7 @@ class TaskStatusView(APIView):
             reviewer = task.review_by_id == request.user.pk
             assignee = task.assigned_to_id == request.user.pk
             if target == 'change_requested' or (target == 'completed' and task.review_by_id):
+                require_permission(request.user, 'Tasks', 'Edit')
                 if not (manager or reviewer):
                     raise PermissionDenied('Only the reviewer or project manager can approve this task.')
             elif not (manager or assignee):

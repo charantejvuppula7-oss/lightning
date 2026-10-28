@@ -1,11 +1,13 @@
 import re
+from types import SimpleNamespace
 
 from django.db import transaction
 from django.utils import timezone
 from django.core.exceptions import ValidationError as ModelValidationError
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
-from api.models import ChatMention, Project, ProjectChatMessage, ProjectChatRoom, UserData, ResourceFile
+from api.models import ChatMention, Project, ProjectChatMessage, ProjectChatRoom, ProjectChatReaction, UserData, ResourceFile
+from apps.chat.serializers import ChatMessageSerializer
 from apps.notifications.models import Notification, EmailOutbox
 from apps.notifications.email_outbox import enqueue_emails
 from apps.roles.permissions import require_permission
@@ -113,5 +115,34 @@ def save_chat_message(user, data):
             'project_name': room.project.project_name, 'message': message.content,
             'message_id': str(message.pk), 'mentioned_usernames': sorted(names),
         }) for recipient in recipients if recipient.email])
+        transaction.on_commit(lambda: publish_message(message))
     return message, created
+
+
+def message_data(message, user=None):
+    return dict(ChatMessageSerializer(message, context={'request': SimpleNamespace(user=user)} if user else {}).data)
+
+
+def publish_message(message):
+    from apps.chat.socket import broadcast, schedule
+    data = {'message': message_data(message)}
+    if message.parent_message_id:
+        data['parent'] = message_data(message.parent_message)
+    schedule(lambda: broadcast('message_created', message.room.project_id, data))
+
+
+@transaction.atomic
+def change_reaction(user, room, message_id, *, add):
+    from apps.chat.socket import broadcast, schedule
+    message = ProjectChatMessage.objects.filter(pk=message_id, room=room).first()
+    if message is None:
+        raise NotFound('Message not found.')
+    if add:
+        ProjectChatReaction.objects.get_or_create(message=message, user=user)
+    else:
+        ProjectChatReaction.objects.filter(message=message, user=user).delete()
+    user_ids = [str(pk) for pk in message.reactions.values_list('user_id', flat=True)]
+    data = {'message_id': str(message.pk), 'user_ids': user_ids}
+    transaction.on_commit(lambda: schedule(lambda: broadcast('reaction_changed', room.project_id, data)))
+    return {'count': len(user_ids), 'reacted': add}
 

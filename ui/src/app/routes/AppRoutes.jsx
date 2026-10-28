@@ -10,7 +10,6 @@ const DocumentsPage = lazy(() => import('../../features/documents/DocumentsPage.
 const WorkloadPage = lazy(() => import('../../features/workload/WorkloadPage.jsx'))
 const ApprovalsPage = lazy(() => import('../../features/approvals/ApprovalsPage.jsx'))
 const CalendarPage = lazy(() => import('../../features/calendar/CalendarPage.jsx'))
-const ProjectsPage = lazy(() => import('../../features/projects/ProjectsPage.jsx'))
 const ProjectEditorLayout = lazy(() => import('../../features/projects/editor/ProjectEditorLayout.jsx'))
 const ProjectOverviewPage = lazy(() => import('../../features/projects/ProjectOverviewPage.jsx'))
 const OverviewDashboard = lazy(() => import('../../features/dashboard/OverviewDashboard.jsx'))
@@ -56,7 +55,7 @@ function NotificationsRoute({ allowedRoles }) {
 
 function ProjectsRoute() {
   return <ProtectedRoute requiredPermission={{ module: 'Projects', action: 'View' }}>
-    {(user) => <AppLayout user={user}><ProjectsPage user={user} /></AppLayout>}
+    {(user) => <AppLayout user={user}><ProjectOverviewPage user={user} /></AppLayout>}
   </ProtectedRoute>
 }
 
@@ -98,7 +97,7 @@ const sidebarRoutes = [
     { path: `/${role}/approvals`, module: 'Approvals', page: user => <ApprovalsPage user={user} /> },
   ]),
   { path: '/admin/all-projects', module: 'Projects', page: user => <ProjectOverviewPage user={user} /> },
-  { path: '/user/projects', module: 'Projects', page: user => <ProjectsPage user={user} /> },
+  { path: '/user/projects', module: 'Projects', page: user => <ProjectOverviewPage user={user} /> },
   ...['admin', 'pm', 'user'].map(role => ({ path: `/${role}/calendar`, module: 'Calendar', page: () => <CalendarPage /> })),
 ]
 const searchablePages = { Chat:ChatPage, Dependencies:DependenciesPage, 'Roles & permissions':RolesPermissionsPage }

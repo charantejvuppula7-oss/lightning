@@ -75,7 +75,7 @@ class AuthenticationService:
 
 
 class PasswordResetDeliveryError(APIException):
-    """Exception raised when SMTP delivery of OTP verification fails."""
+    """Exception raised when Microsoft Graph delivery of OTP verification fails."""
     status_code = 503
     default_detail = 'Unable to send the verification code. Please try again later.'
 

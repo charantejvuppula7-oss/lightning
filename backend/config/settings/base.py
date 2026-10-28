@@ -262,27 +262,14 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600
 FILE_UPLOAD_MAX_MEMORY_SIZE = 104857600
 
 # ---------------------------------------------------------------------------
-# Email & SMTP Configuration (kept as fallback / Django mail)
+# Frontend links used in transactional emails
 # ---------------------------------------------------------------------------
-EMAIL_BACKEND = os.environ.get(
-    'DJANGO_EMAIL_BACKEND',
-    'django.core.mail.backends.smtp.EmailBackend'
-)
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 't')
-EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False').lower() in ('true', '1', 't')
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'webmaster@localhost')
-SERVER_EMAIL = os.environ.get('SERVER_EMAIL', DEFAULT_FROM_EMAIL)
-EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', 10))
 FRONTEND_URL = os.environ.get('FRONTEND_URL') or 'http://localhost:5173'
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
 
 # ---------------------------------------------------------------------------
 # Microsoft Graph API — transactional email notifications
-# Credentials can be overridden per-environment via environment variables.
+# Microsoft Graph is the only transactional mail provider. Credentials stay in the environment.
 # ---------------------------------------------------------------------------
 MICROSOFT_GRAPH_EMAIL = {
     "TENANT_ID":     os.environ.get("MS_GRAPH_TENANT_ID", ""),

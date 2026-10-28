@@ -27,7 +27,7 @@ export function PersistentSidebarRoute() {
 
   return (
     <ProtectedRoute>
-      {(user) => <Loading user={user}><Outlet context={{ searchQuery, onSearchChange, persistentSidebar: true }} /></Loading>}
+      {(user) => <Loading user={user}><Outlet context={{ user, searchQuery, onSearchChange, persistentSidebar: true }} /></Loading>}
     </ProtectedRoute>
   )
 }

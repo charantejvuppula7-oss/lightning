@@ -68,7 +68,6 @@ export default function ProjectOverviewPage({ user }) {
       {!projects.length && <p>No matching projects.</p>}
       {project ? <>
         {(role === 'admin' || hasSidebarPermission(user.permissions, 'ProjectJourney')) && <section><h2>Project Overview</h2><ProjectJourneyCard project={project}
-          showTimeline={role === 'admin' || hasSidebarPermission(user.permissions, 'MilestoneMap')}
           onAddFeature={(role === 'admin' || hasSidebarPermission(user?.permissions || {}, 'Features', 'Create')) ? () => setDialog('feature') : undefined}
           onAddMilestone={(role === 'admin' || hasSidebarPermission(user?.permissions || {}, 'Milestones', 'Create')) ? () => setDialog('milestone') : undefined}
           onAssignTask={(role === 'admin' || hasSidebarPermission(user?.permissions || {}, 'Tasks', 'Create')) ? assignTask : undefined}

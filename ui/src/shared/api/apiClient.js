@@ -25,7 +25,11 @@ export async function apiFetch(path, options = {}) {
   const method = options.method || 'GET'
   const headers = { ...options.headers }
   if (!['GET', 'HEAD'].includes(method)) headers['X-CSRFToken'] = await csrf()
-  return fetch(`${API_BASE}${path}`, { ...options, method, credentials: 'include', headers })
+  const response = await fetch(`${API_BASE}${path}`, { ...options, method, credentials: 'include', headers })
+  if (response.ok && !['GET', 'HEAD'].includes(method) && /^\/(tasks|dependencies|approvals)\//.test(path)) {
+    window.dispatchEvent(new Event('notifications:changed'))
+  }
+  return response
 }
 
 export async function apiRequest(path, { method = 'GET', body, signal } = {}) {
@@ -44,10 +48,7 @@ export async function apiRequest(path, { method = 'GET', body, signal } = {}) {
 }
 
 export async function apiUpload(path, formData, { method = 'POST' } = {}) {
-  const response = await fetch(`${API_BASE}${path}`, {
-    method, credentials: 'include',
-    headers: { 'X-CSRFToken': await csrf() }, body: formData,
-  })
+  const response = await apiFetch(path, { method, body: formData })
   const data = response.headers.get('content-type')?.includes('application/json') ? await response.json() : null
   if (!response.ok) throw new ApiError(response.status, data, response.headers.get('Retry-After'))
   return data

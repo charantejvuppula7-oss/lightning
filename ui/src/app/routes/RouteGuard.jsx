@@ -1,11 +1,12 @@
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate, useLocation, useOutletContext } from 'react-router-dom'
 import useSession from '../../shared/hooks/useSession.js'
 import { getRoleDashboard, roleSlug } from '../../shared/utils/roles.js'
 import { hasSidebarPermission } from '../../layouts/Sidebar.jsx'
 import LayoutSkeleton from '../../layouts/LayoutSkeleton.jsx'
 
 export default function ProtectedRoute({ children, allowedRoles, requiredPermission }) {
-  const { status, user } = useSession()
+  const parentUser = useOutletContext()?.user
+  const { status, user } = useSession(parentUser)
   const location = useLocation()
   if (status === 'loading') return <LayoutSkeleton pathname={location.pathname} />
   if (status === 'unavailable') return <div role="status" className="auth-status">Unable to verify your session. Refresh to try again.</div>

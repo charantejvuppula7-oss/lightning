@@ -12,6 +12,7 @@ import EditTaskPage from './TaskEditor.jsx';
 import FilterDropdown from './FilterDropdown.jsx';
 import SortMenu from './SortMenu.jsx';
 import { DEFAULT_SORT_OPTIONS } from './sortOptions.js';
+const EMPTY_FILTERS = { dueDate: 'any', statuses: [], priorities: [], assignedTo: '' };
 function TaskList({
   tasks = [],
   onAddDependencyClick,
@@ -22,7 +23,6 @@ function TaskList({
   canEditTask = false,
   canDeleteTask = false,
   currentUserId,
-  currentUserNames = [],
   className = "",
   style = {},
   toast,
@@ -80,10 +80,7 @@ function TaskList({
             onTaskDelete={onTaskDelete}
             canEditTask={canEditTask}
             canDeleteTask={canDeleteTask}
-            isAssignedUser={canEditTask && Boolean(task.assignedTo?.some((assignee) =>
-              (currentUserId && assignee.id && String(assignee.id) === String(currentUserId)) ||
-              currentUserNames.some((name) => String(name).toLowerCase() === String(assignee.name || "").toLowerCase())
-            ))}
+            isAssignedUser={isAssignedToUser(task, currentUserId)}
             isTaskAssigner={Boolean(
               currentUserId && task.assignedBy?.id && String(task.assignedBy.id) === String(currentUserId)
             )}
@@ -95,10 +92,9 @@ function TaskList({
 }
 
 // ── Data Normalization Helper ────────────────────────────────────────
-function isAssignedToUser(task, userId, userNames) {
+function isAssignedToUser(task, userId) {
   return Boolean(task?.assignedTo?.some((assignee) =>
-    (userId && assignee.id && String(assignee.id) === String(userId)) ||
-    userNames.some((name) => String(name).toLowerCase() === String(assignee.name || "").toLowerCase())
+    userId && assignee.id && String(assignee.id) === String(userId)
   ));
 }
 
@@ -106,13 +102,12 @@ export default function TasksPage({ user: currentUser }) {
   const { projects, selectedProjectId: externalProjectId } = useContext(ProjectSelectionContext);
   const externalProject = projects.find(project => project.id === externalProjectId)?.project_name || '';
   const currentUserId = currentUser.id;
-  const currentUserNames = useMemo(() => [currentUser.user_name], [currentUser.user_name]);
   const userRole = ['admin', 'pm'].includes(roleSlug(currentUser.role)) ? roleSlug(currentUser.role) : 'user';
   const admin = userRole === 'admin';
   const canEditTask = admin || hasSidebarPermission(currentUser.permissions, 'Tasks', 'Edit');
   const canDeleteTask = admin || hasSidebarPermission(currentUser.permissions, 'Tasks', 'Delete');
   const canCreateTask = Boolean(externalProjectId) && (admin || hasSidebarPermission(currentUser.permissions, 'Tasks', 'Create'));
-  const isCurrentUserAssignee = task => isAssignedToUser(task, currentUserId, currentUserNames);
+  const isCurrentUserAssignee = task => isAssignedToUser(task, currentUserId);
   const [searchParams, setSearchParams] = useSearchParams();
   const allowedTabs = ['all','my','in-progress','in-review','change-requested','completed'];
   const requestedTab = searchParams.get('tab');
@@ -137,7 +132,7 @@ export default function TasksPage({ user: currentUser }) {
     fetchTasks({ signal: controller.signal });
     return () => controller.abort();
   }, [fetchTasks]);
-  const myTasks = tasks.filter(task => isAssignedToUser(task, currentUserId, currentUserNames));
+  const myTasks = tasks.filter(task => isAssignedToUser(task, currentUserId));
   const counts = { all: tasks.length, my: myTasks.length,
     'in-progress': myTasks.filter(task => task.status === 'in_progress').length,
     'in-review': myTasks.filter(task => task.status === 'in_review').length,
@@ -154,11 +149,16 @@ export default function TasksPage({ user: currentUser }) {
 
   // Filter dropdown state
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [filters, setFilters] = useState({
-    dueDate: "any",
-    statuses: [],
-    priorities: [],
-  });
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  useEffect(() => {
+    // Project-scoped filters must not carry into another project's results.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFilters(EMPTY_FILTERS);
+  }, [externalProjectId]);
+  const canFilterAssignee = userRole !== 'user' && activeTab === 'all';
+  const assignees = useMemo(() => [...new Map(tasks.flatMap(task => task.assignedTo)
+    .filter(person => person.id).map(person => [String(person.id), person])).values()]
+    .sort((a, b) => a.name.localeCompare(b.name)), [tasks]);
 
   // Sort menu state
   const [isSortOpen, setIsSortOpen] = useState(false);
@@ -196,13 +196,13 @@ export default function TasksPage({ user: currentUser }) {
         return false;
       }
       // "My Tasks" tab: only show tasks assigned to current user
-      if (activeTab === "my" && !isAssignedToUser(t, currentUserId, currentUserNames)) {
+      if (activeTab === "my" && !isAssignedToUser(t, currentUserId)) {
         return false;
       }
       // Status tabs are personal views for every role, including Admin.
       if (
         ["in-progress", "in-review", "change-requested", "completed"].includes(activeTab) &&
-        !isAssignedToUser(t, currentUserId, currentUserNames)
+        !isAssignedToUser(t, currentUserId)
       ) {
         return false;
       }
@@ -213,6 +213,9 @@ export default function TasksPage({ user: currentUser }) {
         } else if (t.status !== activeTab.replaceAll("-", "_")) {
           return false;
         }
+      }
+      if (canFilterAssignee && filters.assignedTo && !isAssignedToUser(t, filters.assignedTo)) {
+        return false;
       }
       // Due Date filter from dropdown
       if (filters.dueDate && filters.dueDate !== "any") {
@@ -253,7 +256,7 @@ export default function TasksPage({ user: currentUser }) {
 
       return true;
     });
-  }, [tasks, externalProject, activeTab, currentUserId, currentUserNames, filters]);
+  }, [tasks, externalProject, activeTab, currentUserId, filters, canFilterAssignee]);
 
   // Compute dynamic counts for the filter dropdown
   const filterCounts = useMemo(() => {
@@ -289,8 +292,9 @@ export default function TasksPage({ user: currentUser }) {
     if (filters.dueDate && filters.dueDate !== "any") count += 1;
     if (Array.isArray(filters.statuses) && filters.statuses.length > 0) count += filters.statuses.length;
     if (Array.isArray(filters.priorities) && filters.priorities.length > 0) count += filters.priorities.length;
+    if (canFilterAssignee && filters.assignedTo) count += 1;
     return count;
-  }, [filters]);
+  }, [filters, canFilterAssignee]);
 
   const currentSortOption = useMemo(() => {
     return DEFAULT_SORT_OPTIONS.find((o) => o.key === sortKey) || DEFAULT_SORT_OPTIONS[0];
@@ -450,13 +454,14 @@ export default function TasksPage({ user: currentUser }) {
             isOpen={isFilterOpen}
             onClose={() => setIsFilterOpen(false)}
             filters={filters}
+            assignees={canFilterAssignee ? assignees : undefined}
             onChange={(newFilters) => setFilters(newFilters)}
             onApply={(newFilters) => {
               setFilters(newFilters);
               setIsFilterOpen(false);
             }}
             onClear={() => {
-              setFilters({ dueDate: "any", statuses: [], priorities: [] });
+              setFilters(EMPTY_FILTERS);
             }}
             counts={filterCounts}
           />
@@ -524,7 +529,6 @@ export default function TasksPage({ user: currentUser }) {
           currentUserRole={userRole}
           tasks={sortedTasks}
           currentUserId={currentUserId}
-          currentUserNames={currentUserNames}
           canEditTask={canEditTask}
           canDeleteTask={canDeleteTask}
           onTaskUpdate={handleTaskUpdate}
@@ -574,12 +578,9 @@ export default function TasksPage({ user: currentUser }) {
           projectId={externalProjectId}
           projects={projects}
           onSave={async (payload) => {
-            const taskId = editingTask?.Id || editingTask?.id || editingTask?.dbId;
-            const isEditing = Boolean(taskId);
             try {
               await saveTask({ projectId: externalProjectId, task: editingTask || {}, values: payload });
               setIsEditModalOpen(false); setEditingTask(null); await fetchTasks();
-              toast.success(isEditing ? 'Task updated.' : 'Task created.');
             } catch (error) { toast.error(errorMessage(error)); throw error; }
 
           }}

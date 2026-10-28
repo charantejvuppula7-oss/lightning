@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { getSession } from '../../features/auth/api/authApi.js'
 
-export default function useSession() {
+export default function useSession(parentUser) {
   const [state, setState] = useState({ status: 'loading', user: null })
   useEffect(() => {
+    if (parentUser) return
     let active = true
     const load = () => getSession().then((data) => {
       if (active) setState(data?.user ? { status: 'authenticated', user: data.user } : { status: 'unauthenticated', user: null })
@@ -13,6 +14,6 @@ export default function useSession() {
     load()
     window.addEventListener('session:changed',load)
     return () => { active = false; window.removeEventListener('session:changed',load) }
-  }, [])
-  return state
+  }, [parentUser])
+  return parentUser ? { status: 'authenticated', user: parentUser } : state
 }

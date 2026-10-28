@@ -11,7 +11,6 @@ export function NotificationPopup() {
   const knownNotificationIds = useRef(new Set());
   const hasCheckedLoginPopup = useRef(false);
   const dismissTimerRef = useRef(null);
-  const isLoginPopupRef = useRef(false);
 
   const isAuthPage = [
     "/login",
@@ -28,41 +27,24 @@ export function NotificationPopup() {
       dismissTimerRef.current = null;
     }
     setIsVisible(false);
-    setTimeout(() => {
+    dismissTimerRef.current = setTimeout(() => {
       setPopupData(null);
+      dismissTimerRef.current = null;
     }, 280);
   }, []);
 
-  // Show a popup and schedule auto-dismiss in 6 seconds
-  const showPopup = useCallback((data, autoCloseMs = 6000, pauseOnHover = true) => {
+  // Every popup dismisses after two seconds.
+  const showPopup = useCallback((data) => {
     if (dismissTimerRef.current) {
       clearTimeout(dismissTimerRef.current);
     }
-    isLoginPopupRef.current = !pauseOnHover;
     setPopupData(data);
     setIsVisible(true);
 
-    // Auto-dismiss after the requested duration
     dismissTimerRef.current = setTimeout(() => {
       dismissPopup();
-    }, autoCloseMs);
+    }, 2000);
   }, [dismissPopup]);
-
-  // Handle mouse hover to pause dismiss timer
-  const handleMouseEnter = () => {
-    if (!isLoginPopupRef.current && dismissTimerRef.current) {
-      clearTimeout(dismissTimerRef.current);
-      dismissTimerRef.current = null;
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (!isLoginPopupRef.current && isVisible && !dismissTimerRef.current) {
-      dismissTimerRef.current = setTimeout(() => {
-        dismissPopup();
-      }, 3500);
-    }
-  };
 
   // Fetch notifications and evaluate login popup or new message popup
   const checkNotifications = useCallback(
@@ -102,7 +84,7 @@ export function NotificationPopup() {
                   "Check your notification inbox for recent updates.",
                 count: unreadCount,
                 id: latest.id,
-              }, wasJustLoggedIn ? 1500 : 6000, !wasJustLoggedIn);
+              });
             }
           }
           return;
@@ -219,8 +201,6 @@ export function NotificationPopup() {
     >
 
       <div
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
         className={`w-[390px]! max-w-[calc(100vw_-_32px)]! [background-color:var(--color-white)]! rounded-[16px]! [border:1px_solid_var(--color-slate-200)]! [box-shadow:0_10px_25px_-3px_rgba(15,_23,_42,_0.08),_0_4px_6px_-2px_rgba(15,_23,_42,_0.04)]! p-[18px_20px_16px_20px]! box-border! ${isVisible ? 'animate-notification-in' : 'animate-notification-out'}`}
       >
         {/* Header row: "Notification" + "[1 New]" + "✕" */}

@@ -218,6 +218,15 @@ set `DJANGO_SETTINGS_MODULE=config.settings.production` and must provide
 .\venv\Scripts\python.exe -m uvicorn config.asgi:application --port 8000
 ```
 
+Use Uvicorn for local development, including chat and notification streams. Django's
+`manage.py runserver` serves WSGI and buffers the asynchronous event stream, leaving
+chat on Connecting. From the repository root, `./scripts/start-backend.ps1` starts
+the backend with ASGI and reloads it when Python files change.
+
+Transactional email uses Microsoft Graph only. Configure `MS_GRAPH_TENANT_ID`,
+`MS_GRAPH_CLIENT_ID`, `MS_GRAPH_CLIENT_SECRET`, and `MS_GRAPH_SENDER_UPN` in the
+ignored `backend/.env` file. No SMTP fallback is used.
+
 
 ## Monitoring and database explorer
 
@@ -238,3 +247,16 @@ The existing `/api/admin/logs/*` and `/api/admin/db/*` URLs alias the same views
 The database explorer only exposes registered application models; password hashes
 and session keys are omitted. Existing record edits retain model validation and
 foreign-key protections. API-log polling is excluded from request logging.
+
+## Live project chat
+
+Chat uses authenticated Socket.IO at `/api/socket.io/`, with WebSocket and polling
+transports. Messages, replies, reactions, typing and presence use one connection;
+history and attachment uploads use REST. Session cookies, password hashes, active
+accounts and project membership are checked on join and actions, before broadcasts,
+and every 30 seconds for idle connections. Socket actions use the configured cache
+(Redis in production) for per-user rate limits.
+
+Run the existing single Uvicorn worker. The deployment Nginx configuration includes
+WebSocket upgrade headers; rerun `scripts/deploy.sh` when deploying this change.
+Additional workers require a shared Socket.IO manager and presence store first.

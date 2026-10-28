@@ -22,6 +22,7 @@ export default function FilterDropdown({
   isOpen = true,
   onClose,
   filters = { dueDate: "any", statuses: [], priorities: [] },
+  assignees,
   onChange,
   onApply,
   onClear,
@@ -65,7 +66,7 @@ export default function FilterDropdown({
 
   const handleSelectDueDate = (val) => {
     if (val === "any") {
-      onChange?.({ dueDate: "any", statuses: [], priorities: [] });
+      onChange?.({ dueDate: "any", statuses: [], priorities: [], assignedTo: '' });
       return;
     }
     const next = {
@@ -102,6 +103,7 @@ export default function FilterDropdown({
       dueDate: "any",
       statuses: [],
       priorities: [],
+      assignedTo: '',
     };
     if (onClear) {
       onClear();
@@ -257,6 +259,17 @@ export default function FilterDropdown({
 
       <div className="h-[1px]! [background-color:#E5E7EB]! m-[14px_0]!" />
 
+      {assignees &&
+        <label className="flex! flex-col! gap-[10px]! mb-[14px]! text-[15px]! font-bold! text-[#111827]!">
+          Assigned to
+          <select aria-label="Assigned to" value={filters.assignedTo || ''}
+            onChange={event => onChange?.({ ...filters, assignedTo: event.target.value })}
+            className="w-full! rounded-[8px]! border! border-[#D1D5DB]! bg-white! p-[8px_10px]! text-[13px]! font-normal! text-[#4B5563]!">
+            <option value="">Anyone</option>
+            {assignees.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}
+          </select>
+        </label>
+      }
       {/* ── Footer: clear all & Done ── */}
       <div className="flex! items-center! justify-between! pt-[2px]!">
         <button
