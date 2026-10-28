@@ -3,9 +3,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { SearchBar } from "../../../shared/components/SearchControls.jsx";
-import MonitoringHeader from '../components/MonitoringHeader.jsx'
+import MonitoringHeader from '../MonitoringHeader.jsx'
 import { adminFetch as fetch } from "../api/monitoringApi.js";
-import MonitoringLayout from "../components/MonitoringLayout.jsx";
+import { MonitoringLayout } from "../../../layouts/Loading.jsx";
 
 export default function DatabaseExplorerPage({ user }) {
   const [searchParams] = useSearchParams();

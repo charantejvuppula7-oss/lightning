@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import ReviewDrawer from '../approvals/ReviewDrawer.jsx'
-import CreateTaskDialog from '../tasks/components/CreateTaskDialog.jsx'
+import CreateTaskDialog from '../tasks/CreateTaskDialog.jsx'
 import { useNavigate } from 'react-router-dom'
 import useApiData from '../../shared/hooks/useApiData.js'
 import { useProjectSelection } from '../projects/useProjectSelection.js'
 import { roleSlug } from '../../shared/utils/roles.js'
-import { hasSidebarPermission } from '../../layouts/sidebarNavigation.js'
-import ProjectStatus from './components/ProjectStatus.jsx'
-import TeamWorkload from './components/TeamWorkload.jsx'
+import { hasSidebarPermission } from '../../layouts/Sidebar.jsx'
+import ProjectStatus from './ProjectStatus.jsx'
+import TeamWorkload from './TeamWorkload.jsx'
 
 function StatusBadge({ status }) {
   const s = (status || "").toLowerCase();

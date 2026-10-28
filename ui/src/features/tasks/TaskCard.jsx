@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-import { apiRequest, apiUpload } from '../../../shared/api/apiClient.js';
+import { apiRequest, apiUpload } from '../../shared/api/apiClient.js';
 import ReviewButton from "./ReviewButton";
 import MarkAsCompletedButton from "./MarkAsCompletedButton";
 import TaskMoreOption from "./TaskMoreOption";

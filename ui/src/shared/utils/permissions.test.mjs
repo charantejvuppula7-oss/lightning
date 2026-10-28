@@ -1,7 +1,19 @@
 import assert from 'node:assert/strict'
-import test from 'node:test'
+import test, { after } from 'node:test'
+import { fileURLToPath } from 'node:url'
+import { createServer } from 'vite'
 import { hasPermission, permissionSchema } from './permissions.js'
-import { sidebarItems } from '../../layouts/sidebarNavigation.js'
+
+const uiRoot = fileURLToPath(new URL('../../../', import.meta.url))
+const vite = await createServer({
+  root: uiRoot,
+  configFile: fileURLToPath(new URL('../../../vite.config.js', import.meta.url)),
+  server: { middlewareMode: true },
+  appType: 'custom',
+})
+const { sidebarItems } = await vite.ssrLoadModule('/src/layouts/Sidebar.jsx')
+
+after(() => vite.close())
 
 test('the permission matrix contains exactly ten modules and six view-only widgets', () => {
   assert.deepEqual(Object.keys(permissionSchema), ['Tasks', 'Features', 'Milestones', 'Reports', 'Projects',

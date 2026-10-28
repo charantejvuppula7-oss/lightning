@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { apiRequest } from '../../../shared/api/apiClient.js'
-import { ModalField, ModalShell } from '../../../shared/ui/Modal.jsx'
-import { canUsePermission, displayName, getApiError } from '../../../shared/utils/modalUtils.js'
+import { apiRequest } from '../../shared/api/apiClient.js'
+import { ModalField, ModalShell } from '../../shared/ui/Modal.jsx'
+import { canUsePermission, displayName, getApiError } from '../../shared/utils/modalUtils.js'
 
 export default function AddDependencyModal({ isOpen, onClose, task, tasks = [], users = [], permissions, user, onCreated }) {
   const [taskId, setTaskId] = useState('')

@@ -1,4 +1,4 @@
-import AppLayout from '../../../layouts/AppLayout.jsx'
+import { AppLayout } from '../../../layouts/Loading.jsx'
 import GlobalSearch from '../../../shared/components/GlobalSearch.jsx'
 import { roleSlug } from '../../../shared/utils/roles.js'
 import ProjectEditorPage from './ProjectEditorPage.jsx'

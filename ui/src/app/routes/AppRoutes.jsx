@@ -1,8 +1,8 @@
-import { lazy, Suspense, useState } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+import { Navigate, Route, Routes, useOutletContext } from 'react-router-dom'
 import LoginPage from '../../features/auth/pages/LoginPage.jsx'
 import ProtectedRoute from './RouteGuard.jsx'
-import AppLayout from '../../layouts/AppLayout.jsx'
+import { AppLayout, PersistentSidebarRoute } from '../../layouts/Loading.jsx'
 
 const TasksPage = lazy(() => import('../../features/tasks/TasksPage.jsx'))
 const UsersPage = lazy(() => import('../../features/users/UsersPage.jsx'))
@@ -32,11 +32,7 @@ function Dashboard({ user, variant }) {
 function DashboardRoute({ allowedRoles, variant }) {
   return (
     <ProtectedRoute allowedRoles={allowedRoles}>
-      {(user) => (
-        <AppLayout user={user}>
-          <Dashboard user={user} variant={variant} />
-        </AppLayout>
-      )}
+      {(user) => <AppLayout user={user}><Dashboard user={user} variant={variant} /></AppLayout>}
     </ProtectedRoute>
   )
 }
@@ -50,10 +46,10 @@ function ProfileRoute({ allowedRoles }) {
 }
 
 function NotificationsRoute({ allowedRoles }) {
-  const [searchQuery, setSearchQuery] = useState('')
+  const { searchQuery, onSearchChange } = useOutletContext()
   return (
     <ProtectedRoute allowedRoles={allowedRoles}>
-      {(user) => <AppLayout user={user} searchQuery={searchQuery} onSearchChange={(event) => setSearchQuery(event.target.value)}><NotificationsPage searchQuery={searchQuery} /></AppLayout>}
+      {(user) => <AppLayout user={user} searchQuery={searchQuery} onSearchChange={onSearchChange}><NotificationsPage searchQuery={searchQuery} /></AppLayout>}
     </ProtectedRoute>
   )
 }
@@ -76,7 +72,8 @@ function ProjectEditRoute() {
   </ProtectedRoute>
 }
 
-function PermissionPageRoute({ module, children, searchQuery, onSearchChange }) {
+function PermissionPageRoute({ module, children }) {
+  const { searchQuery, onSearchChange } = useOutletContext()
   return <ProtectedRoute requiredPermission={{ module, action: 'View' }}>
     {(user) => <AppLayout user={user} searchQuery={searchQuery} onSearchChange={onSearchChange}>{typeof children === 'function' ? children(user) : children}</AppLayout>}
   </ProtectedRoute>
@@ -102,25 +99,25 @@ const sidebarRoutes = [
   ]),
   { path: '/admin/all-projects', module: 'Projects', page: user => <ProjectOverviewPage user={user} /> },
   { path: '/user/projects', module: 'Projects', page: user => <ProjectsPage user={user} /> },
-  ...['pm', 'user'].map(role => ({ path: `/${role}/calendar`, module: 'Calendar', page: () => <CalendarPage /> })),
+  ...['admin', 'pm', 'user'].map(role => ({ path: `/${role}/calendar`, module: 'Calendar', page: () => <CalendarPage /> })),
 ]
 const searchablePages = { Chat:ChatPage, Dependencies:DependenciesPage, 'Roles & permissions':RolesPermissionsPage }
 function SearchableFeatureRoute({ module }) {
-  const [query,setQuery] = useState('')
+  const { searchQuery } = useOutletContext()
   const Page = searchablePages[module]
-  return <PermissionPageRoute module={module} searchQuery={query} onSearchChange={event => setQuery(event.target.value)}>{user => <Suspense fallback={<p role="status" className="p-[24px]!">Loading...</p>}><Page user={user} searchQuery={query} /></Suspense>}</PermissionPageRoute>
+  return <PermissionPageRoute module={module}>{user => <Suspense fallback={<p role="status" className="p-[24px]!">Loading...</p>}><Page user={user} searchQuery={searchQuery} /></Suspense>}</PermissionPageRoute>
 }
 
 export default function AppRoutes() {
   return (
-    <Suspense fallback={<p role="status" className="p-6">Loading...</p>}>
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/admin/login" element={<Navigate to="/login" replace />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage mode="forgot" />} />
-      <Route path="/verify-identity" element={<ForgotPasswordPage mode="verify" />} />
-      <Route path="/reset-password" element={<ForgotPasswordPage mode="reset" />} />
+      <Route path="/forgot-password" element={<Suspense fallback={<p role="status" className="p-6">Loading...</p>}><ForgotPasswordPage mode="forgot" /></Suspense>} />
+      <Route path="/verify-identity" element={<Suspense fallback={<p role="status" className="p-6">Loading...</p>}><ForgotPasswordPage mode="verify" /></Suspense>} />
+      <Route path="/reset-password" element={<Suspense fallback={<p role="status" className="p-6">Loading...</p>}><ForgotPasswordPage mode="reset" /></Suspense>} />
+      <Route element={<PersistentSidebarRoute />}>
       <Route path="/admin/dashboard" element={<DashboardRoute allowedRoles={['Administrator']} />} />
       <Route path="/pm/dashboard" element={<DashboardRoute allowedRoles={['Project Manager']} />} />
       <Route path="/user/dashboard" element={<DashboardRoute variant="workspace" />} />
@@ -161,8 +158,8 @@ export default function AppRoutes() {
       } />
       {sidebarRoutes.map(({ path, module, page }) => <Route key={path} path={path} element={searchablePages[module] ? <SearchableFeatureRoute module={module} /> : <PermissionPageRoute module={module}>{page}</PermissionPageRoute>} />)}
       <Route path="/admin/database" element={<ProtectedRoute>{user => <DatabaseExplorerPage user={user} />}</ProtectedRoute>} />
+      </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
-    </Suspense>
   )
 }

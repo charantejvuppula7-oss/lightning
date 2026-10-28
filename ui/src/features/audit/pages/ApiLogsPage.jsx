@@ -1,11 +1,11 @@
-import Paginator from '../components/Paginator.jsx'
+import Paginator from '../Paginator.jsx'
 
 import useLogHistory from '../hooks/useLogHistory.js'
-import DetailRow from '../components/LogDetailRow.jsx'
+import DetailRow from '../LogDetailRow.jsx'
 import { formatLogDate as fmtDate } from '../logFormat.js'
-import MonitoringLayout from "../components/MonitoringLayout.jsx";
+import { MonitoringLayout } from "../../../layouts/Loading.jsx";
 import DatePicker from "../../../shared/components/DatePicker.jsx";
-import MonitoringHeader from '../components/MonitoringHeader.jsx'
+import MonitoringHeader from '../MonitoringHeader.jsx'
 import { FilterSelect, SearchBar } from "../../../shared/components/SearchControls.jsx";
 
 // ── Method badge colour map ──────────────────────────────────────────

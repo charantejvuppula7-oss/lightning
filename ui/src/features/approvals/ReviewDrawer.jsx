@@ -1,7 +1,7 @@
 import { reviewDecision } from './reviewDecision.js'
 import { useState } from 'react'
 import { errorMessage } from '../../shared/api/apiClient.js'
-import { hasSidebarPermission } from '../../layouts/sidebarNavigation.js'
+import { hasSidebarPermission } from '../../layouts/Sidebar.jsx'
 const date = value => value ? new Date(value).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '\u2014'
 const label = value => String(value || '').replaceAll('_',' ')
 

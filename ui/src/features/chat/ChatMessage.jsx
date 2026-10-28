@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { apiRequest, errorMessage } from '../../../shared/api/apiClient.js'
+import { apiRequest, errorMessage } from '../../shared/api/apiClient.js'
 import { Avatar, FileCard, MessageText } from './ChatElements.jsx'
 
 export default function ChatMessage({ message, user, onReply, members = [], projectId, reaction, onReactionUpdate, onlineIds = [] }) {

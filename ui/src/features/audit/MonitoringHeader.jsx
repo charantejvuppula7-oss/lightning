@@ -1,4 +1,4 @@
-import Navbar from '../../../layouts/Navbar.jsx'
+import Navbar from '../../layouts/Navbar.jsx'
 export default function MonitoringHeader({ user, title, subtitle, icon, actions, actionsGap = 12 }) {
  return <Navbar user={user} showSearch={false} avatarClassName="w-[34px]! h-[34px]! shadow-none!" rightGap={actionsGap} className="h-[60px]! min-h-[60px]! max-h-[60px]! px-[32px]!"
   leftContent={<div className="flex! items-center! gap-[12px]!">

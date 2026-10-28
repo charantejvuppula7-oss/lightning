@@ -1,5 +1,5 @@
 import { useImperativeHandle, useRef, useState } from 'react'
-import { apiRequest, apiUpload, errorMessage } from '../../../shared/api/apiClient.js'
+import { apiRequest, apiUpload, errorMessage } from '../../shared/api/apiClient.js'
 import { Avatar, FileIcon } from './ChatElements.jsx'
 
 async function compressImage(file) {

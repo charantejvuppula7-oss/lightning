@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { apiRequest } from '../../shared/api/apiClient.js';
-import AppLayout from '../../layouts/AppLayout.jsx'
+import { AppLayout } from '../../layouts/Loading.jsx'
 import Button from '../../shared/ui/Button.jsx';
 import Input from '../../shared/ui/Input.jsx';
-import ProfileAvatar from './components/ProfileAvatar.jsx';
-import ProfileDetailRow from './components/ProfileDetailRow.jsx';
+import ProfileAvatar from './ProfileAvatar.jsx';
+import ProfileDetailRow from './ProfileDetailRow.jsx';
 
 function ToastNotification({ toast, onClose }) {
   if (!toast) return null;

@@ -2,11 +2,11 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import useApiData from '../../shared/hooks/useApiData.js'
 import { useProjectSelection } from '../projects/useProjectSelection.js'
 import { apiRequest, errorMessage } from '../../shared/api/apiClient.js'
-import { hasSidebarPermission } from '../../layouts/sidebarNavigation.js'
-import { Avatar, PeopleIcon, PushPinIcon } from './components/ChatElements.jsx'
-import ChatMessage from './components/ChatMessage.jsx'
-import ChatComposer from './components/ChatComposer.jsx'
-import ChatSidebar from './components/ChatSidebar.jsx'
+import { hasSidebarPermission } from '../../layouts/Sidebar.jsx'
+import { Avatar, PeopleIcon, PushPinIcon } from './ChatElements.jsx'
+import ChatMessage from './ChatMessage.jsx'
+import ChatComposer from './ChatComposer.jsx'
+import ChatSidebar from './ChatSidebar.jsx'
 
 function dateLabel(value) {
   const date=new Date(value); const today=new Date(); const yesterday=new Date(); yesterday.setDate(today.getDate()-1)

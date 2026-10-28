@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useProjectSelection } from '../useProjectSelection.js'
+import { useProjectSelection } from './useProjectSelection.js'
 export default function ProjectSelector({ onProjectSelect, user }) {
  const { projects: availableProjects, selectedProjectId, setSelectedProjectId, loadProjects } = useProjectSelection()
  const rootRef = useRef(null)

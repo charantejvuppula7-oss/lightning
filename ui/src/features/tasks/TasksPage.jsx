@@ -5,13 +5,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiList, errorMessage } from '../../shared/api/apiClient.js';
 import { useFeedback } from '../../shared/components/Feedback.jsx';
 import { ProjectSelectionContext } from '../projects/projectSelectionContext.js';
-import { hasSidebarPermission } from '../../layouts/sidebarNavigation.js';
+import { hasSidebarPermission } from '../../layouts/Sidebar.jsx';
 import { roleSlug } from '../../shared/utils/roles.js';
-import TaskCard from './components/TaskCard.jsx';
-import EditTaskPage from './components/TaskEditor.jsx';
-import FilterDropdown from './components/FilterDropdown.jsx';
-import SortMenu from './components/SortMenu.jsx';
-import { DEFAULT_SORT_OPTIONS } from './components/sortOptions.js';
+import TaskCard from './TaskCard.jsx';
+import EditTaskPage from './TaskEditor.jsx';
+import FilterDropdown from './FilterDropdown.jsx';
+import SortMenu from './SortMenu.jsx';
+import { DEFAULT_SORT_OPTIONS } from './sortOptions.js';
 function TaskList({
   tasks = [],
   onAddDependencyClick,

@@ -5,7 +5,7 @@ import useApiData from '../../shared/hooks/useApiData.js'
 import { useProjectSelection } from '../projects/useProjectSelection.js'
 import { errorMessage } from '../../shared/api/apiClient.js'
 import { useFeedback } from '../../shared/components/Feedback.jsx'
-import { hasSidebarPermission } from '../../layouts/sidebarNavigation.js'
+import { hasSidebarPermission } from '../../layouts/Sidebar.jsx'
 import ReviewDrawer from './ReviewDrawer.jsx'
 const date = value => value ? new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
 const label = value => String(value || '').replaceAll('_', ' ')

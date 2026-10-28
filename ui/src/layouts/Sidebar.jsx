@@ -1,10 +1,101 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { logout } from '../features/auth/api/authApi.js'
-import { sidebarItems, sidebarItemActive } from './sidebarNavigation.js'
+import { hasPermission } from '../shared/utils/permissions.js'
 import useAppVersion from '../shared/hooks/useAppVersion.js'
 import lightningLogoLight from '../assets/lightning-logo-light.png'
 import lightningIcon from '../assets/lightning-icon.png'
+
+// Navigation behavior is colocated with the sidebar so role access stays easy to review.
+/* eslint-disable react-refresh/only-export-components */
+
+const ADMIN_TOOL_PATHS = new Set(['/admin/database', '/admin/api-logs'])
+const ROLE_PREFIXES = { admin: 'admin', pm: 'pm', user: 'user' }
+const BASE_ROUTE_ALIASES = new Set(['/admin', '/pm', '/dashboard'])
+
+export const hasSidebarPermission = hasPermission
+
+export function sidebarItems(role, permissions = {}) {
+  const roleItems = role === 'admin' ? ADMIN_MENU_ITEMS : role === 'pm' ? PM_MENU_ITEMS : USER_MENU_ITEMS
+  const adminTools = role === 'admin' ? [] : ADMIN_MENU_ITEMS.filter(item => ADMIN_TOOL_PATHS.has(item.path))
+
+  return [...roleItems, ...adminTools].filter(item => (
+    role === 'admin' || !item.permission || hasSidebarPermission(permissions, item.permission)
+  ))
+}
+
+export function sidebarItemActive(item, pathname, role) {
+  if (pathname === item.path || pathname.startsWith(`${item.path}/`)) return true
+
+  const rolePrefix = ROLE_PREFIXES[role] || 'user'
+  const aliases = {
+    '/projects': rolePrefix === 'admin' ? '/admin/all-projects' : `/${rolePrefix}/projects`,
+    '/tasks': `/${rolePrefix}/tasks`,
+    '/dependencies': `/${rolePrefix}/dependencies`,
+    '/chat': `/${rolePrefix}/chat`,
+    '/calendar': `/${rolePrefix}/calendar`,
+    '/admin/db-explorer': '/admin/database',
+    '/admin': '/admin/dashboard',
+    '/pm': '/pm/dashboard',
+    '/dashboard': '/user/dashboard',
+  }
+
+  return Object.entries(aliases).some(([alias, target]) => {
+    if (target !== item.path) return false
+    if (pathname === alias) return true
+    return !BASE_ROUTE_ALIASES.has(alias) && pathname.startsWith(`${alias}/`)
+  })
+}
+
+// Admin side elements access
+const ADMIN_MENU_ITEMS = [
+  { icon: 'space_dashboard', label: 'Overview', path: '/admin/dashboard' },
+  { icon: 'folder_open', label: 'Projects', path: '/admin/all-projects', permission: 'Projects' },
+  { icon: 'assignment_turned_in', label: 'Tasks', path: '/admin/tasks', permission: 'Tasks' },
+  { icon: 'account_tree', label: 'Dependencies', path: '/admin/dependencies', permission: 'Dependencies' },
+  { icon: 'chat', label: 'Project Chat', path: '/admin/chat', permission: 'Chat' },
+  { icon: 'fact_check', label: 'Approvals', path: '/admin/approvals' },
+  { icon: 'monitoring', label: 'Workload', path: '/admin/workload', permission: 'TeamWorLoad' },
+  { icon: 'description', label: 'Documents', path: '/admin/documents', permission: 'Documents' },
+  { icon: 'group', label: 'Users', path: '/admin/users', permission: 'User Management' },
+  { icon: 'admin_panel_settings', label: 'Roles & Permissions', path: '/admin/roles-permissions', permission: 'Roles & permissions' },
+  { icon: 'database', label: 'Database Explorer', path: '/admin/database' },
+  { icon: 'history', label: 'Audit Logs', path: '/admin/audit-logs' },
+  { icon: 'speed', label: 'API Logs', path: '/admin/api-logs' },
+  { icon: 'calendar_today', label: 'Calendar', path: '/admin/calendar' },
+]
+
+// PM side elements access
+const PM_MENU_ITEMS = [
+  { icon: 'space_dashboard', label: 'Dashboard', path: '/pm/dashboard' },
+  { icon: 'folder_open', label: 'Projects', path: '/pm/projects', permission: 'Projects' },
+  { icon: 'assignment_turned_in', label: 'Tasks', path: '/pm/tasks', permission: 'Tasks' },
+  { icon: 'account_tree', label: 'Dependencies', path: '/pm/dependencies', permission: 'Dependencies' },
+  { icon: 'group', label: 'Users', path: '/pm/users', permission: 'User Management' },
+  { icon: 'chat', label: 'Chat', path: '/pm/chat', permission: 'Chat' },
+  { icon: 'fact_check', label: 'Approvals', path: '/pm/approvals' },
+  { icon: 'monitoring', label: 'Workload', path: '/pm/workload', permission: 'TeamWorLoad' },
+  { icon: 'admin_panel_settings', label: 'Roles & Permission', path: '/pm/roles-permissions', permission: 'Roles & permissions' },
+  { icon: 'calendar_today', label: 'Calendar', path: '/pm/calendar' },
+  { icon: 'description', label: 'Document', path: '/pm/documents', permission: 'Documents' },
+  { icon: 'history', label: 'Audit logs', path: '/pm/audit-logs' },
+]
+
+// User side elements access
+const USER_MENU_ITEMS = [
+  { id: 'workspace', label: 'Dashboard', path: '/user/dashboard', icon: 'dashboard', permission: 'Dashboard' },
+  { id: 'tasks', label: 'Tasks', path: '/user/tasks', icon: 'tasks', permission: 'Tasks' },
+  { id: 'projects', label: 'Projects', path: '/user/projects', icon: 'folder_open', permission: 'Projects' },
+  { id: 'dependencies', label: 'Dependencies', path: '/user/dependencies', icon: 'dependencies', permission: 'Dependencies' },
+  { id: 'chats', label: 'Chats', path: '/user/chat', icon: 'chat', permission: 'Chat' },
+  { id: 'approvals', label: 'Approvals', path: '/user/approvals', icon: 'fact_check', permission: 'Approvals' },
+  { id: 'calendar', label: 'Calendar', path: '/user/calendar', icon: 'calendar' },
+  { id: 'documents', label: 'Document', path: '/user/documents', icon: 'document', permission: 'Documents' },
+  { id: 'audit-logs', label: 'Audit Logs', path: '/user/audit-logs', icon: 'history', permission: 'Audit Logs' },
+  { id: 'users', label: 'Users', path: '/user/users', icon: 'group', permission: 'User Management' },
+  { id: 'roles-permissions', label: 'Roles & Permissions', path: '/user/roles-permissions', icon: 'admin_panel_settings', permission: 'Roles & permissions' },
+  { id: 'workload', label: 'Workload', path: '/user/workload', icon: 'monitoring', permission: 'TeamWorLoad' },
+]
 
 const iconPaths = {
   dashboard: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18M9 12h12" /></>,

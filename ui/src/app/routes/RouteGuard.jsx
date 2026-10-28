@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import useSession from '../../shared/hooks/useSession.js'
 import { getRoleDashboard, roleSlug } from '../../shared/utils/roles.js'
-import { hasSidebarPermission } from '../../layouts/sidebarNavigation.js'
+import { hasSidebarPermission } from '../../layouts/Sidebar.jsx'
 import LayoutSkeleton from '../../layouts/LayoutSkeleton.jsx'
 
 export default function ProtectedRoute({ children, allowedRoles, requiredPermission }) {

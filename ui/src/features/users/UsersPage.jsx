@@ -4,7 +4,7 @@ import { FilterSelect, SearchBar } from '../../shared/components/SearchControls.
 import { useFeedback } from '../../shared/components/Feedback.jsx';
 import { apiList, apiRequest, errorMessage } from '../../shared/api/apiClient.js';
 import { ProjectSelectionContext } from '../projects/projectSelectionContext.js';
-import { hasSidebarPermission } from '../../layouts/sidebarNavigation.js';
+import { hasSidebarPermission } from '../../layouts/Sidebar.jsx';
 import { roleSlug as getRoleSlug } from '../../shared/utils/roles.js';
 import UserEditor from './UserEditor.jsx';
 

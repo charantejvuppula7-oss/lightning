@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { apiRequest } from '../../../shared/api/apiClient.js'
-import { ModalField, ModalShell } from '../../../shared/ui/Modal.jsx'
-import { canUsePermission, getApiError } from '../../../shared/utils/modalUtils.js'
+import { apiRequest } from '../../shared/api/apiClient.js'
+import { ModalField, ModalShell } from '../../shared/ui/Modal.jsx'
+import { canUsePermission, getApiError } from '../../shared/utils/modalUtils.js'
 
 const emptyMilestone = () => ({ name: '', description: '', startDate: '', dueDate: '' })
 

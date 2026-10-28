@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { apiRequest, errorMessage } from '../../../shared/api/apiClient.js';
-import DatePicker from "../../../shared/components/DatePicker.jsx";
+import { apiRequest, errorMessage } from '../../shared/api/apiClient.js';
+import DatePicker from "../../shared/components/DatePicker.jsx";
 
 /**
  * EditTask Modal Component (PM/edit task POP UP)

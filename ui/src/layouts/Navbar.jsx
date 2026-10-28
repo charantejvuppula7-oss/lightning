@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import GlobalSearch from '../shared/components/GlobalSearch.jsx'
-import ProjectSelector from '../features/projects/components/ProjectSelector.jsx'
+import ProjectSelector from '../features/projects/ProjectSelector.jsx'
 import { navigateToSearchResult } from '../shared/utils/searchNavigation.js'
 import { NotificationBell } from '../features/notifications/NotificationBell.jsx'
 import { roleSlug } from '../shared/utils/roles.js'

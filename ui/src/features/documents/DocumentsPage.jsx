@@ -4,7 +4,7 @@ import { SearchInput } from '../../shared/components/SearchControls.jsx';
 import { useFeedback } from '../../shared/components/Feedback.jsx';
 import { apiRequest, apiUpload, errorMessage } from '../../shared/api/apiClient.js';
 import { ProjectSelectionContext } from '../projects/projectSelectionContext.js';
-import { hasSidebarPermission } from '../../layouts/sidebarNavigation.js';
+import { hasSidebarPermission } from '../../layouts/Sidebar.jsx';
 import DocumentActionModals from './DocumentActionModals.jsx';
 
 function downloadDocument(doc) {

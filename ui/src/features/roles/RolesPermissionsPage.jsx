@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import useApiData from '../../shared/hooks/useApiData.js'
 import { apiList, apiRequest, errorMessage } from '../../shared/api/apiClient.js'
-import { hasSidebarPermission } from '../../layouts/sidebarNavigation.js'
+import { hasSidebarPermission } from '../../layouts/Sidebar.jsx'
 import { roleSlug } from '../../shared/utils/roles.js'
 import { useFeedback } from '../../shared/components/Feedback.jsx'
 import { permissionSchema } from '../../shared/utils/permissions.js'
