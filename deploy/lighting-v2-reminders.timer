@@ -1,0 +1,10 @@
+[Unit]
+Description=Generate Lighting v2 deadline notifications daily
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+Unit=lighting-v2-reminders.service
+
+[Install]
+WantedBy=timers.target

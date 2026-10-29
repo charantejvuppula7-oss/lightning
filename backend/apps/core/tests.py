@@ -69,3 +69,17 @@ class LiveStreamTests(SimpleTestCase):
         self.assertIn(b'event: access_revoked', await anext(stream))
         with self.assertRaises(StopAsyncIteration):
             await anext(stream)
+
+
+class OutboxQueueTests(SimpleTestCase):
+    def test_full_immediate_queue_keeps_durable_jobs_for_the_scheduled_retry(self):
+        from apps.notifications.email_outbox import enqueue_emails
+        job = SimpleNamespace(pk=uuid4())
+        with patch('apps.notifications.email_outbox.EmailOutbox.objects.bulk_create', return_value=[job]) as persist, \
+             patch('apps.notifications.email_outbox.transaction.on_commit', side_effect=lambda callback, **kwargs: callback()), \
+             patch('apps.notifications.email_outbox.pending_deliveries') as queue, \
+             patch('apps.notifications.email_outbox.mail_pool.submit') as submit:
+            queue.acquire.return_value = False
+            enqueue_emails([('task_assigned', {'to_email': 'test@example.com'})])
+        persist.assert_called_once()
+        submit.assert_not_called()

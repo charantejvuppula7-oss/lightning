@@ -57,13 +57,7 @@ export default function Navbar({ role: roleProp, showProjectSelector, onProjectS
       onOpenInbox();
       return;
     }
-    if (effectiveRole === "pm") {
-      navigate("/pm/notifications");
-    } else if (effectiveRole === "user") {
-      navigate("/user/dashboard", { state: { tab: "notifications" } });
-    } else {
-      navigate("/admin/notifications");
-    }
+    navigate(`/${effectiveRole}/notifications`);
   };
 
   // ── Avatar Click ────────────────────────────────────────────────────────
@@ -81,14 +75,7 @@ export default function Navbar({ role: roleProp, showProjectSelector, onProjectS
     }
   };
 
-  // Avatar default colors by role
-  const resolvedAvatarBg =
-    avatarColor ||
-    (effectiveRole === "pm"
-      ? "var(--color-role-pm)"
-      : effectiveRole === "user"
-      ? "#1E3A8A"
-      : "var(--color-slate-900)");
+  const resolvedAvatarBg = avatarColor || "var(--color-slate-900)";
 
   return (
     <header
@@ -173,7 +160,7 @@ export default function Navbar({ role: roleProp, showProjectSelector, onProjectS
             onClick={handleAvatarClick}
             title={avatarTooltip}
             style={{ backgroundColor: resolvedAvatarBg }}
-            className={`flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-[50%] text-white text-[12px] font-bold cursor-pointer select-none transition-transform duration-150 hover:scale-[1.06] ${effectiveRole === 'user' ? 'shadow-[0_2px_4px_rgba(30,58,138,0.25)]' : effectiveRole === 'pm' ? 'shadow-[0_2px_4px_rgba(249,115,22,0.25)]' : 'shadow-[0_2px_4px_rgba(37,99,235,0.25)]'} ${avatarClassName}`}
+            className={`flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-[50%] text-white text-[12px] font-bold cursor-pointer select-none transition-transform duration-150 hover:scale-[1.06] shadow-[0_2px_4px_rgba(37,99,235,0.25)] ${avatarClassName}`}
           >
             {userInitials}
           </div>

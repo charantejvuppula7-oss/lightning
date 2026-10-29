@@ -5,21 +5,20 @@ import { hasSidebarPermission } from '../../layouts/Sidebar.jsx'
 const date = value => value ? new Date(value).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '\u2014'
 const label = value => String(value || '').replaceAll('_',' ')
 
-export default function ReviewDrawer({ item: selectedItem, user, onClose, onUpdated }) {
+export default function ReviewDrawer({ item: selectedItem, user, toast, onClose, onUpdated }) {
   const [reason, setReason] = useState('')
   const [showReason, setShowReason] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [actionError, setActionError] = useState('')
   const canEdit = selectedItem.type === 'task' ? selectedItem.can_review === true : ['Admin', 'Administrator'].includes(user.role) || hasSidebarPermission(user.permissions || {}, 'Dependencies', 'Edit')
   const close = () => { if (!saving) onClose() }
   const decide = async (row, action) => {
     if (saving) return
-    setSaving(true); setActionError('')
+    setSaving(true)
     try {
       await reviewDecision(row, action, reason)
 
-      onUpdated?.(); onClose()
-    } catch (error) { setActionError(errorMessage(error)) }
+      onUpdated?.(); onClose(); toast.success(action === 'approve' ? 'Approved successfully.' : row.type === 'task' ? 'Changes requested.' : 'Dependency declined and paused.')
+    } catch (error) { toast.error(errorMessage(error)) }
     finally { setSaving(false) }
   }
   return <div className="review-overlay" onClick={() => { if (!saving) close() }}><aside className="review-drawer" data-review-type={selectedItem.type} role="dialog" aria-modal="true" aria-labelledby="review-title" onClick={event => event.stopPropagation()}>
@@ -31,7 +30,6 @@ export default function ReviewDrawer({ item: selectedItem, user, onClose, onUpda
         {selectedItem.provider_task && <><h3>Provider task</h3><p>{selectedItem.provider_task}</p></>}
         {<><h3>Attachments</h3>{selectedItem.attachments?.length ? selectedItem.attachments.map(file => <a className="review-file" key={file.id} href={file.url} download>{file.name} <span>Download ↓</span></a>) : <p>No files attached.</p>}
           {selectedItem.links?.map(link => <a className="review-file" key={link} href={link} target="_blank" rel="noreferrer">{link} ↗</a>)}</>}
-        {actionError && <p role="alert" className="review-error">{actionError}</p>}
         {showReason && <label className="review-reason">{selectedItem.type === 'task' ? 'Describe the changes needed' : 'Reason for declining'}<textarea value={reason} onChange={event => setReason(event.target.value)} maxLength={2000} /></label>}
       </div><footer>{canEdit && <><button className="review-primary" disabled={saving} onClick={() => decide(selectedItem, 'approve')}>{saving ? 'Saving…' : selectedItem.type === 'task' ? 'Approve' : 'Approve dependency'}</button>
         {showReason ? <button disabled={saving || !reason.trim()} onClick={() => decide(selectedItem, 'decline')}>Confirm {selectedItem.type === 'task' ? 'changes' : 'decline'}</button> : <button disabled={saving} onClick={() => setShowReason(true)}>{selectedItem.type === 'task' ? 'Request changes' : 'Decline'}</button>}</>}</footer>

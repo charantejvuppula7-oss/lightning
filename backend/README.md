@@ -20,7 +20,7 @@ backend/
 │   ├── dependencies/       Task dependency CRUD and creation service
 │   ├── milestones/         Milestone API
 │   ├── notifications/      Deadline alerts, notification API and email scheduling
-│   ├── chat/               Project chat history, sending and SSE stream
+│   ├── chat/               Project chat history, sending and Socket.IO
 │   ├── audit/              Audit and security logging
 │   └── core/               HTTP middleware, errors, pagination and shared views
 ├── services/email.py       Shared Microsoft Graph email delivery
@@ -102,8 +102,8 @@ the dependency task's project. A dependency can reference another task in the
 same project through `depends_on`; self, duplicate, cross-project, and circular
 task links are rejected.
 
-Tasks begin as `open`. `PATCH /api/tasks/<uuid>/` advances status through
-`in_progress`, `in_review`, and `completed`; the `Task` model checks transitions.
+Tasks begin as `open`. The status endpoint, task serializer and database explorer
+share `apps/tasks/transitions.py` for timers, review rules and status changes.
 Project membership and assignment still limit access. User onboarding and task
 assignment emails are stored in the database transaction and dispatched after
 commit. The onboarding email directs the user to password reset and does not
@@ -218,9 +218,8 @@ set `DJANGO_SETTINGS_MODULE=config.settings.production` and must provide
 .\venv\Scripts\python.exe -m uvicorn config.asgi:application --port 8000
 ```
 
-Use Uvicorn for local development, including chat and notification streams. Django's
-`manage.py runserver` serves WSGI and buffers the asynchronous event stream, leaving
-chat on Connecting. From the repository root, `./scripts/start-backend.ps1` starts
+Use Uvicorn for local development: Socket.IO requires the ASGI application.
+Django's `manage.py runserver` does not serve the Socket.IO application. From the repository root, `./scripts/start-backend.ps1` starts
 the backend with ASGI and reloads it when Python files change.
 
 Transactional email uses Microsoft Graph only. Configure `MS_GRAPH_TENANT_ID`,
@@ -230,7 +229,7 @@ ignored `backend/.env` file. No SMTP fallback is used.
 
 ## Monitoring and database explorer
 
-The frontend uses shared controls in `ui/src/components/common`, its navbar in
+The frontend uses shared controls in `ui/src/shared/components`, its navbar in
 `ui/src/layouts`, and the three monitoring screens in `ui/src/features/audit`.
 Log state, pagination, formatting, and the page shell are shared within that feature.
 Backend queries, model registry, and record operations stay in `apps/admin_panel`.
@@ -260,3 +259,26 @@ and every 30 seconds for idle connections. Socket actions use the configured cac
 Run the existing single Uvicorn worker. The deployment Nginx configuration includes
 WebSocket upgrade headers; rerun `scripts/deploy.sh` when deploying this change.
 Additional workers require a shared Socket.IO manager and presence store first.
+
+## Project editor transactions
+
+`PATCH /api/projects/<uuid>/update/` accepts an ordered `changes` list restricted
+to that project's projects, milestones, features, sprints, tasks and dependencies.
+Each item declares `resource`, `method`, `id` and optional `body`. New records use
+unique `new:` IDs referenced by later changes. Existing serializers, permissions
+and audit services validate every change; a failed change rolls back the entire
+metadata edit. Original individual resource endpoints remain available.
+
+File uploads remain separate network transfers. File replacement uploads new
+files before removing old database references. A failed file transfer reports
+that metadata was saved so it is not mistaken for a fully rolled-back edit.
+
+## Notification delivery
+
+The UI shares an authenticated Socket.IO connection for chat and notifications.
+Recipient-only invalidations refresh the shared notification snapshot; an event
+arriving during a pending fetch queues one follow-up refresh. Production reminder
+commands forward invalidations through the existing Redis instance.
+Task-status preferences persist at `/api/notifications/preferences/`. Notification
+targets are checked on the server before navigating to tasks, dependencies,
+reviews or chat. The SSE endpoint remains for compatibility, not as the UI transport.

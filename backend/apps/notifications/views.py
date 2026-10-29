@@ -22,7 +22,7 @@ from rest_framework.renderers import JSONRenderer
 from apps.notifications.models import Notification
 from apps.notifications.serializers import NotificationSerializer
 from api.models import ProjectChatMessage, Task, TaskDependency, UserData
-from apps.roles.permissions import has_permission, scope_queryset
+from apps.roles.permissions import has_permission, require_permission, scope_queryset
 from apps.approvals.views import review_tasks, managed_dependencies
 
 
@@ -191,5 +191,51 @@ class NotificationMarkAllReadView(APIView):
             Response: JSON payload with `{"updated": <count>}`.
         """
         updated = Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        from apps.notifications.signals import notify_users
+        notify_users({request.user.pk})
         return Response({'updated': updated}, status=status.HTTP_200_OK)
+
+
+class NotificationPreferencesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({'notify_task_status': request.user.notify_task_status})
+
+    def patch(self, request):
+        value = request.data.get('notify_task_status')
+        if not isinstance(value, bool):
+            raise ValidationError({'notify_task_status': 'Use true or false.'})
+        request.user.notify_task_status = value
+        request.user.save(update_fields=['notify_task_status'])
+        return Response({'notify_task_status': value})
+
+
+class NotificationTargetView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, notification_id):
+        notification = get_object_or_404(Notification, pk=notification_id, user=request.user)
+        if notification.notification_type == Notification.CHAT_MENTION:
+            message = get_object_or_404(ProjectChatMessage.objects.select_related('room'), pk=notification.resource_id)
+            from apps.chat.services import get_chat_room
+            get_chat_room(message.room.project_id, request.user)
+            target = {'page': 'chat', 'messageId': str(message.pk)}
+            project_id = message.room.project_id
+        elif notification.notification_type.startswith('dependency_'):
+            require_permission(request.user, 'Dependencies', 'View')
+            dependency = get_object_or_404(scope_queryset(request.user, 'dependency', TaskDependency.objects.select_related('task')),
+                                           pk=notification.resource_id)
+            tab = 'waiting_on_me' if dependency.assigned_to_id == request.user.pk else 'waiting_on_other' if dependency.task.assigned_to_id == request.user.pk else 'all'
+            target = {'page': 'dependencies', 'dependencyId': str(dependency.pk), 'tab': tab}
+            project_id = dependency.task.project_id
+        else:
+            require_permission(request.user, 'Tasks', 'View')
+            task = get_object_or_404(scope_queryset(request.user, 'task', Task.objects.all()), pk=notification.resource_id)
+            review = task.status == 'in_review' and task.review_by_id == request.user.pk and has_permission(request.user, 'Approvals', 'View')
+            target = {'page': 'approvals', 'reviewId': str(task.pk)} if review else {'page': 'tasks', 'taskId': str(task.pk), 'tab': 'all'}
+            project_id = task.project_id
+        role = request.user.role.lower()
+        base = 'admin' if role in ('admin', 'administrator') else 'pm' if role in ('pm', 'project manager') else 'user'
+        return Response({**target, 'projectId': str(project_id), 'base': base})
 

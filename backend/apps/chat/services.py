@@ -132,6 +132,33 @@ def publish_message(message):
 
 
 @transaction.atomic
+def change_message(user, room, message_id, *, content=None, delete=False):
+    from apps.chat.socket import broadcast, schedule
+    message = ProjectChatMessage.objects.select_for_update().filter(pk=message_id, room=room).first()
+    if message is None:
+        raise NotFound('Message not found.')
+    if message.sender_id != user.pk:
+        raise PermissionDenied('You can only edit or delete your own messages.')
+    if delete:
+        data = {'message_id': str(message.pk), 'parent_id': str(message.parent_message_id) if message.parent_message_id else None}
+        parent = message.parent_message
+        message.delete()
+        if parent:
+            data['parent'] = message_data(parent)
+        event = 'message_deleted'
+    else:
+        if not isinstance(content, str) or len(content) > 10000 or (not content.strip() and not message.attachment_id):
+            raise ValidationError('Enter a message of up to 10000 characters.')
+        message.content = content.strip()
+        message.is_edited = True
+        message.save(update_fields=['content', 'is_edited', 'updated_at'])
+        data = {'message': message_data(message)}
+        event = 'message_updated'
+    transaction.on_commit(lambda: schedule(lambda: broadcast(event, room.project_id, data)))
+    return data
+
+
+@transaction.atomic
 def change_reaction(user, room, message_id, *, add):
     from apps.chat.socket import broadcast, schedule
     message = ProjectChatMessage.objects.filter(pk=message_id, room=room).first()

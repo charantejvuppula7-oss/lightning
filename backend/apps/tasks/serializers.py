@@ -127,6 +127,12 @@ class TaskSerializer(serializers.ModelSerializer):
             Task: Updated task model instance.
         """
         if 'status' in validated_data:
-            instance.transition_to(validated_data.pop('status'), save=False)
+            target = validated_data.pop('status')
+            if target != instance.status:
+                from apps.tasks.transitions import apply_task_status
+                instance.Remarks = validated_data.pop('Remarks', instance.Remarks)
+                for field in ('Time_Taken', 'start_Time', 'pause_Time'):
+                    validated_data.pop(field, None)
+                apply_task_status(instance, {'status': target}, self.context['request'])
         return super().update(instance, validated_data)
 

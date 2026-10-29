@@ -1,5 +1,6 @@
 const API_BASE = (import.meta.env?.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
 let csrfToken = null
+let csrfRequest = null
 
 export class ApiError extends Error {
   constructor(status, data, retryAfter = 0) {
@@ -12,13 +13,14 @@ export class ApiError extends Error {
 
 async function csrf() {
   if (csrfToken) return csrfToken
-  const response = await fetch(`${API_BASE}/auth/csrf/`, { credentials: 'include' })
-  if (!response.ok) {
-    const data = response.headers.get('content-type')?.includes('application/json') ? await response.json() : null
-    throw new ApiError(response.status, data, response.headers.get('Retry-After'))
+  if (!csrfRequest) {
+    const request = fetch(`${API_BASE}/auth/csrf/`, { credentials: 'include' }).then(readResponse).then(data => {
+      if (csrfRequest === request) csrfToken = data.csrfToken
+      return data.csrfToken
+    }).finally(() => { if (csrfRequest === request) csrfRequest = null })
+    csrfRequest = request
   }
-  csrfToken = (await response.json()).csrfToken
-  return csrfToken
+  return csrfRequest
 }
 
 export async function apiFetch(path, options = {}) {
@@ -26,35 +28,37 @@ export async function apiFetch(path, options = {}) {
   const headers = { ...options.headers }
   if (!['GET', 'HEAD'].includes(method)) headers['X-CSRFToken'] = await csrf()
   const response = await fetch(`${API_BASE}${path}`, { ...options, method, credentials: 'include', headers })
-  if (response.ok && !['GET', 'HEAD'].includes(method) && /^\/(tasks|dependencies|approvals)\//.test(path)) {
+  if (response.ok && !['GET', 'HEAD'].includes(method) &&
+      (/^\/(tasks|dependencies|approvals)\//.test(path) || /^\/projects\/[^/]+\/update\/$/.test(path))) {
     window.dispatchEvent(new Event('notifications:changed'))
   }
   return response
 }
 
-export async function apiRequest(path, { method = 'GET', body, signal } = {}) {
-  const response = await apiFetch(path, {
-    method,
-    signal,
-    ...(body !== undefined ? { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}),
-  })
+async function readResponse(response) {
   const data = response.headers.get('content-type')?.includes('application/json') ? await response.json() : null
   if (!response.ok) {
     if (response.status === 403) csrfToken = null
     throw new ApiError(response.status, data, response.headers.get('Retry-After'))
   }
+  return data
+}
+
+export async function apiRequest(path, { method = 'GET', body, signal } = {}) {
+  const data = await readResponse(await apiFetch(path, {
+    method,
+    signal,
+    ...(body !== undefined ? { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}),
+  }))
   if (data?.csrfToken) csrfToken = data.csrfToken
   return data
 }
 
 export async function apiUpload(path, formData, { method = 'POST' } = {}) {
-  const response = await apiFetch(path, { method, body: formData })
-  const data = response.headers.get('content-type')?.includes('application/json') ? await response.json() : null
-  if (!response.ok) throw new ApiError(response.status, data, response.headers.get('Retry-After'))
-  return data
+  return readResponse(await apiFetch(path, { method, body: formData }))
 }
 
-export function clearCsrf() { csrfToken = null }
+export function clearCsrf() { csrfToken = null; csrfRequest = null }
 
 export async function apiList(path, { signal } = {}) {
   const rows = []
@@ -69,5 +73,6 @@ export async function apiList(path, { signal } = {}) {
 
 export function errorMessage(error) {
   if (!error.data) return error.message || 'Request failed. Please try again.'
-  return Object.entries(error.data).map(([key, value]) => `${key === 'detail' ? '' : `${key}: `}${Array.isArray(value) ? value.join(' ') : value}`).join(' ')
+  if (typeof error.data === 'string') return error.data
+  return Object.entries(error.data).map(([key, value]) => `${key === 'detail' ? '' : `${key}: `}${Array.isArray(value) ? value.join(' ') : typeof value === 'object' ? JSON.stringify(value) : value}`).join(' ')
 }

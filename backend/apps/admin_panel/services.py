@@ -200,6 +200,13 @@ def change_record(request, key, record_id, deleting=False):
             obj = serializer.save()
             LogService.log_audit_event(actor=request.user, action='updated', entity_type=key,
                                        entity=obj, request=request, old_values=before, new_values=record_data(obj))
+        elif key == 'tasks':
+            from apps.tasks.serializers import TaskSerializer
+            serializer = TaskSerializer(obj, data=request.data, partial=True, context={'request': request})
+            serializer.is_valid(raise_exception=True)
+            obj = serializer.save()
+            LogService.log_audit_event(actor=request.user, action='updated', entity_type=key,
+                                      entity=obj, request=request, old_values=before, new_values=record_data(obj))
         else:
             missing = missing_fields(type(obj))
             allowed = {f.name: f for f in obj._meta.fields if not f.primary_key and not f.auto_created

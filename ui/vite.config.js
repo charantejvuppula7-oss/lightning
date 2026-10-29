@@ -13,5 +13,6 @@ export default defineConfig({
   server: { proxy: {
     '/api/socket.io': { target: 'http://localhost:8000', ws: true },
     '/api': 'http://localhost:8000',
+    '/media': 'http://localhost:8000',
   } },
 })

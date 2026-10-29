@@ -8,7 +8,7 @@ const uiRoot = fileURLToPath(new URL('../../../', import.meta.url))
 const vite = await createServer({
   root: uiRoot,
   configFile: fileURLToPath(new URL('../../../vite.config.js', import.meta.url)),
-  server: { middlewareMode: true },
+  server: { middlewareMode: true, hmr: false, ws: false },
   appType: 'custom',
 })
 const { sidebarItems } = await vite.ssrLoadModule('/src/layouts/Sidebar.jsx')

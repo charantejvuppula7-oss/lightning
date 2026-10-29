@@ -8,6 +8,7 @@ import { roleSlug } from '../../shared/utils/roles.js'
 import { hasSidebarPermission } from '../../layouts/Sidebar.jsx'
 import ProjectStatus from './ProjectStatus.jsx'
 import TeamWorkload from './TeamWorkload.jsx'
+import { useFeedback } from '../../shared/components/Feedback.jsx'
 
 function StatusBadge({ status }) {
   const s = (status || "").toLowerCase();
@@ -80,6 +81,7 @@ function UrgencyBadge({ urgency }) {
 }
 
 export default function OverviewDashboard({ user }) {
+  const { toast, feedback } = useFeedback()
   const navigate = useNavigate();
   const [addingTask, setAddingTask] = useState(false);
   const [reviewItem, setReviewItem] = useState(null);
@@ -97,8 +99,8 @@ export default function OverviewDashboard({ user }) {
     impact: row.dependency_type === 'mandatory' ? `Blocks ${row.task_name}` : row.task_name,
     urgency: row.priority, sent: formatDate(row.submitted_at) }));
   const taskProject = data.projects.find(project => project.id === selectedProjectId) || data.projects[0];
-  return <main className="company-overview">
-    {reviewItem && <ReviewDrawer item={reviewItem} user={user} onClose={() => setReviewItem(null)} onUpdated={reload} />}
+  return <main className="company-overview">{feedback}
+    {reviewItem && <ReviewDrawer item={reviewItem} user={user} toast={toast} onClose={() => setReviewItem(null)} onUpdated={reload} />}
     {addingTask && <CreateTaskDialog key={taskProject?.id} project={taskProject} projects={data.projects} onClose={() => setAddingTask(false)} onCreated={reload} />}
           <div
             className="max-w-[1548px]! w-full! m-[0_auto]! p-[28px_32px_60px]!"

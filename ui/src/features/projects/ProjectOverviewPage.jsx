@@ -56,15 +56,18 @@ export default function ProjectOverviewPage({ user }) {
     catch (error) { toast.error(errorMessage(error)) }
   }
   return <main className="pm-projects-page live-projects">
-    <div className="pm-projects-heading"><div><h1>Projects</h1></div>{allowed('Create') && <button onClick={() => navigate('/projects/new')}>＋ Create Project</button>}</div>
+    <section>
+    <div className="pm-projects-heading"><div><h1>Projects</h1></div>{allowed('Create') && <button onClick={() => navigate('/projects/new')}><span className="material-symbols-outlined text-[18px]!" aria-hidden="true">add</span>Create Project</button>}</div>
     {feedback}{location.state?.saved && <p role="status">{location.state.saved}</p>}
     {error && <p role="alert">{error} <button onClick={reload}>Retry</button></p>}
-    {loading ? <p role="status">Loading projects…</p> : <>
+    {loading ? <p role="status">Loading projects…</p> :
       <div className="pm-project-cards">{projects.map(item => <button type="button" key={item.id} className={project?.id === item.id ? 'pm-project-card selected' : 'pm-project-card'} aria-pressed={project?.id === item.id} onClick={() => select(item)}>
         <div className="pm-project-card-top"><strong title={item.project_name}>{item.project_name}</strong><span className={`project-state ${(statusOverrides[item.id] || item.status).toLowerCase()}`}>{statusOverrides[item.id] || item.status}</span></div>
         <p title={item.milestones[0]?.name}>{item.milestones[0] ? `M1- ${item.milestones[0].name}` : '—'}</p><div className="project-progress-row"><div className="project-progress"><i style={{ width: `${item.progress}%` }} /></div><span>{item.progress}%</span></div>
         <p className="project-due">Due: {formatDate(item.end_date)}</p><div className="project-counts"><span><span className="material-symbols-outlined">link</span>{item.dependency_count} dependency</span><span><span className="material-symbols-outlined">block</span>{item.blocker_count} blocker</span></div>
-      </button>)}</div>
+      </button>)}</div>}
+    </section>
+    {!loading && <>
       {!projects.length && <p>No matching projects.</p>}
       {project ? <>
         {(role === 'admin' || hasSidebarPermission(user.permissions, 'ProjectJourney')) && <section><h2>Project Overview</h2><ProjectJourneyCard project={project}

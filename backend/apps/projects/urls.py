@@ -1,12 +1,14 @@
 from django.urls import path
 from apps.projects.overview import ProjectOverviewView, DashboardOverviewView
 from apps.projects.workspace import WorkspaceView
+from apps.projects.update import ProjectUpdateView
 
 from apps.projects.views import (AssignedProjectListView, ProjectListCreateView, ProjectDetailView,
                                  ProjectSetupOptionsView, ProjectSetupDetailView, ProjectFilesView)
 
 
 urlpatterns = [
+    path('projects/<uuid:project_id>/update/', ProjectUpdateView.as_view()),
     path('workspace/', WorkspaceView.as_view()),
     path('projects/overview/', ProjectOverviewView.as_view()),
     path('overview/', DashboardOverviewView.as_view()),

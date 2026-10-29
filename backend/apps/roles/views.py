@@ -93,41 +93,16 @@ class RoleDetailView(ResourceAPIView):
         return Response(RoleSerializer(instance).data)
 
     def put(self, request, role_id):
-        """
-        Replace all fields of an existing role within an atomic transaction.
-
-        Args:
-            request (Request): Incoming request with full role payload.
-            role_id (UUID): Role identifier.
-
-        Returns:
-            Response: Serialized updated role.
-        """
-        with transaction.atomic():
-            instance = self.authorized_object(request, role_id, lock=True)
-            before = {'name': instance.name, 'permissions': instance.permissions}
-            serializer = RoleSerializer(instance, data=request.data, context={'request': request})
-            serializer.is_valid(raise_exception=True)
-            instance = serializer.save()
-            self.audit(request, instance, 'updated', old_values=before,
-                       new_values={'name': instance.name, 'permissions': instance.permissions})
-        return Response(RoleSerializer(instance).data)
+        return self._update(request, role_id)
 
     def patch(self, request, role_id):
-        """
-        Partially update an existing role within an atomic transaction.
+        return self._update(request, role_id, partial=True)
 
-        Args:
-            request (Request): Incoming request with partial role payload.
-            role_id (UUID): Role identifier.
-
-        Returns:
-            Response: Serialized updated role.
-        """
+    def _update(self, request, role_id, partial=False):
         with transaction.atomic():
             instance = self.authorized_object(request, role_id, lock=True)
             before = {'name': instance.name, 'permissions': instance.permissions}
-            serializer = RoleSerializer(instance, data=request.data, partial=True, context={'request': request})
+            serializer = RoleSerializer(instance, data=request.data, partial=partial, context={'request': request})
             serializer.is_valid(raise_exception=True)
             instance = serializer.save()
             self.audit(request, instance, 'updated', old_values=before,

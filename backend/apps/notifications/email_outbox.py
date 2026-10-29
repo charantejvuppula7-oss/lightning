@@ -9,6 +9,7 @@ This module implements the transactional Outbox Pattern for email notifications:
 
 import logging
 from concurrent.futures import ThreadPoolExecutor
+from threading import BoundedSemaphore
 from datetime import timedelta
 
 from django.db import transaction
@@ -23,6 +24,7 @@ from services.email import EmailService
 logger = logging.getLogger(__name__)
 # Dedicated bounded background thread pool for immediate outbound delivery attempts
 mail_pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix='pms-email')
+pending_deliveries = BoundedSemaphore(100)
 
 
 def enqueue_emails(messages):
@@ -45,7 +47,13 @@ def enqueue_emails(messages):
     if jobs:
         def dispatch():
             for job in jobs:
-                mail_pool.submit(deliver_in_background, job.pk)
+                if not pending_deliveries.acquire(blocking=False):
+                    continue  # The scheduled outbox retry owns jobs beyond this process's queue limit.
+                try:
+                    mail_pool.submit(deliver_in_background, job.pk)
+                except RuntimeError:
+                    pending_deliveries.release()
+                    logger.warning('email_worker_stopping job_id=%s', job.pk)
         transaction.on_commit(dispatch, robust=True)
 
 
@@ -55,6 +63,7 @@ def deliver_in_background(job_id):
         return deliver_email(job_id)
     finally:
         close_old_connections()
+        pending_deliveries.release()
 
 
 def deliver_email(job_id):

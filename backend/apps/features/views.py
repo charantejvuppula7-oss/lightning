@@ -74,38 +74,15 @@ class FeatureDetailView(ResourceAPIView):
         return Response(FeatureSerializer(instance).data)
 
     def put(self, request, feature_id):
-        """
-        Full update of a feature within an atomic transaction.
-
-        Args:
-            request (Request): Request with full payload.
-            feature_id (UUID): Feature identifier.
-
-        Returns:
-            Response: Serialized updated feature.
-        """
-        with transaction.atomic():
-            instance = self.authorized_object(request, feature_id, lock=True)
-            serializer = FeatureSerializer(instance, data=request.data, context={'request': request})
-            serializer.is_valid(raise_exception=True)
-            instance = serializer.save()
-            self.audit(request, instance, 'updated')
-        return Response(FeatureSerializer(instance).data)
+        return self._update(request, feature_id)
 
     def patch(self, request, feature_id):
-        """
-        Partial update of a feature within an atomic transaction.
+        return self._update(request, feature_id, partial=True)
 
-        Args:
-            request (Request): Request with partial payload.
-            feature_id (UUID): Feature identifier.
-
-        Returns:
-            Response: Serialized updated feature.
-        """
+    def _update(self, request, feature_id, partial=False):
         with transaction.atomic():
             instance = self.authorized_object(request, feature_id, lock=True)
-            serializer = FeatureSerializer(instance, data=request.data, partial=True, context={'request': request})
+            serializer = FeatureSerializer(instance, data=request.data, partial=partial, context={'request': request})
             serializer.is_valid(raise_exception=True)
             instance = serializer.save()
             self.audit(request, instance, 'updated')

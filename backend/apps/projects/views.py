@@ -7,12 +7,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.models import Project, Customer, Priority, ProjectType, Department, UserData, ResourceFile
+from api.models import Project, Customer, Priority, ProjectType, Department, UserData
 from apps.core.pagination import ResourcePagination
 from apps.projects.serializers import ProjectSerializer, ProjectCreateSerializer, ProjectCreationResponseSerializer, is_project_manager_role
 from apps.projects.services import create_project
 from apps.projects.filters import filter_projects
 from apps.core.views import ResourceAPIView
+from apps.documents.services import delete_document, store_document
 from apps.roles.permissions import allowed_projects, has_permission, is_admin, require_permission
 
 
@@ -157,38 +158,15 @@ class ProjectDetailView(ResourceAPIView):
         return Response(ProjectSerializer(instance).data)
 
     def put(self, request, project_id):
-        """
-        Perform a full update of project attributes inside an atomic transaction.
-
-        Args:
-            request (Request): Incoming request.
-            project_id (UUID): Project identifier.
-
-        Returns:
-            Response: Serialized updated project.
-        """
-        with transaction.atomic():
-            instance = self.authorized_object(request, project_id, lock=True)
-            serializer = ProjectSerializer(instance, data=request.data, context={'request': request})
-            serializer.is_valid(raise_exception=True)
-            instance = serializer.save()
-            self.audit(request, instance, 'updated')
-        return Response(ProjectSerializer(instance).data)
+        return self._update(request, project_id)
 
     def patch(self, request, project_id):
-        """
-        Perform a partial update of project attributes inside an atomic transaction.
+        return self._update(request, project_id, partial=True)
 
-        Args:
-            request (Request): Incoming request.
-            project_id (UUID): Project identifier.
-
-        Returns:
-            Response: Serialized updated project.
-        """
+    def _update(self, request, project_id, partial=False):
         with transaction.atomic():
             instance = self.authorized_object(request, project_id, lock=True)
-            serializer = ProjectSerializer(instance, data=request.data, partial=True, context={'request': request})
+            serializer = ProjectSerializer(instance, data=request.data, partial=partial, context={'request': request})
             serializer.is_valid(raise_exception=True)
             instance = serializer.save()
             self.audit(request, instance, 'updated')
@@ -299,13 +277,8 @@ class ProjectFilesView(ResourceAPIView):
         is_pdr = request.data.get('is_pdr') == 'true'
         with transaction.atomic():
             for file in files:
-                ResourceFile.objects.create(
-                    project=project, file=file, file_name=file.name,
-                    file_size=file.size, file_type=ResourceFile.get_file_category(file.name),
-                    is_pdr=is_pdr, pdr_version=request.data.get('pdr_version', '') if is_pdr else '',
-                    pdr_changelog=request.data.get('pdr_changelog', '') if is_pdr else '',
-                    uploaded_by=request.user,
-                )
+                store_document(request, project, file, is_pdr=is_pdr,
+                    pdr_version=request.data.get('pdr_version', ''), pdr_changelog=request.data.get('pdr_changelog', ''))
         return Response(status=status.HTTP_201_CREATED)
 
     def patch(self, request, project_id):
@@ -352,7 +325,8 @@ class ProjectFilesView(ResourceAPIView):
         item = project.resource_files_set.filter(pk=file_id).first()
         if item is None:
             return Response({'id': 'File not found.'}, status=status.HTTP_404_NOT_FOUND)
-        item.delete()
+        with transaction.atomic():
+            delete_document(request, item)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

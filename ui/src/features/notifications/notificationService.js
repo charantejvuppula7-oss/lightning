@@ -1,4 +1,5 @@
 import { apiRequest } from '../../shared/api/apiClient.js';
+import { getSharedSocket, retainSocket } from '../chat/chatConnection.js';
 
 function normalize(notification) {
   return {
@@ -10,15 +11,17 @@ function normalize(notification) {
 
 let snapshot = null;
 let pending = null;
+let refreshQueued = false;
 let updatedAt = 0;
 let generation = 0;
-let timer = null;
+let releaseSocket = null;
 const listeners = new Set();
 
 export function resetNotificationCache() {
   generation += 1;
   snapshot = null;
   pending = null;
+  refreshQueued = false;
   updatedAt = 0;
 }
 
@@ -32,12 +35,20 @@ async function getSnapshot(force = false) {
     updatedAt = Date.now();
     listeners.forEach(listener => listener(snapshot));
     return snapshot;
-  }).finally(() => { if (pending === request) pending = null; });
+  }).finally(() => {
+    if (pending === request) {
+      pending = null;
+      if (refreshQueued) { refreshQueued = false; refresh(); }
+    }
+  });
   pending = request;
   return request;
 }
 
-const refresh = () => getSnapshot(true).catch(() => {});
+const refresh = () => {
+  if (pending) { refreshQueued = true; return; }
+  getSnapshot(true).catch(() => {});
+};
 
 export const notificationService = {
   getSnapshot,
@@ -45,14 +56,19 @@ export const notificationService = {
   subscribe(listener) {
     listeners.add(listener);
     if (listeners.size === 1) {
-      timer = setInterval(refresh, 15000);
+      const socket = getSharedSocket();
+      socket.on('notifications_changed', refresh);
+      socket.on('connect', refresh);
+      releaseSocket = retainSocket();
       window.addEventListener('notifications:changed', refresh);
     }
     return () => {
       listeners.delete(listener);
       if (!listeners.size) {
-        clearInterval(timer);
-        timer = null;
+        getSharedSocket().off('notifications_changed', refresh);
+        getSharedSocket().off('connect', refresh);
+        releaseSocket();
+        releaseSocket = null;
         window.removeEventListener('notifications:changed', refresh);
       }
     };

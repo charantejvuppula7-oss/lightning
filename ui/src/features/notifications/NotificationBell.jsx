@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { notificationService } from './notificationService.js';
+import useNotificationNavigation from './useNotificationNavigation.js';
 
 function renderFormattedMessage(text) {
   if (!text) return "";
@@ -48,6 +49,7 @@ export function NotificationBell({
   className = "",
 }) {
   const navigate = useNavigate();
+  const { openNotification, feedback } = useNotificationNavigation();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -102,17 +104,7 @@ export function NotificationBell({
 
   // Mark individual as read
   const handleItemClick = async (notif) => {
-    if (!notif.is_read && notif.id) {
-      try {
-        await notificationService.markAsRead(notif.id);
-        setNotifications((prev) =>
-          prev.map((n) => (n.id === notif.id ? { ...n, is_read: true } : n))
-        );
-        setUnreadCount((count) => Math.max(0, count - 1));
-      } catch (err) {
-        console.warn("Error marking notification read:", err);
-      }
-    }
+    if (await openNotification(notif.id)) setIsOpen(false);
   };
 
   const handleOpenInbox = () => {
@@ -131,6 +123,7 @@ export function NotificationBell({
 
     >
       {/* Bell Trigger Button */}
+      {feedback}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}

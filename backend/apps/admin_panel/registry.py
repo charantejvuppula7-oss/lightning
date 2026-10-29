@@ -40,7 +40,7 @@ DB_TABLE_REGISTRY = {
         'category': 'Projects',
         'icon': 'link',
         'search_fields': ['description', 'status'],
-        'default_fields': ['id', 'task', 'assigned_to', 'status', 'Due_Date', 'Time_Taken', 'created_at'],
+        'default_fields': ['id', 'task', 'assigned_to', 'status', 'due_date', 'Time_Taken', 'created_at'],
     },
     'sprints': {
         'model': Sprint,
@@ -48,7 +48,7 @@ DB_TABLE_REGISTRY = {
         'category': 'Projects',
         'icon': 'calendar_month',
         'search_fields': ['Sprint_No', 'Sprint_Name', 'Status'],
-        'default_fields': ['id', 'Sprint_No', 'Sprint_Name', 'project', 'Status', 'Sprint_start_date', 'Sprint_end_date', 'Number_of_days', 'order_index'],
+        'default_fields': ['id', 'Sprint_No', 'Sprint_Name', 'project', 'Status', 'Sprint_start_date', 'Sprint_end_date', 'Number_of_days'],
     },
     'milestones': {
         'model': Milestones,
@@ -64,7 +64,7 @@ DB_TABLE_REGISTRY = {
         'category': 'Projects',
         'icon': 'stars',
         'search_fields': ['feature_name', 'description'],
-        'default_fields': ['id', 'feature_name', 'milestone', 'due_date', 'status', 'created_at'],
+        'default_fields': ['id', 'feature_name', 'Milestone', 'feature_due_date', 'feature_status', 'created_at'],
     },
     'roles': {
         'model': Role,
@@ -95,16 +95,16 @@ DB_TABLE_REGISTRY = {
         'display_name': 'User Skills Junction',
         'category': 'System & Lookups',
         'icon': 'badge',
-        'search_fields': ['skill'],
-        'default_fields': ['id', 'person', 'skill_link', 'skill'],
+        'search_fields': ['skill_link__name'],
+        'default_fields': ['id', 'person', 'skill_link'],
     },
     'resources': {
         'model': ResourceFile,
         'display_name': 'Resource Files',
         'category': 'Assets & Media',
         'icon': 'attach_file',
-        'search_fields': ['name', 'file_type'],
-        'default_fields': ['id', 'name', 'file_type', 'file_size', 'project', 'uploaded_by', 'is_pdr', 'created_at'],
+        'search_fields': ['file_name', 'file_type'],
+        'default_fields': ['id', 'file_name', 'file_type', 'file_size', 'project', 'uploaded_by', 'is_pdr', 'uploaded_at'],
     },
     'audit_logs': {
         'model': AuditLog,

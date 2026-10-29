@@ -20,7 +20,15 @@ export default function DependenciesPage({ user, searchQuery = '' }) {
   const query = selectedProjectId && selectedProjectId !== 'all' ? `&project=${selectedProjectId}` : ''
   const { data:dependencies, setData:setDependencies, loading, error, reload } = useApiData(`/dependencies/?page_size=100${query}`,[],apiList)
   const manager = ['admin','pm'].includes(roleSlug(user.role))
-  const [tab,setTab] = useState(manager ? 'all' : 'waiting_on_other')
+  const requestedTab = params.get('tab')
+  const [tab,setTab] = useState(['all','waiting_on_me','waiting_on_other'].includes(requestedTab) ? requestedTab : manager ? 'all' : 'waiting_on_other')
+  useEffect(() => {
+    if (['all','waiting_on_me','waiting_on_other'].includes(requestedTab)) {
+      // Synchronize notification links when this page is already open.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTab(requestedTab)
+    }
+  }, [requestedTab])
   const [now,setNow] = useState(Date.now)
   const { toast,feedback } = useFeedback()
   const canEdit = roleSlug(user.role) === 'admin' || hasSidebarPermission(user.permissions || {}, 'Dependencies','Edit')

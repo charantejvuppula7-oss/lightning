@@ -76,42 +76,16 @@ class TaskDetailView(ResourceAPIView):
         return Response(TaskSerializer(instance, context={'request': request}).data)
 
     def put(self, request, task_id):
-        """
-        Full update of a task within an atomic transaction, notifying new assignee if changed.
-
-        Args:
-            request (Request): Request with full task payload.
-            task_id (UUID): Task identifier.
-
-        Returns:
-            Response: Serialized updated task.
-        """
-        with transaction.atomic():
-            instance = self.authorized_object(request, task_id, lock=True)
-            previous_assignee_id = instance.assigned_to_id
-            serializer = TaskSerializer(instance, data=request.data, context={'request': request})
-            serializer.is_valid(raise_exception=True)
-            instance = serializer.save()
-            self.audit(request, instance, 'updated')
-            if instance.assigned_to_id != previous_assignee_id:
-                schedule_assignment_notice(instance, request.user)
-        return Response(TaskSerializer(instance, context={'request': request}).data)
+        return self._update(request, task_id)
 
     def patch(self, request, task_id):
-        """
-        Partial update of a task within an atomic transaction, notifying new assignee if changed.
+        return self._update(request, task_id, partial=True)
 
-        Args:
-            request (Request): Request with partial task payload.
-            task_id (UUID): Task identifier.
-
-        Returns:
-            Response: Serialized updated task.
-        """
+    def _update(self, request, task_id, partial=False):
         with transaction.atomic():
             instance = self.authorized_object(request, task_id, lock=True)
             previous_assignee_id = instance.assigned_to_id
-            serializer = TaskSerializer(instance, data=request.data, partial=True, context={'request': request})
+            serializer = TaskSerializer(instance, data=request.data, partial=partial, context={'request': request})
             serializer.is_valid(raise_exception=True)
             instance = serializer.save()
             self.audit(request, instance, 'updated')

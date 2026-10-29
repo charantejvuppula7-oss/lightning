@@ -7,6 +7,7 @@ import lightningLogoLight from '../assets/lightning-logo-light.png'
 import lightningIcon from '../assets/lightning-icon.png'
 import { notificationService } from '../features/notifications/notificationService.js'
 import { useProjectSelection } from '../features/projects/useProjectSelection.js'
+import { readSidebarCollapsed, sidebarStorageKey } from './sidebarState.js'
 
 // Navigation behavior is colocated with the sidebar so role access stays easy to review.
 /* eslint-disable react-refresh/only-export-components */
@@ -95,22 +96,6 @@ const USER_MENU_ITEMS = [
   { id: 'workload', label: 'Workload', path: '/user/workload', icon: 'monitoring', permission: 'TeamWorLoad' },
 ]
 
-const iconPaths = {
-  dashboard: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18M9 12h12" /></>,
-  projects: <><path d="M3 7h7l2 2h9l-2 11H3z" /><path d="M3 7V5h7l2 2" /></>,
-  tasks: <><rect x="5" y="4" width="14" height="17" rx="2" /><path d="M9 4.5V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1.5M8.5 9h7M8.5 13h7M8.5 17H13" /></>,
-  dependencies: <><rect x="2.5" y="9.5" width="5" height="5" rx=".75" /><path d="M7.5 12H13M13 5.5v13m0-13h3.5M13 12h3.5M13 18.5h3.5" /><rect x="16.5" y="3" width="5" height="5" rx=".75" /><rect x="16.5" y="9.5" width="5" height="5" rx=".75" /><rect x="16.5" y="16" width="5" height="5" rx=".75" /></>,
-  users: <><circle cx="9" cy="8" r="3" /><path d="M3 20v-1a6 6 0 0 1 12 0v1zM16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 5v1" /></>,
-  chat: <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2zM8 8h8M8 12h5" />,
-  approvals: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="m7 9 1.5 1.5L11 8m2 1h4m-10 5 1.5 1.5L11 13m2 1h4" /></>,
-  workload: <><path d="M4 20v-5m5 5V9m5 11V4m5 16v-9" /><path d="m3 11 6-5 4 2 7-6" /></>,
-  roles: <><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z" /><circle cx="12" cy="10" r="2" /><path d="M9 16a3 3 0 0 1 6 0" /></>,
-  calendar: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></>,
-  document: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h6" />,
-  audit: <><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5m4-1v5l4 2" /></>,
-  database: <><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" /></>,
-}
-
 const materialIcons = {
   dashboard: 'space_dashboard',
   projects: 'folder_open',
@@ -127,40 +112,16 @@ const materialIcons = {
   database: 'database',
 }
 
-function SidebarIcon({ name, role }) {
-  const useCustomIcon = !['admin', 'pm'].includes(role)
-    && ['dashboard', 'tasks', 'dependencies', 'chat', 'calendar', 'document'].includes(name)
-
-  if (!useCustomIcon) {
-    return (
-      <span className="material-symbols-outlined sidebar-icon" style={{ fontSize: '18px' }} aria-hidden="true">
-        {materialIcons[name] || name}
-      </span>
-    )
-  }
-
-  return (
-    <svg
-      className="sidebar-icon"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {iconPaths[name]}
-    </svg>
-  )
+function SidebarIcon({ name }) {
+  return <span className="material-symbols-outlined sidebar-icon" aria-hidden="true">
+    {materialIcons[name] || name}
+  </span>
 }
 
-export default function Sidebar({ active: currentPath, effectiveRole: role = 'developer', permissions = {}, canAccessChat = false, onLogout, isCollapsed: controlledCollapsed, onToggle }) {
+export default function Sidebar({ active: currentPath, effectiveRole: role = 'user', permissions = {}, canAccessChat = false, onLogout, isCollapsed: controlledCollapsed, onToggle }) {
   const navigate = useNavigate()
   const effectiveRole = ['admin', 'pm'].includes(role) ? role : 'user'
-  const userRole = !['admin', 'pm'].includes(effectiveRole)
-  const storageKey = userRole ? (localStorage.getItem('dev-sidebar-collapsed') !== null ? 'dev-sidebar-collapsed' : 'user-sidebar-collapsed') : `${effectiveRole}-sidebar-collapsed`
-  const [internalCollapsed, setInternalCollapsed] = useState(() => localStorage.getItem(storageKey) === 'true')
+  const [internalCollapsed, setInternalCollapsed] = useState(() => readSidebarCollapsed(effectiveRole))
   const isCollapsed = controlledCollapsed ?? internalCollapsed
   const [loggingOut, setLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState('')
@@ -185,7 +146,7 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
   const handleToggle = () => {
     if (onToggle) return onToggle()
     setInternalCollapsed(previous => {
-      localStorage.setItem(storageKey, String(!previous))
+      localStorage.setItem(sidebarStorageKey, String(!previous))
       return !previous
     })
   }
@@ -202,18 +163,12 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
       }
       navigate('/login', { replace: true })
     } catch {
-      setLogoutError('Unable to log out. Please try again.')
+      setLogoutError('Unable to sign out. Please try again.')
       setLoggingOut(false)
     }
   }
   const sidebarWidth = isCollapsed ? "68px" : "220px";
-  const sidebarPadding = isCollapsed
-    ? effectiveRole === "admin"
-      ? "20px 8px"
-      : "16px 8px"
-    : effectiveRole === "admin"
-      ? "20px 16px"
-      : "16px 14px";
+  const sidebarPadding = isCollapsed ? "20px 8px" : "20px 16px";
   const sidebarStyle = {
     width: sidebarWidth,
     minWidth: sidebarWidth,
@@ -225,7 +180,7 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
     boxSizing: 'border-box',
     flexShrink: 0,
     fontFamily: 'Inter, sans-serif',
-    fontSize: effectiveRole === 'admin' ? '13px' : '14px',
+    fontSize: '13px',
     lineHeight: 1.5,
   };
 
@@ -239,7 +194,7 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
       <div
         className="flex! items-center! h-[40px]! p-[0_2px]! w-full! box-border! shrink-0!" style={{
   justifyContent: isCollapsed ? "center" : "space-between",
-  marginBottom: effectiveRole === "user" ? "20px" : "16px"
+  marginBottom: "16px"
 }}
       >
         <div
@@ -252,7 +207,7 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
               className="object-contain! block! shrink-0!" style={{
   width: "20px",
   height: "20px",
-  borderRadius: effectiveRole === "admin" ? "6px" : "4px"
+  borderRadius: "6px"
 }}
             />
           ) : (
@@ -261,8 +216,8 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
                 src={lightningLogoLight}
                 alt="Lightning PDPM"
                 className="w-auto! object-contain! block! [flex-shrink:1]!" style={{
-  height: effectiveRole === "admin" ? "30px" : "28px",
-  maxWidth: effectiveRole === "admin" ? "150px" : "140px"
+  height: "30px",
+  maxWidth: "150px"
 }}
               />
               {(version || isLoadingVersion) && (
@@ -324,14 +279,14 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
   lineHeight: "20px",
   fontFamily: "inherit",
   justifyContent: isCollapsed ? "center" : "flex-start",
-  fontSize: effectiveRole === "admin" ? "13px" : "14px",
+  fontSize: "13px",
   fontWeight: active ? "600" : "500",
   color: active ? "var(--color-primary)" : "var(--color-slate-600)",
   backgroundColor: active ? "var(--color-primary-subtle)" : "transparent"
 }}
               onClick={() => navigate(item.path)}
             >
-              <SidebarIcon name={item.icon} role={effectiveRole} />
+              <SidebarIcon name={item.icon} />
               {!isCollapsed && (
                 <>
                   <span className="whitespace-nowrap! overflow-hidden! text-ellipsis! flex-1!">
@@ -349,37 +304,37 @@ export default function Sidebar({ active: currentPath, effectiveRole: role = 'de
       {/* Logout button (Pinned at Bottom) */}
       <div
         className="mt-auto! [flex:0_0_auto]! sticky! bottom-[0]! z-[1]! pb-[max(8px,_env(safe-area-inset-bottom))]! [border-top:1px_solid_var(--color-slate-100)]! w-full! [background-color:var(--color-white)]!" style={{
-  paddingTop: effectiveRole === "admin" ? "14px" : "12px"
+  paddingTop: "14px"
 }}
       >
         <button
           type="button"
-          className={(effectiveRole === "admin" ? "shared-sidebar-logout-btn-red" : "shared-sidebar-logout-btn-slate") + " " + "flex! items-center! font-semibold! cursor-pointer! [transition:all_0.15s_ease]! select-none! w-full! border-0! [font-family:inherit]! text-left!"}
-          title={isCollapsed ? (effectiveRole === "admin" ? "Sign Out" : "Logout") : ""}
-          aria-label={effectiveRole === "admin" ? "Sign Out" : "Logout"}
+          className={"shared-sidebar-logout-btn-red" + " " + "flex! items-center! font-semibold! cursor-pointer! [transition:all_0.15s_ease]! select-none! w-full! border-0! [font-family:inherit]! text-left!"}
+          title={isCollapsed ? "Sign Out" : ""}
+          aria-label="Sign Out"
           onClick={handleLogout}
           disabled={loggingOut}
           style={{
-  gap: effectiveRole === "admin" ? "12px" : "10px",
-  padding: isCollapsed ? "10px 0" : effectiveRole === "admin" ? "10px 12px" : "10px 14px",
+  gap: "12px",
+  padding: isCollapsed ? "10px 0" : "10px 12px",
   justifyContent: isCollapsed ? "center" : "flex-start",
-  borderRadius: effectiveRole === "admin" ? "8px" : "6px",
-  fontSize: effectiveRole === "admin" ? "13px" : "14px",
-  color: effectiveRole === "admin" ? "var(--color-danger-dark)" : "var(--color-slate-800)",
-  backgroundColor: effectiveRole === "admin" ? "var(--color-danger-bg)" : "var(--color-slate-200)"
+  borderRadius: "8px",
+  fontSize: "13px",
+  color: "var(--color-danger-dark)",
+  backgroundColor: "var(--color-danger-bg)"
 }}
         >
           <span
             className="material-symbols-outlined"
             style={{
               fontSize: "18px",
-              color: effectiveRole === "admin" ? "var(--color-danger-dark)" : "var(--color-slate-800)",
+              color: "var(--color-danger-dark)",
             }}
             aria-hidden="true"
           >
             logout
           </span>
-          {!isCollapsed && (effectiveRole === "admin" ? "Sign Out" : "Logout")}
+          {!isCollapsed && "Sign Out"}
         </button>
       </div>
     </div>

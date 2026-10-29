@@ -84,38 +84,15 @@ class UserDetailView(ResourceAPIView):
         return Response(UserSerializer(instance).data)
 
     def put(self, request, user_id):
-        """
-        Full update of a user account within an atomic transaction.
-
-        Args:
-            request (Request): Incoming request with full payload.
-            user_id (UUID): User identifier.
-
-        Returns:
-            Response: Serialized updated user profile.
-        """
-        with transaction.atomic():
-            instance = self.authorized_object(request, user_id, lock=True)
-            serializer = UserSerializer(instance, data=request.data, context={'request': request})
-            serializer.is_valid(raise_exception=True)
-            instance = serializer.save()
-            self.audit(request, instance, 'updated')
-        return Response(UserSerializer(instance).data)
+        return self._update(request, user_id)
 
     def patch(self, request, user_id):
-        """
-        Partial update of a user account within an atomic transaction.
+        return self._update(request, user_id, partial=True)
 
-        Args:
-            request (Request): Incoming request with partial payload.
-            user_id (UUID): User identifier.
-
-        Returns:
-            Response: Serialized updated user profile.
-        """
+    def _update(self, request, user_id, partial=False):
         with transaction.atomic():
             instance = self.authorized_object(request, user_id, lock=True)
-            serializer = UserSerializer(instance, data=request.data, partial=True, context={'request': request})
+            serializer = UserSerializer(instance, data=request.data, partial=partial, context={'request': request})
             serializer.is_valid(raise_exception=True)
             instance = serializer.save()
             self.audit(request, instance, 'updated')

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback, useContext } from 'r
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { SearchInput } from '../../shared/components/SearchControls.jsx';
 import { useFeedback } from '../../shared/components/Feedback.jsx';
-import { apiRequest, apiUpload, errorMessage } from '../../shared/api/apiClient.js';
+import { apiRequest, errorMessage } from '../../shared/api/apiClient.js';
 import { ProjectSelectionContext } from '../projects/projectSelectionContext.js';
 import { hasSidebarPermission } from '../../layouts/Sidebar.jsx';
 import DocumentActionModals from './DocumentActionModals.jsx';
@@ -40,8 +40,6 @@ export default function DocumentsPage({ user }) {
   const admin = ['Administrator', 'Admin'].includes(user.role);
   const canRename = admin || hasSidebarPermission(user.permissions, 'Documents', 'Edit');
   const canDelete = admin || hasSidebarPermission(user.permissions, 'Documents', 'Delete');
-  const canUpload = admin || hasSidebarPermission(user.permissions, 'Documents', 'Create');
-  const [uploading, setUploading] = useState(false);
   const { toast, feedback } = useFeedback();
   // ── Documents State ──────────────────────────────────────────────────
   const [documents, setDocuments] = useState([]);
@@ -228,17 +226,6 @@ export default function DocumentsPage({ user }) {
       className="w-full! box-border! [font-family:'Inter',_-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_Roboto,_sans-serif]!"
     >
       {feedback}
-      {canUpload && selectedProjectId && <label className="[float:right]! cursor-pointer! [color:var(--color-primary)]! font-semibold!">
-        {uploading ? 'Uploading…' : '+ Upload document'}
-        <input type="file" hidden disabled={uploading} onChange={async event => {
-          const file = event.target.files[0]; if (!file) return;
-          setUploading(true);
-          const form = new FormData(); form.append('file', file); form.append('project', selectedProjectId);
-          try { await apiUpload('/documents/', form); await fetchDocuments(); toast.success('Document uploaded.'); }
-          catch (error) { toast.error(errorMessage(error)); }
-          finally { setUploading(false); event.target.value = ''; }
-        }} />
-      </label>}
       {/* ── Page Header ── */}
       {showHeader && (
         <div className="mb-[20px]!">
@@ -273,7 +260,7 @@ export default function DocumentsPage({ user }) {
             placeholder="Search document"
             value={activeSearch}
             onChange={(e) => {
-              setInternalSearchQuery(e.target.value); setCurrentPage(1);
+              setInternalSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
             controlClassName="[width:100%]! [padding:8px_12px_8px_34px]! [border-radius:8px]! [border:1px_solid_var(--color-slate-200)]! [background-color:var(--color-white)]! [font-size:13px]! [color:var(--color-slate-900)]! [outline:none]! [box-sizing:border-box]! [box-shadow:0_1px_2px_rgba(0,0,0,0.02)]!"

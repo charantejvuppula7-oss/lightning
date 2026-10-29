@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { notificationService } from './notificationService.js';
+import useNotificationNavigation from './useNotificationNavigation.js';
 
 export function NotificationPopup() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { openNotification, feedback } = useNotificationNavigation();
 
   const [popupData, setPopupData] = useState(null); // { title, message, badge, count, id }
   const [isVisible, setIsVisible] = useState(false);
@@ -142,7 +144,7 @@ export function NotificationPopup() {
     return () => clearTimeout(initial);
   }, [location.pathname, isAuthPage, checkNotifications, dismissPopup]);
 
-  // Share the existing 15-second refresh with the bell.
+  // Share the bell's Socket.IO subscription.
   useEffect(() => {
     if (isAuthPage) return;
     return notificationService.subscribe(() => {
@@ -170,7 +172,7 @@ export function NotificationPopup() {
     };
   }, []);
 
-  if (!popupData || isAuthPage) return null;
+  if (!popupData || isAuthPage) return feedback;
 
   const handleOpenInbox = () => {
     dismissPopup();
@@ -200,6 +202,7 @@ export function NotificationPopup() {
 }}
     >
 
+      {feedback}
       <div
         className={`w-[390px]! max-w-[calc(100vw_-_32px)]! [background-color:var(--color-white)]! rounded-[16px]! [border:1px_solid_var(--color-slate-200)]! [box-shadow:0_10px_25px_-3px_rgba(15,_23,_42,_0.08),_0_4px_6px_-2px_rgba(15,_23,_42,_0.04)]! p-[18px_20px_16px_20px]! box-border! ${isVisible ? 'animate-notification-in' : 'animate-notification-out'}`}
       >
@@ -248,11 +251,11 @@ export function NotificationPopup() {
         </div>
 
         {/* Notification Message Details */}
-        <div
-          className="text-[14px]! [color:var(--color-slate-900)]! leading-[1.45]! [word-break:break-word]!"
+        <button type="button" onClick={async () => { if (popupData.id && await openNotification(popupData.id)) dismissPopup(); }}
+          className="block! w-full! border-0! bg-transparent! p-0! text-left! text-[14px]! [color:var(--color-slate-900)]! leading-[1.45]! [word-break:break-word]!"
         >
           {renderMessageContent(popupData.message)}
-        </div>
+        </button>
 
         {/* Divider Line */}
         <div

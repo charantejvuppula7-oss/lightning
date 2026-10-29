@@ -1,17 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { apiRequest } from '../../shared/api/apiClient.js'
+import { apiList } from '../../shared/api/apiClient.js'
 import { ProjectSelectionContext } from './projectSelectionContext.js'
-
-async function fetchProjects() {
-  const projects = []
-  let path = '/projects/assigned/?page_size=100'
-  while (path) {
-    const page = await apiRequest(path)
-    projects.push(...(page.results || []))
-    path = page.next ? `/projects/assigned/${new URL(page.next).search}` : null
-  }
-  return projects
-}
 
 export function ProjectSelectionProvider({ children }) {
   const [projects, setProjects] = useState([])
@@ -24,7 +13,7 @@ export function ProjectSelectionProvider({ children }) {
     if (pending.current) return pending.current
     setLoading(true)
     setError(false)
-    const request = fetchProjects()
+    const request = apiList('/projects/assigned/?page_size=100')
       .then((items) => {
         setProjects(items)
         setSelectedProjectId((current) => current === 'all' || items.some((item) => item.id === current) ? current : 'all')

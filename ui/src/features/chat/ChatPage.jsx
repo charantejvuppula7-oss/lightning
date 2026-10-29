@@ -7,7 +7,8 @@ import { Avatar, PeopleIcon, PushPinIcon } from './ChatElements.jsx'
 import ChatMessage from './ChatMessage.jsx'
 import ChatComposer from './ChatComposer.jsx'
 import ChatSidebar from './ChatSidebar.jsx'
-import { createChatConnection, chatRequest } from './chatConnection.js'
+import { getSharedSocket, retainSocket, chatRequest } from './chatConnection.js'
+import { useSearchParams } from 'react-router-dom'
 
 function dateLabel(value) {
   const date=new Date(value); const today=new Date(); const yesterday=new Date(); yesterday.setDate(today.getDate()-1)
@@ -15,18 +16,8 @@ function dateLabel(value) {
 }
 
 export default function ChatPage({ user,searchQuery = '' }) {
-  const [socket] = useState(createChatConnection)
-  useEffect(() => {
-    const reconnect = () => { if (!socket.connected) socket.connect() }
-    socket.connect()
-    window.addEventListener('online', reconnect)
-    window.addEventListener('focus', reconnect)
-    return () => {
-      window.removeEventListener('online', reconnect)
-      window.removeEventListener('focus', reconnect)
-      socket.disconnect()
-    }
-  }, [socket])
+  const [socket] = useState(getSharedSocket)
+  useEffect(() => retainSocket(), [])
   const {projects,selectedProjectId} = useProjectSelection()
   const project=projects.find(project => project.id === selectedProjectId)
   if (!project) return <section className="p-[28px]!"><h1>Project Chat</h1><p>Select a project to open its conversation.</p></section>
@@ -34,9 +25,13 @@ export default function ChatPage({ user,searchQuery = '' }) {
 }
 
 function ProjectChat({ project,user,socket,searchQuery }) {
-  const {data:history,loading,error,reload} = useApiData(`/projects/${project.id}/chat/messages/?page_size=100&search=${encodeURIComponent(searchQuery)}`,{results:[],count:0})
+  const [params] = useSearchParams()
+  const focusId = params.get('messageId') || ''
+  const {data:history,loading,error,reload} = useApiData(`/projects/${project.id}/chat/messages/?page_size=100&search=${encodeURIComponent(searchQuery)}&messageId=${encodeURIComponent(focusId)}`,{results:[],count:0})
   const {data:members} = useApiData(`/projects/${project.id}/chat/members/`,[])
   const [live,setLive] = useState([])
+  const [deleted,setDeleted] = useState(new Set())
+  const [revision,setRevision] = useState(0)
   const [older,setOlder] = useState({query:'',rows:[],page:1,next:null})
   const [loadingOlder,setLoadingOlder] = useState(false)
   const [connection,setConnection] = useState('Connecting...')
@@ -54,6 +49,13 @@ function ProjectChat({ project,user,socket,searchQuery }) {
   const pendingScroll=useRef(null)
   const atBottom=useRef(true)
   const composer=useRef(null)
+  useEffect(() => {
+    if (history.focus) {
+      // Synchronize the open thread with a server-authorized notification target.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setParent(history.focus); setPanelOpen(true); setActiveTab('Thread')
+    }
+  }, [history.focus])
   const canUpload=['Admin','Administrator'].includes(user.role) || hasSidebarPermission(user.permissions || {},'Documents','Create')
   const denied=Boolean(error) || connection !== 'Live'
   const onlineIds=online || members.filter(person => person.online).map(person => person.id)
@@ -61,20 +63,32 @@ function ProjectChat({ project,user,socket,searchQuery }) {
   const messages=useMemo(() => {
     const olderRows=older.query === searchQuery ? older.rows : []
     const unique=new Map([...history.results,...olderRows,...live].filter(message => !message.parent_message).map(message => [message.id,message]))
-    return [...unique.values()].filter(message => !searchQuery || `${message.content} ${message.sender_name} ${message.sender_display_name}`.toLowerCase().includes(searchQuery.toLowerCase())).sort((a,b) => new Date(a.created_at)-new Date(b.created_at))
-  },[history.results,older,live,searchQuery])
+    return [...unique.values()].filter(message => !deleted.has(message.id) && (!searchQuery || `${message.content} ${message.sender_name} ${message.sender_display_name}`.toLowerCase().includes(searchQuery.toLowerCase()))).sort((a,b) => new Date(a.created_at)-new Date(b.created_at))
+  },[history.results,older,live,deleted,searchQuery])
   useEffect(() => {
     let active = true
     const join = async () => {
       setConnection('Connecting...')
       try {
         await chatRequest(socket, 'join_project', { projectId: project.id })
-        if (active) { setConnection('Live'); setLive([]); setReactions(null); reload() }
+        if (active) { setConnection('Live'); setLive([]); setDeleted(new Set()); setReactions(null); setRevision(value => value+1); reload() }
       } catch (error) { if (active) setConnection(error.message) }
     }
     const created = ({ message, parent }) => {
+      setRevision(value => value+1)
       setLive(previous => [...previous.filter(item => item.id !== message.id && item.id !== parent?.id), message, ...(parent ? [parent] : [])])
       if (!atBottom.current) setNewBelow(true)
+    }
+    const updated = ({ message }) => {
+      setLive(previous => [...previous.filter(item => item.id !== message.id), message])
+      setParent(current => current?.id === message.id ? message : current)
+      setRevision(value => value+1)
+    }
+    const removed = ({ message_id, parent }) => {
+      setDeleted(previous => new Set([...previous,message_id]))
+      setLive(previous => [...previous.filter(item => item.id !== message_id && item.id !== parent?.id), ...(parent ? [parent] : [])])
+      setParent(current => current?.id === message_id ? null : current?.id === parent?.id ? parent : current)
+      setRevision(value => value+1)
     }
     const presence = data => setOnline(data.online_ids)
     const typingChanged = data => setTyping(previous => {
@@ -89,6 +103,8 @@ function ProjectChat({ project,user,socket,searchQuery }) {
     socket.on('disconnect', disconnected)
     socket.on('connect_error', failed)
     socket.on('message_created', created)
+    socket.on('message_updated', updated)
+    socket.on('message_deleted', removed)
     socket.on('presence_changed', presence)
     socket.on('typing_changed', typingChanged)
     socket.on('reaction_changed', reactionChanged)
@@ -100,6 +116,8 @@ function ProjectChat({ project,user,socket,searchQuery }) {
       socket.off('disconnect', disconnected)
       socket.off('connect_error', failed)
       socket.off('message_created', created)
+      socket.off('message_updated', updated)
+      socket.off('message_deleted', removed)
       socket.off('presence_changed', presence)
       socket.off('typing_changed', typingChanged)
       socket.off('reaction_changed', reactionChanged)
@@ -154,6 +172,6 @@ function ProjectChat({ project,user,socket,searchQuery }) {
         <ChatComposer socket={socket} ref={composer} projectId={project.id} members={members} canUpload={canUpload} disabled={denied} onSent={message => { atBottom.current=true; setLive(previous => [...previous,message]) }}/>
       </div>
     </div>
-    {panelOpen && <ChatSidebar tab={activeTab} setTab={setActiveTab} onClose={() => {setPanelOpen(false);setParent(null)}} {...{project,parent,setParent,members,files,pinnedFiles,onlineIds,user,canUpload,socket}} messagesCount={history.count} togglePin={id => setPinnedFiles(previous => previous.includes(id) ? previous.filter(value => value !== id) : [...previous,id])} onMention={mention} revision={live.length} disabled={denied}/>}
+    {panelOpen && <ChatSidebar tab={activeTab} setTab={setActiveTab} onClose={() => {setPanelOpen(false);setParent(null)}} {...{project,parent,setParent,members,files,pinnedFiles,onlineIds,user,canUpload,socket}} messagesCount={history.count} togglePin={id => setPinnedFiles(previous => previous.includes(id) ? previous.filter(value => value !== id) : [...previous,id])} onMention={mention} revision={revision} disabled={denied}/>}
   </section>
 }

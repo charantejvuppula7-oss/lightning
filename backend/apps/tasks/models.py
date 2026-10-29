@@ -76,20 +76,6 @@ class Task(models.Model):
             models.Index(fields=['project', 'status']),
         ]
 
-    STATUS_TRANSITIONS = {
-        'open': {'in_progress'},
-        'in_progress': {'in_review'},
-        'in_review': {'completed', 'in_progress'},
-        'completed': set(),
-    }
-
-    def transition_to(self, new_status, *, save=True):
-        if new_status != self.status and new_status not in self.STATUS_TRANSITIONS.get(self.status, set()):
-            raise ValidationError({'status': 'Invalid task status transition.'})
-        self.status = new_status
-        if save:
-            self.save(update_fields=['status', 'updated_at'])
-
     def clean(self):
         if self._state.adding and self.status != 'open':
             raise ValidationError({'status': 'New tasks must be open.'})

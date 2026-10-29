@@ -1,7 +1,7 @@
 from django.db import transaction
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -9,18 +9,34 @@ from rest_framework.views import APIView
 
 from api.models import ResourceFile
 from apps.audit.services import LogService
-from apps.roles.permissions import allowed_projects, require_permission
+from apps.roles.permissions import allowed_projects, has_permission, require_permission
 from apps.documents.serializers import DocumentSerializer
+from apps.documents.services import delete_document, store_document
 
 
 def documents_for(user):
     return ResourceFile.objects.filter(project__in=allowed_projects(user)).select_related('project', 'uploaded_by')
 
 
-def delete_document(request, document):
-    LogService.log_audit_event(actor=request.user, action='deleted', entity_type='document', entity=document, request=request)
-    # Retain the stored file: historical project records can reference the same upload.
-    document.delete()
+def download_response(document):
+    try:
+        response = FileResponse(document.file.open('rb'), as_attachment=True, filename=document.file_name)
+        response['Cache-Control'] = 'private, no-store'
+        return response
+    except FileNotFoundError as error:
+        raise Http404('The stored file is unavailable.') from error
+
+
+class ProtectedMediaView(APIView):
+    """Keep existing file URLs while enforcing the same project/document access as the UI."""
+    permission_classes = [IsAuthenticated]
+    throttle_scope = 'download'
+
+    def get(self, request, file_path):
+        if not (has_permission(request.user, 'Documents', 'View') or has_permission(request.user, 'Projects', 'View')):
+            raise PermissionDenied('Document access denied.')
+        document = get_object_or_404(documents_for(request.user), file=file_path)
+        return download_response(document)
 
 
 class DocumentListView(APIView):
@@ -44,9 +60,7 @@ class DocumentListView(APIView):
         if not upload:
             raise ValidationError({'file': 'Choose a file to upload.'})
         with transaction.atomic():
-            document = ResourceFile.objects.create(project=project, file=upload, file_name=upload.name,
-                file_type=ResourceFile.get_file_category(upload.name), file_size=upload.size, uploaded_by=request.user)
-            LogService.log_audit_event(actor=request.user, action='created', entity_type='document', entity=document, request=request)
+            document = store_document(request, project, upload)
         return Response(DocumentSerializer(document).data, status=201)
 
 
@@ -93,7 +107,4 @@ class DocumentDownloadView(APIView):
     def get(self, request, document_id):
         require_permission(request.user, 'Documents', 'View')
         document = get_object_or_404(documents_for(request.user), pk=document_id)
-        try:
-            return FileResponse(document.file.open('rb'), as_attachment=True, filename=document.file_name)
-        except FileNotFoundError as error:
-            raise Http404('The stored file is unavailable.') from error
+        return download_response(document)

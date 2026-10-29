@@ -38,7 +38,14 @@ class ChatHistoryView(APIView):
         queryset = queryset.select_related('sender__role_link', 'attachment', 'parent_message').prefetch_related('reactions').annotate(reply_count=Count('replies')).order_by('-created_at', '-pk')
         paginator = ResourcePagination()
         page = paginator.paginate_queryset(queryset, request, view=self)
-        return paginator.get_paginated_response(ChatMessageSerializer(page, many=True, context={'request': request}).data)
+        response = paginator.get_paginated_response(ChatMessageSerializer(page, many=True, context={'request': request}).data)
+        if request.query_params.get('messageId'):
+            message_id = serializers.UUIDField().run_validation(request.query_params['messageId'])
+            message = ProjectChatMessage.objects.filter(pk=message_id, room=room).select_related('parent_message').first()
+            if message is None:
+                raise NotFound('Message not found.')
+            response.data['focus'] = ChatMessageSerializer(message.parent_message or message, context={'request': request}).data
+        return response
 
     def post(self, request, project_id):
         """

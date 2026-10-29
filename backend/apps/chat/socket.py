@@ -16,7 +16,7 @@ from rest_framework.exceptions import APIException, AuthenticationFailed, Valida
 from rest_framework.throttling import SimpleRateThrottle
 
 from apps.chat.serializers import ChatSendSerializer
-from apps.chat.services import get_chat_room, save_chat_message, change_reaction, message_data
+from apps.chat.services import get_chat_room, save_chat_message, change_reaction, change_message, message_data
 from apps.users.auth.backends import UserSessionAuthentication
 
 logger = logging.getLogger(__name__)
@@ -36,6 +36,9 @@ connections = {}
 typing_tasks = {}
 server_loop = None
 access_task = None
+notification_task = None
+redis_url = settings.CACHES['default'].get('LOCATION') if 'RedisCache' in settings.CACHES['default']['BACKEND'] else None
+notification_channel = 'lighting-v2:notifications'
 
 
 def authenticated_user(cookie):
@@ -93,14 +96,16 @@ def wire(data):
 
 
 async def startup():
-    global server_loop, access_task
+    global server_loop, access_task, notification_task
     server_loop = asyncio.get_running_loop()
     access_task = sio.start_background_task(session_watch)
+    if redis_url:
+        notification_task = sio.start_background_task(notification_watch)
 
 
 async def shutdown():
-    global server_loop, access_task
-    tasks = list(typing_tasks.values()) + ([access_task] if access_task else [])
+    global server_loop, access_task, notification_task
+    tasks = list(typing_tasks.values()) + [task for task in (access_task, notification_task) if task]
     for task in tasks:
         task.cancel()
     await asyncio.gather(*tasks, return_exceptions=True)
@@ -108,6 +113,7 @@ async def shutdown():
     typing_tasks.clear()
     connections.clear()
     access_task = None
+    notification_task = None
     server_loop = None
 
 
@@ -164,6 +170,45 @@ async def session_watch():
             await refresh_access()
         except Exception:
             logger.exception('chat_session_check_failed')
+
+
+async def notify_recipients(user_ids):
+    for sid, state in list(connections.items()):
+        if state['user_id'] not in user_ids:
+            continue
+        try:
+            user = await sync_to_async(authenticated_user)(state['cookie'])
+            if str(user.pk) == state['user_id']:
+                await sio.emit('notifications_changed', {}, to=sid)
+        except APIException:
+            await sio.disconnect(sid)
+
+
+def publish_notifications(user_ids):
+    if server_loop and server_loop.is_running():
+        schedule(lambda: notify_recipients(user_ids))
+    elif redis_url:
+        # Scheduled reminder commands run outside the ASGI process.
+        from redis import Redis
+        try:
+            with Redis.from_url(redis_url, socket_connect_timeout=2, socket_timeout=2) as client:
+                client.publish(notification_channel, json.dumps(list(user_ids)))
+        except Exception:
+            logger.exception('notification_publish_failed')
+
+
+async def notification_watch():
+    from redis.asyncio import Redis
+    while True:
+        try:
+            async with Redis.from_url(redis_url) as client, client.pubsub() as pubsub:
+                await pubsub.subscribe(notification_channel)
+                async for item in pubsub.listen():
+                    if item['type'] == 'message':
+                        await notify_recipients(set(json.loads(item['data'])))
+        except Exception:
+            logger.exception('notification_subscription_failed')
+            await asyncio.sleep(5)
 
 
 @sio.event
@@ -223,6 +268,9 @@ def perform(cookie, project_id, event, data):
         serializer.is_valid(raise_exception=True)
         message, _ = save_chat_message(user, {**serializer.validated_data, 'project_id': room.project_id})
         return {'message': message_data(message, user)}
+    if event in ('edit_message', 'delete_message'):
+        return change_message(user, room, UUID(str(data.get('messageId'))),
+                              content=data.get('content'), delete=event == 'delete_message')
     if not isinstance(data.get('active'), bool):
         raise ValidationError('active must be true or false.')
     message_id = UUID(str(data.get('messageId')))
@@ -248,6 +296,16 @@ async def send_message(sid, data):
 @sio.event
 async def reaction(sid, data):
     return await action(sid, data, 'reaction')
+
+
+@sio.event
+async def edit_message(sid, data):
+    return await action(sid, data, 'edit_message')
+
+
+@sio.event
+async def delete_message(sid, data):
+    return await action(sid, data, 'delete_message')
 
 
 @sio.event

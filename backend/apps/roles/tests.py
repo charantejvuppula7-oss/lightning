@@ -114,16 +114,21 @@ class RoleAccessTests(TestCase):
         self.assertEqual(response.data['events'], [])
         self.assertEqual(response.data['count'], 0)
 
-    def test_assigned_users_need_edit_permission_for_task_status_changes(self):
+    def test_assignees_can_start_but_need_edit_permission_to_approve_reviews(self):
         self.role.permissions['Tasks'] = {'View': True, 'Edit': False}
         self.role.save(update_fields=['permissions'])
         task = Task.objects.create(project=self.project, assigned_to=self.user, review_by=self.user,
             Task_Name='Assigned task', description='')
         response = self.client.patch(f'/api/tasks/{task.pk}/status/', {'status': 'in_progress'}, format='json')
+        self.assertEqual(response.status_code, 200, response.data)
+        task.refresh_from_db()
+        task.status = 'in_review'
+        task.save(update_fields=['status'])
+        response = self.client.patch(f'/api/tasks/{task.pk}/status/', {'status': 'completed'}, format='json')
         self.assertEqual(response.status_code, 403, response.data)
         self.role.permissions['Tasks']['Edit'] = True
         self.role.save(update_fields=['permissions'])
-        response = self.client.patch(f'/api/tasks/{task.pk}/status/', {'status': 'in_progress'}, format='json')
+        response = self.client.patch(f'/api/tasks/{task.pk}/status/', {'status': 'completed'}, format='json')
         self.assertEqual(response.status_code, 200, response.data)
 
     def test_new_roles_have_only_supported_entries_and_unsupported_grants_are_rejected(self):

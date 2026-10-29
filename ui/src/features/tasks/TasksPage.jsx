@@ -111,6 +111,7 @@ export default function TasksPage({ user: currentUser }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const allowedTabs = ['all','my','in-progress','in-review','change-requested','completed'];
   const requestedTab = searchParams.get('tab');
+  const targetTaskId = searchParams.get('taskId');
   const activeTab = allowedTabs.includes(requestedTab) ? requestedTab : userRole === 'user' ? 'my' : 'all';
   const handleTabChange = tab => setSearchParams({ tab });
   const navigate = useNavigate();
@@ -154,7 +155,7 @@ export default function TasksPage({ user: currentUser }) {
     // Project-scoped filters must not carry into another project's results.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setFilters(EMPTY_FILTERS);
-  }, [externalProjectId]);
+  }, [externalProjectId, targetTaskId]);
   const canFilterAssignee = userRole !== 'user' && activeTab === 'all';
   const assignees = useMemo(() => [...new Map(tasks.flatMap(task => task.assignedTo)
     .filter(person => person.id).map(person => [String(person.id), person])).values()]
@@ -525,6 +526,7 @@ export default function TasksPage({ user: currentUser }) {
       ) : sortedTasks.length > 0 ? (
         /* Accordion Task List: one open at a time */
         <TaskList
+          key={searchParams.get('taskId') || activeTab}
           toast={toast}
           currentUserRole={userRole}
           tasks={sortedTasks}

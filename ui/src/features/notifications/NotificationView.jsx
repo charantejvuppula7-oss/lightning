@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { notificationService } from './notificationService.js';
+import useNotificationNavigation from './useNotificationNavigation.js';
+import { apiRequest, errorMessage } from '../../shared/api/apiClient.js';
 
 function getTimeAgo(timestamp) {
   if (!timestamp) return "Just now";
@@ -25,10 +27,25 @@ function getSectionCategory(timestamp) {
 }
 
 export default function NotificationView({ searchQuery = "" }) {
+  const { openNotification, feedback, toast } = useNotificationNavigation();
   const [activeTab, setActiveTab] = useState("all"); // 'all' | 'assigned' | 'mentions'
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [preferences, setPreferences] = useState(null);
+  const [savingPreference, setSavingPreference] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    apiRequest('/notifications/preferences/', { signal: controller.signal }).then(setPreferences).catch(() => {});
+    return () => controller.abort();
+  }, []);
+  const changePreference = async event => {
+    setSavingPreference(true);
+    try { setPreferences(await apiRequest('/notifications/preferences/', { method: 'PATCH', body: { notify_task_status: event.target.checked } })); }
+    catch (error) { toast.error(errorMessage(error)); }
+    finally { setSavingPreference(false); }
+  };
 
   // Fetch live notifications from backend API
   useEffect(() => {
@@ -63,13 +80,10 @@ export default function NotificationView({ searchQuery = "" }) {
       }
     }
     fetchNotifications(true);
-    const interval = setInterval(() => fetchNotifications(), 30000);
-    const handleChange = () => fetchNotifications();
-    window.addEventListener('notifications:changed', handleChange);
+    const unsubscribe = notificationService.subscribe(() => fetchNotifications());
     return () => {
       isMounted = false;
-      clearInterval(interval);
-      window.removeEventListener('notifications:changed', handleChange);
+      unsubscribe();
     };
   }, []);
 
@@ -123,17 +137,6 @@ export default function NotificationView({ searchQuery = "" }) {
     return groups;
   }, [filteredNotifications]);
 
-  const toggleItemHighlight = async (id) => {
-    try {
-      await notificationService.markAsRead(id);
-      setNotifications((prev) =>
-        prev.map((item) => item.id === id ? { ...item, isHighlighted: false, isRead: true } : item)
-      );
-    } catch (err) {
-      console.warn("Error marking notification read:", err);
-    }
-  };
-
   const handleMarkAllRead = async () => {
     try {
       await notificationService.markAllRead();
@@ -151,6 +154,11 @@ export default function NotificationView({ searchQuery = "" }) {
 
     >
       {/* ── Header Section ── */}
+      {feedback}
+      {preferences && <label className="flex! items-center! gap-2! text-[13px]! self-end!">
+        <input type="checkbox" checked={preferences.notify_task_status} disabled={savingPreference} onChange={changePreference} />
+        Task status notifications
+      </label>}
       <div className="w-full! mb-[4px]! flex! justify-between! items-start!">
         <div>
           <h1
@@ -283,7 +291,7 @@ export default function NotificationView({ searchQuery = "" }) {
                   return (
                     <div
                       key={item.id}
-                      onClick={() => toggleItemHighlight(item.id)}
+                      onClick={() => openNotification(item.id)}
                       className={"flex! items-start! gap-[12px]! p-[11px_14px]! rounded-[4px]! [transition:background-color_0.15s_ease]! cursor-pointer! box-border! w-full!" + ' ' + (!isBgBlue ? "hover:[background-color:var(--color-slate-50)]!" : '')} style={{
   backgroundColor: isBgBlue ? "#edf5ff" : "var(--color-white)"
 }}

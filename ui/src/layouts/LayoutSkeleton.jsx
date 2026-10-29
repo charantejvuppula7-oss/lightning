@@ -1,17 +1,15 @@
-
+import { readSidebarCollapsed } from './sidebarState.js'
 function Skeleton({ className = '' }) {
   return <div className={`layout-skeleton-block ${className}`} />
 }
 
 export default function LayoutSkeleton({ pathname }) {
   const role = pathname.startsWith('/admin/') ? 'admin' : pathname.startsWith('/pm/') ? 'pm' : 'user'
-  const storageKey = role === 'user' && localStorage.getItem('dev-sidebar-collapsed') !== null
-    ? 'dev-sidebar-collapsed' : `${role}-sidebar-collapsed`
-  const collapsed = localStorage.getItem(storageKey) === 'true'
+  const collapsed = readSidebarCollapsed(role)
   const dashboard = pathname.endsWith('/dashboard')
 
   return (
-    <div className={`layout-skeleton ${collapsed ? 'layout-skeleton-collapsed' : ''}`} style={{ '--skeleton-sidebar-width': collapsed ? '68px' : role === 'admin' ? '240px' : '220px' }}>
+    <div className={`layout-skeleton ${collapsed ? 'layout-skeleton-collapsed' : ''}`} style={{ '--skeleton-sidebar-width': collapsed ? '68px' : '220px' }}>
       <aside className="layout-skeleton-sidebar" aria-hidden="true">
         <div className="layout-skeleton-brand">
           <Skeleton className="layout-skeleton-logo" />

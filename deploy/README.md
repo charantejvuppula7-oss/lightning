@@ -139,8 +139,9 @@ sudo journalctl -u lighting-v2 -n 50 --no-pager
 Open `http://122.175.58.131:5173` and log in with the initial credentials.
 Chat and notification streams use unbuffered ASGI proxying. Nginx serves the
 built React assets, not Vite's development server. Existing project media URLs
-are served through `/media/`; document downloads retain their API permission
-checks.
+are served through authenticated `/media/` requests to Django. Nginx must not
+serve the private media directory with a public `alias`. Both legacy project
+file URLs and document API downloads enforce project access.
 
 After copying an update into the same folder, run:
 
@@ -153,6 +154,13 @@ The timer runs daily at midnight in the Ubuntu server's timezone, with catch-up
 after downtime. Deployment also runs cleanup immediately, including previously
 expired logs. View results with
 `sudo journalctl -u lighting-v2-log-cleanup --no-pager`.
+
+Deployment also installs `lighting-v2-reminders.timer` (daily deadline alerts)
+and `lighting-v2-email-outbox.timer` (retries pending mail every minute). These
+reuse the existing Django commands and database outbox; no task queue service
+is required. View all three with `systemctl list-timers 'lighting-v2-*'`.
+Email remains at-least-once: an interrupted provider call can produce a duplicate.
+Redis forwards scheduled notification invalidations to the ASGI process.
 
 Microsoft Graph mail configuration is optional and is **not** copied from
 Company automatically. To enable mail, add the `MS_GRAPH_*` values from

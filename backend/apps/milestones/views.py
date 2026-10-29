@@ -74,38 +74,15 @@ class MilestoneDetailView(ResourceAPIView):
         return Response(MilestoneSerializer(instance).data)
 
     def put(self, request, milestone_id):
-        """
-        Perform a full update of a milestone within an atomic transaction.
-
-        Args:
-            request (Request): Request with full payload.
-            milestone_id (UUID): Milestone identifier.
-
-        Returns:
-            Response: Serialized updated milestone.
-        """
-        with transaction.atomic():
-            instance = self.authorized_object(request, milestone_id, lock=True)
-            serializer = MilestoneSerializer(instance, data=request.data, context={'request': request})
-            serializer.is_valid(raise_exception=True)
-            instance = serializer.save(updated_by=request.user)
-            self.audit(request, instance, 'updated')
-        return Response(MilestoneSerializer(instance).data)
+        return self._update(request, milestone_id)
 
     def patch(self, request, milestone_id):
-        """
-        Perform a partial update of a milestone within an atomic transaction.
+        return self._update(request, milestone_id, partial=True)
 
-        Args:
-            request (Request): Request with partial payload.
-            milestone_id (UUID): Milestone identifier.
-
-        Returns:
-            Response: Serialized updated milestone.
-        """
+    def _update(self, request, milestone_id, partial=False):
         with transaction.atomic():
             instance = self.authorized_object(request, milestone_id, lock=True)
-            serializer = MilestoneSerializer(instance, data=request.data, partial=True, context={'request': request})
+            serializer = MilestoneSerializer(instance, data=request.data, partial=partial, context={'request': request})
             serializer.is_valid(raise_exception=True)
             instance = serializer.save(updated_by=request.user)
             self.audit(request, instance, 'updated')

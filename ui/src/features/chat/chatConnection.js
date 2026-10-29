@@ -1,5 +1,32 @@
 import { io } from 'socket.io-client'
 
+let sharedSocket
+let consumers = 0
+const reconnect = () => { if (consumers && !sharedSocket.connected) sharedSocket.connect() }
+
+export function getSharedSocket() {
+  sharedSocket ??= createChatConnection()
+  return sharedSocket
+}
+
+export function retainSocket() {
+  consumers += 1
+  const socket = getSharedSocket()
+  if (consumers === 1) {
+    window.addEventListener('online', reconnect)
+    window.addEventListener('focus', reconnect)
+  }
+  socket.connect()
+  return () => {
+    consumers -= 1
+    if (!consumers) {
+      window.removeEventListener('online', reconnect)
+      window.removeEventListener('focus', reconnect)
+      socket.disconnect()
+    }
+  }
+}
+
 export function createChatConnection() {
   const base = new URL(import.meta.env.VITE_API_BASE_URL || '/api', window.location.origin)
   return io(base.origin, {

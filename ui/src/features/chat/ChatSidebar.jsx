@@ -27,9 +27,9 @@ function Thread({ project,parent,user,members,canUpload,socket,revision,disabled
   const bottom=useRef(null)
   useEffect(() => { bottom.current?.scrollIntoView({block:'nearest'}) },[data.results.length])
   return <div className="live-thread"><div className="thread-messages">
-    <div className="thread-parent-card"><ChatMessage message={parent} user={user} members={members}/></div>
+    <div className="thread-parent-card"><ChatMessage message={parent} user={user} members={members} socket={socket} projectId={project.id}/></div>
     {loading && <p role="status">Loading replies...</p>}{error && <p role="alert">{error}</p>}
-    {data.results.map(message => <ChatMessage key={message.id} message={message} user={user} members={members}/>)}
+    {data.results.map(message => <ChatMessage key={message.id} message={message} user={user} members={members} socket={socket} projectId={project.id}/>)}
     {(page > 1 || data.next) && <div><button disabled={page === 1} onClick={() => setPage(page-1)}>Previous replies</button><button disabled={!data.next} onClick={() => setPage(page+1)}>More replies</button></div>}
     <div ref={bottom}/>
   </div><ChatComposer socket={socket} projectId={project.id} parentId={parent.id} members={members} canUpload={canUpload} onSent={reload} disabled={disabled}/></div>

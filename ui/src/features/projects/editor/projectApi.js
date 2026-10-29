@@ -18,9 +18,6 @@ export async function uploadFiles(projectId, files, pdr = false, version = '', c
 
 export async function saveProjectFiles(id, form, originalFiles) {
   const retainedIds = new Set(form.files.filter(file => file.id).map(file => file.id))
-  for (const file of originalFiles.filter(file => !retainedIds.has(file.id))) {
-    await apiRequest(`/projects/${id}/files/`, { method: 'DELETE', body: { id: file.id } })
-  }
   for (const file of form.files.filter(item => item.id && item.is_pdr)) {
     const original = originalFiles.find(item => item.id === file.id)
     if (original && (original.pdr_version !== form.pdrVersion || original.pdr_changelog !== form.pdrChangelog)) {
@@ -32,6 +29,9 @@ export async function saveProjectFiles(id, form, originalFiles) {
   await uploadFiles(id, form.files.filter(file => file.file && !file.is_pdr).map(file => file.file))
   await uploadFiles(id, form.files.filter(file => file.file && file.is_pdr).map(file => file.file),
     true, form.pdrVersion, form.pdrChangelog)
+  for (const file of originalFiles.filter(file => !retainedIds.has(file.id))) {
+    await apiRequest(`/projects/${id}/files/`, { method: 'DELETE', body: { id: file.id } })
+  }
 }
 
 export function projectFields(form) {
@@ -107,13 +107,20 @@ export function creationPayload(form) {
 const changed = (a, b) => JSON.stringify(a) !== JSON.stringify(b)
 
 export async function updateProject(id, form, initial, originalFiles) {
+  const changes = []
+  const record = async (path, { method, body }) => {
+    const [, resource, existingId] = path.split('/')
+    const id = method === 'POST' ? `new:${changes.length}` : existingId
+    changes.push({ resource, method, id, ...(body && { body }) })
+    return { id }
+  }
   // Extend the date range first so existing children can move before the final range is saved.
   const widerStart = [initial.startDate, form.startDate].filter(Boolean).sort()[0] || null
   const widerEnd = [initial.endDate, form.endDate].filter(Boolean).sort().at(-1) || null
   if (widerStart !== initial.startDate || widerEnd !== initial.endDate) {
-    await apiRequest(`/projects/${id}/`, { method: 'PATCH', body: { start_date: widerStart, end_date: widerEnd } })
+    await record(`/projects/${id}/`, { method: 'PATCH', body: { start_date: widerStart, end_date: widerEnd } })
   }
-  const project = await apiRequest(`/projects/${id}/`, { method: 'PATCH', body: {
+  await record(`/projects/${id}/`, { method: 'PATCH', body: {
     ...projectFields(form), start_date: widerStart, end_date: widerEnd,
   } })
 
@@ -124,19 +131,19 @@ export async function updateProject(id, form, initial, originalFiles) {
   const currentSprints = new Set(form.sprints.map(item => item.id).filter(Boolean))
 
   for (const item of initial.dependencies.filter(item => item.id && !currentDependencies.has(item.id))) {
-    await apiRequest(`/dependencies/${item.id}/`, { method: 'DELETE' })
+    await record(`/dependencies/${item.id}/`, { method: 'DELETE' })
   }
   for (const item of initial.tasks.filter(item => item.id && !currentTasks.has(item.id))) {
-    await apiRequest(`/tasks/${item.id}/`, { method: 'DELETE' })
+    await record(`/tasks/${item.id}/`, { method: 'DELETE' })
   }
   for (const item of initial.milestones.flatMap(m => m.features).filter(item => item.id && !currentFeatures.has(item.id))) {
-    await apiRequest(`/features/${item.id}/`, { method: 'DELETE' })
+    await record(`/features/${item.id}/`, { method: 'DELETE' })
   }
   for (const item of initial.milestones.filter(item => item.id && !currentMilestones.has(item.id))) {
-    await apiRequest(`/milestones/${item.id}/`, { method: 'DELETE' })
+    await record(`/milestones/${item.id}/`, { method: 'DELETE' })
   }
   for (const item of initial.sprints.filter(item => item.id && !currentSprints.has(item.id))) {
-    await apiRequest(`/sprints/${item.id}/`, { method: 'DELETE' })
+    await record(`/sprints/${item.id}/`, { method: 'DELETE' })
   }
 
   const featureIds = {}
@@ -148,7 +155,7 @@ export async function updateProject(id, form, initial, originalFiles) {
     const saved = milestone.id && before && !changed(payload, {
       project: id, name: before.name.trim(), description: before.description.trim(),
       start_date: before.startDate || null, due_date: before.dueDate,
-    }) ? { id: milestone.id } : await apiRequest(milestone.id ? `/milestones/${milestone.id}/` : '/milestones/', {
+    }) ? { id: milestone.id } : await record(milestone.id ? `/milestones/${milestone.id}/` : '/milestones/', {
       method: milestone.id ? 'PATCH' : 'POST', body: payload,
     })
     milestoneIds[milestone.key] = saved.id
@@ -163,7 +170,7 @@ export async function updateProject(id, form, initial, originalFiles) {
         feature_priority: old.priority, feature_start_date: old.startDate || null,
         feature_due_date: old.dueDate ? `${old.dueDate}T00:00:00Z` : null }
       const savedFeature = feature.id && !changed(data, prior) ? { id: feature.id } :
-        await apiRequest(feature.id ? `/features/${feature.id}/` : '/features/', {
+        await record(feature.id ? `/features/${feature.id}/` : '/features/', {
           method: feature.id ? 'PATCH' : 'POST', body: data,
         })
       featureIds[feature.key] = savedFeature.id
@@ -182,7 +189,7 @@ export async function updateProject(id, form, initial, originalFiles) {
       exclude_weekends: old.excludeWeekends, team_members: old.members,
       off_days: old.offDays }
     const saved = sprint.id && !changed(data, prior) ? { id: sprint.id } :
-      await apiRequest(sprint.id ? `/sprints/${sprint.id}/` : '/sprints/', {
+      await record(sprint.id ? `/sprints/${sprint.id}/` : '/sprints/', {
         method: sprint.id ? 'PATCH' : 'POST', body: data,
       })
     sprintIds[sprint.key] = saved.id
@@ -197,7 +204,7 @@ export async function updateProject(id, form, initial, originalFiles) {
       sprint: initial.sprints.find(sprint => sprint.key === old.sprintKey)?.id || null,
       feature: initial.milestones.flatMap(m => m.features).find(feature => feature.key === old.featureKey)?.id || null }
     const saved = task.id && !changed(data, prior) ? { id: task.id } :
-      await apiRequest(task.id ? `/tasks/${task.id}/` : '/tasks/', {
+      await record(task.id ? `/tasks/${task.id}/` : '/tasks/', {
         method: task.id ? 'PATCH' : 'POST', body: data,
       })
     taskIds[task.key] = saved.id
@@ -215,17 +222,19 @@ export async function updateProject(id, form, initial, originalFiles) {
       assigned_to: old.assignee || null,
       due_date: old.dueDate || null }
     if (!dependency.id || changed(data, prior)) {
-      await apiRequest(dependency.id ? `/dependencies/${dependency.id}/` : '/dependencies/', {
+      await record(dependency.id ? `/dependencies/${dependency.id}/` : '/dependencies/', {
         method: dependency.id ? 'PATCH' : 'POST', body: data,
       })
     }
   }
   if (form.startDate !== widerStart || form.endDate !== widerEnd) {
-    await apiRequest(`/projects/${id}/`, { method: 'PATCH', body: {
+    await record(`/projects/${id}/`, { method: 'PATCH', body: {
       start_date: form.startDate || null, end_date: form.endDate || null,
     } })
   }
-  await saveProjectFiles(id, form, originalFiles)
+  const project = await apiRequest(`/projects/${id}/update/`, { method: 'PATCH', body: { changes } })
+  try { await saveProjectFiles(id, form, originalFiles) }
+  catch (error) { throw new Error(`Project changes were saved, but file updates failed. Retry the file changes. ${error.message}`, { cause: error }) }
   return project
 }
 

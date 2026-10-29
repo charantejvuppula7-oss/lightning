@@ -6,51 +6,15 @@ import Button from '../../shared/ui/Button.jsx';
 import Input from '../../shared/ui/Input.jsx';
 import ProfileAvatar from './ProfileAvatar.jsx';
 import ProfileDetailRow from './ProfileDetailRow.jsx';
-
-function ToastNotification({ toast, onClose }) {
-  if (!toast) return null;
-  const isError = toast.type === 'error';
-  const isSuccess = toast.type === 'success';
-
-  return (
-    <div
-      role="alert"
-      className="fixed! top-[20px]! right-[24px]! z-[9999]! p-[12px_18px]! rounded-[8px]! [color:#ffffff]! text-[14px]! font-medium! [box-shadow:0_4px_12px_rgba(0,0,0,0.15)]! flex! items-center! gap-[10px]! [animation:fadeIn_0.2s_ease]!" style={{
-  backgroundColor: isError ? '#ef4444' : isSuccess ? '#10b981' : '#3b82f6'
-}}
-    >
-      <span className={"material-symbols-outlined" + " " + "text-[18px]!"}  aria-hidden="true">
-        {isError ? 'error' : isSuccess ? 'check_circle' : 'info'}
-      </span>
-      <span>{toast.text}</span>
-      <button
-        type="button"
-        onClick={onClose}
-        className="[background:none]! border-0! [color:#ffffff]! cursor-pointer! p-[0_0_0_8px]! text-[16px]! leading-[1]! opacity-[0.8]!"
-        aria-label="Dismiss alert"
-      >
-        ✕
-      </button>
-    </div>
-  );
-}
+import { useFeedback } from '../../shared/components/Feedback.jsx';
 
 export function ProfileContent({ onBack }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState(null);
-
-  const showToast = (text, type = 'info') => {
-    setToast({ text, type });
-  };
-
-  useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => setToast(null), 3500);
-    return () => clearTimeout(timer);
-  }, [toast]);
+  const { toast, feedback } = useFeedback();
+  const showToast = (text, type = 'info') => toast[type](text);
 
   // Edit form state
   const [formData, setFormData] = useState({
@@ -105,7 +69,7 @@ export function ProfileContent({ onBack }) {
             bio: fallbackData.bio,
           });
         } catch {
-          if (active) setToast({ text: 'Failed to load profile', type: 'error' });
+          if (active) toast.error('Failed to load profile');
         }
       })
       .finally(() => {
@@ -114,7 +78,7 @@ export function ProfileContent({ onBack }) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [toast]);
 
   const handleCancel = () => {
     setIsEditing(false);
@@ -208,7 +172,7 @@ export function ProfileContent({ onBack }) {
 
   return (
     <div className="flex! flex-col! w-full! [background-color:var(--color-slate-50)]! min-h-[100%]! box-border! [font-family:'Inter',_-apple-system,_BlinkMacSystemFont,_sans-serif]!">
-      <ToastNotification toast={toast} onClose={() => setToast(null)} />
+      {feedback}
 
       {/* Top Header Card */}
       <div className="[background-color:var(--color-white)]! [border-bottom:1px_solid_var(--color-slate-200)]! p-[18px_32px]! flex! items-center! justify-between! w-full! box-border!">

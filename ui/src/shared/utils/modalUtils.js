@@ -1,16 +1,10 @@
+import { hasPermission } from './permissions.js'
+export { errorMessage as getApiError } from '../api/apiClient.js'
+
 export function canUsePermission(user, module, action) {
   const role = String(user?.role?.name || user?.role || '').toLowerCase()
   return role === 'admin' || role === 'administrator'
-    || user?.permissions?.[module]?.[action] === true
-}
-
-export function getApiError(error) {
-  const data = error?.data
-  if (typeof data?.detail === 'string') return data.detail
-  if (typeof data === 'object' && data) return Object.entries(data).map(([field, value]) =>
-    `${field}: ${Array.isArray(value) ? value.join(', ') : typeof value === 'string' ? value : JSON.stringify(value)}`,
-  ).join(' ')
-  return error?.message || 'Unable to save. Please try again.'
+    || hasPermission(user?.permissions, module, action)
 }
 
 export function displayName(user) {

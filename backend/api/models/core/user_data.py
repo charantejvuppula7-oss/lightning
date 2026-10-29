@@ -100,6 +100,7 @@ class UserData(models.Model):
         choices=ACCOUNT_STATUS,
         default='active'
     )
+    notify_task_status = models.BooleanField(default=True)
 
     # ------------------------
     # Additional Information

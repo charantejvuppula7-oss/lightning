@@ -4,7 +4,17 @@ from django.db import models
 from django.utils import timezone
 
 
+class NotificationManager(models.Manager):
+    def bulk_create(self, objs, **kwargs):
+        rows = super().bulk_create(objs, **kwargs)
+        from apps.notifications.signals import notify_users
+        notify_users({row.user_id for row in rows})
+        return rows
+
+
 class Notification(models.Model):
+    objects = NotificationManager()
+    TASK_STATUS_CHANGED = 'task_status_changed'
     TASK_ASSIGNED = 'task_assigned'
     TASK_DUE_TODAY = 'task_due_today'
     TASK_OVERDUE = 'task_overdue'
@@ -13,6 +23,7 @@ class Notification(models.Model):
     DEPENDENCY_NUDGE = 'dependency_nudge'
     CHAT_MENTION = 'chat_mention'
     TYPES = [
+        (TASK_STATUS_CHANGED, 'Task status changed'),
         (TASK_ASSIGNED, 'Task assigned'),
         (TASK_DUE_TODAY, 'Task due today'),
         (TASK_OVERDUE, 'Task overdue'),
@@ -36,7 +47,7 @@ class Notification(models.Model):
         constraints = [models.UniqueConstraint(
             fields=['user', 'notification_type', 'resource_id', 'notification_date'],
             name='unique_deadline_notification_per_day',
-            condition=~models.Q(notification_type='dependency_nudge'),
+            condition=~models.Q(notification_type__in=['dependency_nudge', 'task_status_changed']),
         )]
         indexes = [models.Index(fields=['user', 'is_read', '-created_at'],
                                 name='notification_user_unread_idx')]

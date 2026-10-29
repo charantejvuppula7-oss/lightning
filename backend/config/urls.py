@@ -12,13 +12,13 @@ When adding a new domain/feature:
 """
 
 from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
 from apps.core.search import GlobalSearchView
 from apps.core.version import AppVersionView
+from apps.documents.views import ProtectedMediaView
 
 
 urlpatterns = [
+    path('media/<path:file_path>', ProtectedMediaView.as_view()),
     path('api/user/app-version/', AppVersionView.as_view()),
     path('api/search/', GlobalSearchView.as_view()),
     path('api/', include('apps.users.urls')),
@@ -36,7 +36,3 @@ urlpatterns = [
     path('api/', include('apps.calendar.urls')),
     path('api/', include('apps.admin_panel.urls')),
 ]
-
-# Serve media files in development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

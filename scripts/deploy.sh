@@ -50,6 +50,10 @@ sudo setfacl -d -m u:www-data:rX "$BACKEND_DIR/media"
 sudo install -m 644 "$REPO_DIR/deploy/lighting-v2.service" /etc/systemd/system/
 sudo install -m 644 "$REPO_DIR/deploy/lighting-v2-log-cleanup.service" /etc/systemd/system/
 sudo install -m 644 "$REPO_DIR/deploy/lighting-v2-log-cleanup.timer" /etc/systemd/system/
+for job in reminders email-outbox; do
+    sudo install -m 644 "$REPO_DIR/deploy/lighting-v2-$job.service" /etc/systemd/system/
+    sudo install -m 644 "$REPO_DIR/deploy/lighting-v2-$job.timer" /etc/systemd/system/
+done
 sudo install -m 644 "$REPO_DIR/deploy/lighting-v2.nginx.conf" /etc/nginx/sites-available/lighting-v2
 sudo ln -sfn /etc/nginx/sites-available/lighting-v2 /etc/nginx/sites-enabled/lighting-v2
 sudo nginx -t
@@ -61,8 +65,8 @@ if [[ "$NGINX_CONFIG" != *'/etc/nginx/sites-enabled/lighting-v2:'* && "$NGINX_CO
     exit 1
 fi
 sudo systemctl daemon-reload
-sudo systemctl enable lighting-v2.service lighting-v2-log-cleanup.timer
-sudo systemctl restart lighting-v2.service lighting-v2-log-cleanup.timer
+sudo systemctl enable lighting-v2.service lighting-v2-log-cleanup.timer lighting-v2-reminders.timer lighting-v2-email-outbox.timer
+sudo systemctl restart lighting-v2.service lighting-v2-log-cleanup.timer lighting-v2-reminders.timer lighting-v2-email-outbox.timer
 sudo systemctl start lighting-v2-log-cleanup.service
 sudo systemctl reload nginx
 curl --fail --retry 10 --retry-connrefused --retry-delay 2 http://127.0.0.1:8084/api/auth/csrf/ >/dev/null
